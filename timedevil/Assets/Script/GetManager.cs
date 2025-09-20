@@ -3,11 +3,12 @@ using TMPro;
 
 public class GetManager : MonoBehaviour
 {
+    [Header("UI")]
     public TextMeshProUGUI talkText;
     public GameObject talkPanel;
-    public bool isAction;
 
     private GameObject scanObject;
+    public bool isAction;
 
     public void Action(GameObject scanObj)
     {
@@ -17,22 +18,25 @@ public class GetManager : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[GetManager] Raycast hit: {scanObj.name} (Layer: {LayerMask.LayerToName(scanObj.layer)})");
-
         if (!isAction)
         {
             isAction = true;
             scanObject = scanObj;
             talkText.text = $"{scanObj.name} 아이템 획득!";
 
-            // 아이템을 ItemDatabase에 추가
-            if (ItemDatabase.Instance != null)
+            string cardId = scanObj.name;
+
+            var cardState = FindObjectOfType<CardStateRuntime>();
+            if (cardState != null)
             {
-                ItemDatabase.Instance.AddItem(scanObj.name);
+                if (cardState.AddOwned(cardId))
+                {
+                    Debug.Log($"[GetManager] 카드 등록 (메모리만): {cardId}");
+                }
             }
             else
             {
-                Debug.LogError("[GetManager] ItemDatabase.Instance가 존재하지 않음!");
+                Debug.LogWarning("[GetManager] CardStateRuntime이 씬에 없음. 등록 불가");
             }
         }
         else

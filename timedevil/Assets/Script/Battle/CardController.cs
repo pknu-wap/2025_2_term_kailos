@@ -1,98 +1,177 @@
+using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 플레이어 카드 사용 컨트롤러 (JSON 덱 기반)
+/// - 덱을 CardSaveStore / CardStateRuntime에서 로드
+/// - 첫 번째 카드 1장을 UI에 표시하고, 클릭 시 패턴 발동
+/// - 발동 후 턴 종료 (연출 시간만큼 대기 후 종료)
+/// </summary>
 public class CardController : MonoBehaviour
 {
     [Header("UI")]
-    [SerializeField] private Button openCardButton;   // "Card"
-    [SerializeField] private GameObject cardGroup;    // 패널
-    [SerializeField] private Image cardImage;         // 카드 이미지
-    [SerializeField] private Button cardImageButton;  // 카드 이미지 위 버튼
+    [SerializeField] private Button cardOpenButton;     // 카드 열기 버튼
+    [SerializeField] private GameObject cardGroup;      // 카드 패널(그룹)
+    [SerializeField] private Image cardImage;           // 카드 아이콘
+    [SerializeField] private Button cardImageButton;    // 카드 사용 버튼(이미지 클릭)
 
-    [Header("Refs")]
+    [Header("Attack")]
     [SerializeField] private AttackController attackController;
 
-    [Header("Resources 폴더")]
-    [SerializeField] private string resourcesFolder = "my_asset";
+    [Header("Resources")]
+    [SerializeField] private string resourcesFolder = "my_asset"; // Resources/my_asset/<CardId>
 
-    private ICardPattern _pattern; // ✅ 누락됐던 필드
+    // 내부 상태
+    private string _currentCardId;    // UI에 표시 중인 카드(덱의 첫 장)
+    private CardSaveData _deckData;   // 현재 세션 덱 데이터(파일에서 로드)
 
-    private void Awake()
+    void Awake()
     {
-        if (openCardButton)    openCardButton.onClick.AddListener(OpenPanel);
-        if (cardImageButton)   cardImageButton.onClick.AddListener(OnCardImageClicked); // ✅ 메서드명 일치
+        // 버튼 리스너 초기화
+        if (cardOpenButton)
+        {
+            cardOpenButton.onClick.RemoveAllListeners();
+            cardOpenButton.onClick.AddListener(OpenCardUI);
+        }
+        if (cardImageButton)
+        {
+            cardImageButton.onClick.RemoveAllListeners();
+            cardImageButton.onClick.AddListener(UseCurrentCard);
+        }
 
+        // 시작 시 패널은 닫아둠
         if (cardGroup) cardGroup.SetActive(false);
     }
 
-    private void OnEnable()
+    void Start()
     {
-        // 인벤토리/DB에서 현재 선택 카드명 가져오기 (예: "Card1")
-        string cardName = (ItemDatabase.Instance != null && ItemDatabase.Instance.collectedItems.Count > 0)
-                            ? ItemDatabase.Instance.collectedItems[0]
-                            : "Card1";
+        var cache = FindObjectOfType<CardStateRuntime>();
+        _deckData = cache != null ? cache.Data : CardSaveStore.Load();
 
-        // 해당 타입의 스크립트 동적 생성하여 ICardPattern 읽기
-        var type = System.Type.GetType(cardName) ?? FindTypeByName(cardName);
-        if (type != null)
+        // 덱이 비었으면 UI/데이터 초기화
+        if (_deckData == null || _deckData.deck == null || _deckData.deck.Count == 0)
         {
-            var go = new GameObject($"_CardProvider_{cardName}");
-            var comp = go.AddComponent(type) as ICardPattern;
-            _pattern = comp;
-
-            // 카드 이미지 세팅
-            if (cardImage && _pattern != null)
-            {
-                var sprite = Resources.Load<Sprite>(_pattern.CardImagePath);
-                cardImage.sprite = sprite;
-                cardImage.preserveAspect = true;
-                cardImage.raycastTarget = true;
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[CardController] 카드 타입을 찾지 못함: {cardName}");
-        }
-    }
-
-    private void OnDisable()
-    {
-        // 임시 생성한 _CardProvider_* 정리
-        var temp = GameObject.Find($"_CardProvider_{_pattern?.GetType().Name}");
-        if (temp) Destroy(temp);
-    }
-
-    private void OpenPanel()
-    {
-        if (cardGroup) cardGroup.SetActive(true);
-    }
-
-    // ✅ 버튼 클릭 시 호출되는 실제 메서드
-    private void OnCardImageClicked()
-    {
-        if (_pattern == null || attackController == null)
-        {
-            Debug.LogError("[CardController] _pattern 또는 attackController가 없음");
+            Debug.Log("[CardController] 덱이 비어있습니다. 카드 UI를 끕니다.");
+            _currentCardId = null;  // ✅ 카드 ID 초기화
+            if (cardOpenButton) cardOpenButton.interactable = false;
+            if (cardGroup) cardGroup.SetActive(false);
+            if (cardImage) cardImage.sprite = null;  // ✅ 이미지 제거
             return;
         }
 
-        // 패턴/타이밍을 사용해서 오른쪽(Enemy) 패널에 표시
-        var timings = _pattern.Timings ?? new float[16];
-        attackController.ShowPattern(_pattern.Pattern16, timings, AttackController.Panel.Enemy);
+        // 첫 장을 현재 카드로 세팅
+        _currentCardId = _deckData.deck[0];
+        RefreshCardIcon();
+    }
 
-        // 턴 종료 예약 (표시 연출이 모두 끝난 뒤)
-        float total = attackController.GetSequenceDuration(timings);
-        TurnManager.Instance.Invoke(nameof(TurnManager.EndPlayerTurn), total);
 
+    // ----- UI 핸들러 -----
+
+    void OpenCardUI()
+    {
+        if (string.IsNullOrEmpty(_currentCardId))
+        {
+            Debug.LogWarning("[CardController] 현재 사용할 수 있는 카드가 없습니다.");
+            return;
+        }
+
+        if (cardGroup) cardGroup.SetActive(true);
+    }
+
+    void CloseCardUI()
+    {
         if (cardGroup) cardGroup.SetActive(false);
     }
 
-    // Type 찾기 보조
-    private static System.Type FindTypeByName(string typeName)
+    // ----- 동작 -----
+
+    void RefreshCardIcon()
+    {
+        if (!cardImage) return;
+
+        // 카드 아이콘 스프라이트 로드 (Resources/my_asset/<CardId>)
+        var sprite = Resources.Load<Sprite>($"{resourcesFolder}/{_currentCardId}");
+        if (!sprite)
+        {
+            Debug.LogWarning($"[CardController] 스프라이트를 찾을 수 없음: Resources/{resourcesFolder}/{_currentCardId}");
+            cardImage.sprite = null;
+            return;
+        }
+        cardImage.sprite = sprite;
+    }
+
+    /// <summary>
+    /// 현재 카드(_currentCardId)를 사용하여 패턴 발동
+    /// </summary>
+    void UseCurrentCard()
+    {
+        if (string.IsNullOrEmpty(_currentCardId))
+        {
+            Debug.LogWarning("[CardController] 사용할 카드가 없습니다.");
+            CloseCardUI();
+            return;
+        }
+        if (attackController == null)
+        {
+            Debug.LogWarning("[CardController] attackController 참조가 없습니다.");
+            CloseCardUI();
+            return;
+        }
+
+        // ICardPattern 구현 타입을 이름으로 찾아 인스턴스화 (예: "Card1")
+        var t = FindTypeByName(_currentCardId);
+        if (t == null)
+        {
+            Debug.LogWarning($"[CardController] 카드 타입을 찾을 수 없음: '{_currentCardId}'");
+            CloseCardUI();
+            return;
+        }
+
+        // 임시 GO에 부착하여 데이터 읽기
+        var go = new GameObject($"_PlayerCard_{_currentCardId}");
+        try
+        {
+            var comp = go.AddComponent(t) as ICardPattern;
+            if (comp == null)
+            {
+                Debug.LogWarning($"[CardController] 타입은 찾았으나 ICardPattern이 아님: '{_currentCardId}'");
+                CloseCardUI();
+                return;
+            }
+
+            // 적 패널(오른쪽)에 표시
+            var timings = comp.Timings ?? new float[16];
+            attackController.ShowPattern(comp.Pattern16, timings, AttackController.Panel.Enemy);
+
+            // 연출 총 시간 후 턴 종료
+            float total = attackController.GetSequenceDuration(timings);
+            Invoke(nameof(EndPlayerTurn), total);
+        }
+        finally
+        {
+            Destroy(go);
+        }
+
+        // 카드 패널 닫기
+        CloseCardUI();
+
+        // 필요 시: 사용한 카드를 덱에서 제거/회전시키고 저장하고 싶다면 여기에 로직 추가 가능
+        // (지금은 단순히 "첫 장을 항상 사용"하는 형태 유지)
+    }
+
+    void EndPlayerTurn()
+    {
+        if (TurnManager.Instance != null)
+            TurnManager.Instance.EndPlayerTurn();
+    }
+
+    // ----- 유틸 -----
+
+    static Type FindTypeByName(string typeName)
     {
         var asm = typeof(CardController).Assembly;
-        foreach (var t in asm.GetTypes())
-            if (t.Name == typeName) return t;
-        return null;
+        return asm.GetTypes().FirstOrDefault(t => t.Name == typeName && typeof(MonoBehaviour).IsAssignableFrom(t));
     }
 }
