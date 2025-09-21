@@ -630,6 +630,7 @@ MonoBehaviour:
   explainImage: {fileID: 1766460462}
   selector: {fileID: 856864524}
   cardSlotPrefab: {fileID: 5341536458310656139}
+  resourcesFolder: my_asset
 --- !u!1 &563271185
 GameObject:
   m_ObjectHideFlags: 0
@@ -3286,6 +3287,7 @@ GameObject:
   - component: {fileID: 1183984326}
   - component: {fileID: 1183984328}
   - component: {fileID: 1183984327}
+  - component: {fileID: 1183984329}
   m_Layer: 5
   m_Name: DeckPanel
   m_TagString: Untagged
@@ -3350,6 +3352,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1183984325}
   m_CullTransparentMesh: 1
+--- !u!114 &1183984329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183984325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 140}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 1
+  m_ConstraintCount: 4
 --- !u!1 &1749681379
 GameObject:
   m_ObjectHideFlags: 0
@@ -3570,6 +3596,7 @@ GameObject:
   - component: {fileID: 1904696921}
   - component: {fileID: 1904696923}
   - component: {fileID: 1904696922}
+  - component: {fileID: 1904696924}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -3634,6 +3661,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1904696920}
   m_CullTransparentMesh: 1
+--- !u!114 &1904696924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904696920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 140}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 1
+  m_ConstraintCount: 4
 --- !u!1001 &5341536458310656137
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3649,6 +3700,10 @@ PrefabInstance:
     - target: {fileID: 3496468367479007433, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4426371405572097045, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_Pivot.x
