@@ -55,6 +55,7 @@ public class MenuController : MonoBehaviour
                     break;
                 case 1: // Card
                     Debug.Log("Card selected");
+                    SceneHistory.PushCurrent();   // ✅ 현재 씬 이름 기록
                     SceneManager.LoadScene("Card");
                     break;
                 case 2: // Option

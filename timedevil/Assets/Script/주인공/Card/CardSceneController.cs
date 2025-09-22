@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class CardSceneController : MonoBehaviour
 {
@@ -41,10 +42,24 @@ public class CardSceneController : MonoBehaviour
         UpdateExplain();
     }
 
-    void Update()
+void Update()
+{
+    HandleInput(); // 원래 있던 입력 처리 (카드 선택, 이동 등)
+
+    if (Input.GetKeyDown(KeyCode.W)) // W 눌렀을 때 이전 씬으로 돌아가기
     {
-        HandleInput();
+        string prev = SceneHistory.PopPrevious();
+        if (!string.IsNullOrEmpty(prev))
+        {
+            SceneManager.LoadScene(prev);
+        }
+        else
+        {
+            Debug.LogWarning("[CardSceneController] 이전 씬 기록이 없습니다.");
+        }
     }
+}
+
 
     // ----------------------------------------------------
 
