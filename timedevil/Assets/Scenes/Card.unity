@@ -3290,6 +3290,7 @@ GameObject:
   - component: {fileID: 1116778333}
   - component: {fileID: 1116778335}
   - component: {fileID: 1116778334}
+  - component: {fileID: 1116778336}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -3354,6 +3355,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1116778332}
   m_CullTransparentMesh: 1
+--- !u!114 &1116778336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1116778332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 140}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 1
+  m_ConstraintCount: 4
 --- !u!1 &1183984325
 GameObject:
   m_ObjectHideFlags: 0
@@ -3465,6 +3490,7 @@ GameObject:
   - component: {fileID: 1278070935}
   - component: {fileID: 1278070937}
   - component: {fileID: 1278070936}
+  - component: {fileID: 1278070938}
   m_Layer: 5
   m_Name: DeckPanel
   m_TagString: Untagged
@@ -3529,6 +3555,30 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1278070934}
   m_CullTransparentMesh: 1
+--- !u!114 &1278070938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1278070934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 140}
+  m_Spacing: {x: 10, y: 10}
+  m_Constraint: 1
+  m_ConstraintCount: 4
 --- !u!1 &1448491258
 GameObject:
   m_ObjectHideFlags: 0
