@@ -13,6 +13,7 @@
 *.log
 ElvGames/
 UI Project/
+ProjectSettings/
 
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
@@ -99,4 +100,5 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
-Main_Project/ProjectSettings/PackageManagerSettings.asset
+timedevil/ProjectSettings/ProjectSettings.asset
+/ProjectSettings.asset
