@@ -1,33 +1,29 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 단순 이전 씬 기록용 헬퍼
+/// - Card 씬 진입 전에 SetLastScene() 호출해서 기록
+/// - Card 씬에서 SceneHistory.LastSceneName으로 돌아가기
+/// </summary>
 public static class SceneHistory
 {
-    private static Stack<string> history = new Stack<string>();
+    /// <summary>마지막으로 들어온 씬 이름</summary>
+    public static string LastSceneName { get; private set; }
 
-    /// <summary>현재 씬을 스택에 기록</summary>
-    public static void PushCurrent()
+    /// <summary>현재 씬 이름 저장</summary>
+    public static void SetLastScene(string sceneName)
     {
-        var current = SceneManager.GetActiveScene().name;
-        if (string.IsNullOrEmpty(current)) return;
-
-        // 같은 씬 연속 기록 방지
-        if (history.Count == 0 || history.Peek() != current)
-            history.Push(current);
+        if (!string.IsNullOrEmpty(sceneName))
+        {
+            LastSceneName = sceneName;
+            Debug.Log($"[SceneHistory] 이전 씬 기록됨: {LastSceneName}");
+        }
     }
 
-    /// <summary>이전 씬 이름 반환 (없으면 null)</summary>
-    public static string PopPrevious()
-    {
-        if (history.Count == 0) return null;
-
-        history.Pop(); // 현재 씬 버리기
-        return (history.Count > 0) ? history.Pop() : null;
-    }
-
+    /// <summary>저장된 씬 기록 초기화</summary>
     public static void Clear()
     {
-        history.Clear();
+        LastSceneName = null;
+        Debug.Log("[SceneHistory] 씬 기록 초기화");
     }
 }
