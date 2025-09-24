@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
 public class CardSceneController : MonoBehaviour
 {
@@ -41,21 +42,53 @@ public class CardSceneController : MonoBehaviour
         UpdateExplain();
     }
 
-    void Update()
-    {
-        HandleInput();
+void Update()
+{
+    HandleInput(); // 원래 있던 입력 처리 (카드 선택, 이동 등)
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
+            {
+                Time.timeScale = 1f; // 혹시 멈춰 있으면 풀기
+                SceneManager.LoadScene(SceneHistory.LastSceneName);
+            }
+            else
+            {
+                Debug.LogWarning("[CardSceneController] 이전 씬 기록이 없습니다.");
+            }
+            return;
+        }
     }
+
 
     // ----------------------------------------------------
 
     void HandleInput()
     {
+        // ✅ W: 직전 씬으로 돌아가기 (Card 씬 공통 단축키)
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
+            {
+                Time.timeScale = 1f; // 메뉴 등에서 0으로 멈춰있을 수 있으니 복구
+                SceneManager.LoadScene(SceneHistory.LastSceneName);
+            }
+            else
+            {
+                Debug.LogWarning("[CardSceneController] 이전 씬 기록이 없습니다.");
+            }
+            return; // W 처리했으면 더 진행 안 함
+        }
+
         var list = inDeck ? deckSlots : cardSlots;
+
         if (list.Count == 0)
         {
             // 선택 가능한 슬롯이 없으면 설명/셀렉터 갱신만
             UpdateSelector();
             UpdateExplain();
+
             // 영역 전환만 허용
             if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
             {
@@ -86,7 +119,7 @@ public class CardSceneController : MonoBehaviour
             if (!inDeck)
                 MoveCard_toDeck_and_RemoveFromCard();
             else
-                MoveCard_toCard_and_RemoveFromDeck(); // (원하면 주석 처리 가능)
+                MoveCard_toCard_and_RemoveFromDeck(); // 필요 없으면 주석 처리
         }
     }
 
