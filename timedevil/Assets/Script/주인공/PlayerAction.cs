@@ -33,9 +33,12 @@ public class NewBehaviourScript : MonoBehaviour
     // 매 프레임 호출
     void Update()
     {
+        // DialogueManager가 없으면 에러가 날 수 있으므로, instance가 null이 아닐 때만 isDialogueActive를 확인
+        bool isTalking = (DialogueManager.instance != null) && DialogueManager.instance.isDialogueActive;
+
         // 입력 (액션 중에는 입력 무시)
-        h = manager.isAction ? 0 : Input.GetAxisRaw("Horizontal"); // 수평
-        v = manager.isAction ? 0 : Input.GetAxisRaw("Vertical");   // 수직
+        h = (manager.isAction || isTalking) ? 0 : Input.GetAxisRaw("Horizontal"); // 수평
+        v = (manager.isAction || isTalking) ? 0 : Input.GetAxisRaw("Vertical");   // 수직
 
         bool hDown = manager.isAction ? false : Input.GetButtonDown("Horizontal");
         bool vDown = manager.isAction ? false : Input.GetButtonDown("Vertical");
@@ -90,22 +93,58 @@ public class NewBehaviourScript : MonoBehaviour
         }
 
         // 상호작용
-        if (Input.GetKeyDown(KeyCode.E))
+        //if (Input.GetKeyDown(KeyCode.E))
+        //{
+        //    if (scanObject != null && scanObject.layer == LayerMask.NameToLayer("teleport"))
+        //    {
+        //        if (Next_Scene != null)
+        //            Next_Scene.LoadBattleScene(scanObject);
+        //    }
+        //    else if (scanObject != null && scanObject.layer == LayerMask.NameToLayer("item_get"))
+        //    {
+        //        if (manager != null)
+        //            get_manager.Action(scanObject);
+        //    }
+        //    else
+        //    {
+        //        if (manager != null)
+        //            manager.Action(scanObject);
+        //    }
+        //}
+        // 상호작용
+        if (Input.GetKeyDown(KeyCode.E) && scanObject != null) // scanObject가 null일 때를 대비
         {
-            if (scanObject != null && scanObject.layer == LayerMask.NameToLayer("teleport"))
+            // 대화가 진행 중이면 다른 상호작용을 막음
+            if (DialogueManager.instance != null && DialogueManager.instance.isDialogueActive)
             {
-                if (Next_Scene != null)
-                    Next_Scene.LoadBattleScene(scanObject);
+                return; // 함수를 여기서 종료
             }
-            else if (scanObject != null && scanObject.layer == LayerMask.NameToLayer("item_get"))
+
+            // scanObject에서 ObjectInteraction 컴포넌트를 가져옵니다.
+            ObjectInteraction objInteraction = scanObject.GetComponent<ObjectInteraction>();
+
+            if (objInteraction != null) // ObjectInteraction 스크립트가 있다면,
             {
-                if (manager != null)
-                    get_manager.Action(scanObject);
+                // Interact() 함수를 호출하여 대화를 시작합니다.
+                objInteraction.Interact();
             }
-            else
+            else // 기존 로직
             {
-                if (manager != null)
-                    manager.Action(scanObject);
+                if (scanObject.layer == LayerMask.NameToLayer("teleport"))
+                {
+                    if (Next_Scene != null)
+                        Next_Scene.LoadBattleScene(scanObject);
+                }
+                else if (scanObject.layer == LayerMask.NameToLayer("item_get"))
+                {
+                    if (get_manager != null)
+                        get_manager.Action(scanObject);
+                }
+                else
+                {
+                    if (manager != null)
+                        manager.Action(scanObject);
+                }
             }
         }
     }
