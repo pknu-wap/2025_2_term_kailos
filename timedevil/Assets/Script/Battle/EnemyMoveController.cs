@@ -42,7 +42,37 @@ public class EnemyMoveController : MonoBehaviour
         // 후보 방향
         Vector2Int[] dirs = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
-        
+        // 경계 안에 들어오는 타깃들만 필터
+        var candidates = dirs
+            .Select(d => cur + d)
+            .Where(g => IsInside(g))
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            // 이동 불가
+            yield break;
+        }
+
+        // 랜덤 타깃
+        Vector2Int target = candidates[Random.Range(0, candidates.Count)];
+
+        // 월드 좌표 목적지
+        Vector3 start = enemyStone.position;
+        Vector3 end = GridToWorld(target);
+        end.z = zOverride; // Z 고정
+
+        // 애니메이션
+        float t = 0f;
+        while (t < moveDuration)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / moveDuration);
+            float eased = moveCurve.Evaluate(k);
+            enemyStone.position = Vector3.LerpUnclamped(start, end, eased);
+            yield return null;
+        }
+        enemyStone.position = end;
     }
 
     // ----------------- helpers -----------------
