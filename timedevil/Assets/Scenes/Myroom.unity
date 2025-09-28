@@ -3831,8 +3831,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90a50729aa10d174c96bea82d3c63668, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveOnDisable: 1
-  saveOnQuit: 1
+  saveOnDisable: 0
+  saveOnQuit: 0
 --- !u!1 &1116344484
 GameObject:
   m_ObjectHideFlags: 0
