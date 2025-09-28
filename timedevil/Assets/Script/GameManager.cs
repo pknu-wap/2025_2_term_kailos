@@ -23,10 +23,6 @@ public class GameManager : MonoBehaviour
         {
             isAction = true;
             scanObject = scanObj;
-            talkText.text = "this name is " + scanObject.name + " unamsay\n";
         }
-
-        talkPanel.SetActive(isAction);
     }
-
 }
