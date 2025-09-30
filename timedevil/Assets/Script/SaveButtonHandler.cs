@@ -5,12 +5,12 @@ public class SaveButtonHandler : MonoBehaviour
     public void OnClickSave()
     {
         if (CardStateRuntime.Instance != null)
-        {
             CardStateRuntime.Instance.SaveNow();
-        }
-        else
-        {
-            Debug.LogWarning("[SaveButtonHandler] CardStateRuntime.Instance °¡ ¾øÀ½");
-        }
+    }
+
+    public void OnClickToggleTalk(GameObject target)
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.Action(target);
     }
 }
