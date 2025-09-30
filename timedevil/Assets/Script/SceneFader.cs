@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using System;
 
 public class SceneFader : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class SceneFader : MonoBehaviour
 
     [Tooltip("페이드 인/아웃 속도")]
     public float fadeDuration = 1f;
+
+    // 페이드인이 완료되었을 때 다른 스크립트에게 알려주는 신호(이벤트)
+    public static event Action OnFadeInComplete;
 
     private void Awake()
     {
@@ -47,7 +51,7 @@ public class SceneFader : MonoBehaviour
     }
 
     // 실제 페이드 효과를 주는 코루틴
-    private IEnumerator Fade(float targetAlpha)
+    public IEnumerator Fade(float targetAlpha)
     {
         float currentTime = 0f;
         float startAlpha = fadeCanvasGroup.alpha;
@@ -70,6 +74,8 @@ public class SceneFader : MonoBehaviour
         if (targetAlpha == 0f)
         {
             fadeCanvasGroup.blocksRaycasts = false;
+            // 페이드인이 끝났다고 신호를 보냄
+            OnFadeInComplete?.Invoke();
         }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
 
-public class NewBehaviourScript : MonoBehaviour
+public class PlayerAction : MonoBehaviour
 {
     // ===== Public =====
     public float Speed;
@@ -120,32 +120,26 @@ public class NewBehaviourScript : MonoBehaviour
                 return; // 함수를 여기서 종료
             }
 
-            // scanObject에서 ObjectInteraction 컴포넌트를 가져옵니다.
-            ObjectInteraction objInteraction = scanObject.GetComponent<ObjectInteraction>();
+            // ▼▼▼ 핵심 변경 부분 ▼▼▼
 
-            if (objInteraction != null) // ObjectInteraction 스크립트가 있다면,
+            // scanObject에서 'IInteractable'이라는 규격을 가진 부품을 찾음
+            IInteractable interactable = scanObject.GetComponent<IInteractable>();
+
+            if (interactable != null) // 'IInteractable' 규격을 만족하는 스크립트가 있다면,
             {
-                // Interact() 함수를 호출하여 대화를 시작합니다.
-                objInteraction.Interact();
+                // 상대방이 침대든, 일반 대화든 상관없이 그냥 Interact() 버튼을 누름
+                interactable.Interact();
             }
-            else // 기존 로직
+            else // 상호작용이 불가능한 특별한 오브젝트라면 (예: 텔레포트)
             {
                 if (scanObject.layer == LayerMask.NameToLayer("teleport"))
                 {
                     if (Next_Scene != null)
                         Next_Scene.LoadBattleScene(scanObject);
                 }
-                else if (scanObject.layer == LayerMask.NameToLayer("item_get"))
-                {
-                    if (get_manager != null)
-                        get_manager.Action(scanObject);
-                }
-                else
-                {
-                    if (manager != null)
-                        manager.Action(scanObject);
-                }
+                // ... 기타 다른 로직
             }
+            // ▲▲▲ 핵심 변경 부분 ▲▲▲
         }
     }
 
