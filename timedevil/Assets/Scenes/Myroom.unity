@@ -496,6 +496,10 @@ MonoBehaviour:
     - characterName: "\uAE40\uC774\uB984"
       text: "\uB0B4 \uC774\uB984\uC740 \uAE40\uC774\uB984"
       characterPortrait: {fileID: 0}
+  overrideCardId: 
+  disableAfterPickup: 1
+  destroyAfterPickup: 0
+  pickupSfx: {fileID: 0}
 --- !u!1 &80516371
 GameObject:
   m_ObjectHideFlags: 0
@@ -717,9 +721,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 890267958}
-        m_TargetAssemblyTypeName: CardStateRuntime, Assembly-CSharp
-        m_MethodName: SaveNow
+      - m_Target: {fileID: 890267959}
+        m_TargetAssemblyTypeName: SaveButtonHandler, Assembly-CSharp
+        m_MethodName: OnClickSave
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2703,6 +2707,7 @@ GameObject:
   - component: {fileID: 890267957}
   - component: {fileID: 890267956}
   - component: {fileID: 890267958}
+  - component: {fileID: 890267959}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2755,6 +2760,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   saveOnDisable: 0
   saveOnQuit: 0
+--- !u!114 &890267959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890267955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5884cc1da40b16c4eb15b0887802235b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &983927780
 GameObject:
   m_ObjectHideFlags: 0
