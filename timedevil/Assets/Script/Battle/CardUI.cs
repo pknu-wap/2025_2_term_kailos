@@ -3,24 +3,21 @@ using UnityEngine.UI;
 
 public class CardUI : MonoBehaviour
 {
-    [HideInInspector] public int handIndex;              // BattleHandUI�� ����
-    [HideInInspector] public string cardId;              // �����ִ� ī��ID
-    public Image image;                                  // ī�� ���� ������/UI �̹���
+    [SerializeField] private Image image;
 
-    System.Action<int> onClick;                          // BattleHandUI�� ���
+    private BattleHandUI owner;
+    private int index;
 
-    public void Setup(int index, string id, Sprite sprite, System.Action<int> click)
+    public void Init(BattleHandUI owner, int index, Sprite sprite)
     {
-        handIndex = index;
-        cardId = id;
+        this.owner = owner;
+        this.index = index;
         if (image) image.sprite = sprite;
-        onClick = click;
     }
 
+    // Button OnClick 에 연결
     public void OnClick()
     {
-        onClick?.Invoke(handIndex);
-        Debug.Log($"카드 클릭됨: {cardId}");
-    // BattleDeckRuntime.Instance.UseCardToBottom(index); 이런 동작을 여기서 호출 가능
+        owner?.OnClickCard(index);
     }
 }

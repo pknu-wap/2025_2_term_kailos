@@ -1,87 +1,150 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class BattleHandUI : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] RectTransform cardGroup;       // ¼ÕÆĞ¸¦ ±ò¾ÆµÑ ºÎ¸ğ(=card_group)
-    [SerializeField] GameObject cardUIPrefab;       // CardUI ÇÁ¸®ÆÕ (Image + Button)
-    [SerializeField] string resourcesFolder = "my_asset";  // Resources/my_asset/<CardId>.png
+    [SerializeField] private RectTransform cardGroup;   // ì¹´ë“œê°€ ë°°ì¹˜ë  ë¶€ëª¨(= card_group)
+    [SerializeField] private GameObject cardUiPrefab;   // CardUI í”„ë¦¬íŒ¹ (Image+Button+CardUI)
+    [SerializeField] private string resourcesFolder = "my_asset";
+    [SerializeField] private AttackController attackController;
 
     [Header("Layout")]
-    [SerializeField] float cardWidth = 120f;        // Ä«µå 1ÀåÀÇ °¡·Î Æø(´ëÃæ)
-    [SerializeField] float maxSpacing = 140f;       // ¼ÕÆĞ°¡ ÀûÀ» ¶§ Ä«µå °£°İ
-    [SerializeField] float minSpacing = 40f;        // ¼ÕÆĞ°¡ ¸¹À» ¶§ ÃÖ¼Ò °£°İ(°ãÄ§ À¯µµ)
-    [SerializeField] float horizontalPadding = 40f; // ÁÂ¿ì ¿©¹é
+    [SerializeField] private float cardWidth = 120f;
+    [SerializeField] private float maxSpacing = 140f;   // ì†íŒ¨ê°€ ì ì„ ë•Œ ê°„ê²©
+    [SerializeField] private float minSpacing = 40f;    // ì†íŒ¨ê°€ ë§ì„ ë•Œ ê²¹ì¹˜ê¸° ê°„ê²©
+    [SerializeField] private float horizontalPadding = 40f;
 
+    // ë‚´ë¶€
     readonly List<CardUI> spawned = new();
+    bool usedThisTurn = false;   // í•œ í„´ 1íšŒ ì‚¬ìš© ì œí•œ
 
-    void OnEnable()
+    void Start()
     {
-        Refresh();  // ¿­¸± ¶§ °»½Å
+        // ì²« í™”ë©´: BattleDeckRuntime ê°€ Start()ì—ì„œ ì´ˆê¸° ë“œë¡œìš°ë¥¼ ëëƒ„
+        Refresh();
     }
 
+    // TurnManagerì—ì„œ í”Œë ˆì´ì–´ í„´ ì‹œì‘ ì‹œ í˜¸ì¶œí•´ ì£¼ì„¸ìš”
+    public void OnPlayerTurnStart()
+    {
+        usedThisTurn = false;
+        BattleDeckRuntime.Instance?.DrawOneIfNeeded();
+        Refresh();
+    }
+
+    // ì†íŒ¨ í‘œì‹œ ë‹¤ì‹œ ë§Œë“¤ê¸°
     public void Refresh()
     {
-        // ±âÁ¸ UI Á¤¸®
-        for (int i = 0; i < spawned.Count; i++)
-            if (spawned[i]) Destroy(spawned[i].gameObject);
+        if (cardGroup == null || cardUiPrefab == null) return;
+
+        // ê¸°ì¡´ ì œê±°
+        foreach (var c in spawned) if (c) Destroy(c.gameObject);
         spawned.Clear();
 
-        var bd = BattleDeckRuntime.Instance;
-        if (bd == null || cardGroup == null || cardUIPrefab == null) return;
+        var deck = BattleDeckRuntime.Instance;
+        if (deck == null || deck.hand.Count == 0) return;
 
-        List<string> hand = bd.hand;
-        int n = hand.Count;
-        if (n == 0) return;
+        int n = deck.hand.Count;
 
-        // ·¹ÀÌ¾Æ¿ô °è»ê
-        float groupWidth = cardGroup.rect.width - horizontalPadding * 2f;
-        // ¼ÕÆĞ°¡ ÀûÀ¸¸é ³Ğ°Ô, ¸¹À¸¸é °£°İÀ» ÁÙ¿© °ãÄ¡°Ô
-        float spacing;
-        if (n <= 1) spacing = 0f;
-        else
-        {
-            // groupWidth ¾È¿¡ "Ã¹ Ä«µå left ~ ¸¶Áö¸· Ä«µå right"°¡ µé¾î¿À°Ô
-            // spacingÀ» °è»ê (spacing < cardWidth¸é ½Ã°¢ÀûÀ¸·Î °ãÄ§)
-            float ideal = Mathf.Min(maxSpacing, Mathf.Max(minSpacing, (groupWidth - cardWidth) / (n - 1)));
-            spacing = ideal;
-        }
+        // ê°€ë³€ ê°„ê²© ê³„ì‚°
+        float width = cardGroup.rect.width - horizontalPadding * 2f;
+        float spacing = Mathf.Clamp(width / Mathf.Max(1, n - 1), minSpacing, maxSpacing);
 
-        // Áß¾Ó Á¤·Ä: ÀüÃ¼ Æø = cardWidth + spacing*(n-1)
-        float totalSpan = cardWidth + spacing * (n - 1);
-        float startX = -totalSpan * 0.5f;
+        // ì¢Œì¸¡ ê¸°ì¤€ x ì‹œì‘ì 
+        float startX = -0.5f * (spacing * (n - 1));
 
         for (int i = 0; i < n; i++)
         {
-            string id = hand[i];
-            var go = Instantiate(cardUIPrefab, cardGroup);
+            string id = deck.hand[i];
+
+            var go = Instantiate(cardUiPrefab, cardGroup);
             var ui = go.GetComponent<CardUI>();
-            if (!ui) ui = go.AddComponent<CardUI>();
+            if (ui == null) ui = go.AddComponent<CardUI>();
 
-            var sprite = Resources.Load<Sprite>($"{resourcesFolder}/{id}");
-            ui.Setup(i, id, sprite, OnClickCard);
+            var sp = Resources.Load<Sprite>($"{resourcesFolder}/{id}");
+            ui.Init(this, i, sp);
 
-            // À§Ä¡ ¹èÄ¡ (·ÎÄÃ ÁÂÇ¥ ±âÁØ ¼öÆò ³ª¿­, ÇÊ¿äÇÑ °æ¿ì PivotÀÌ CenterÀÎ ÇÁ¸®ÆÕ ±ÇÀå)
-            var rt = (RectTransform)go.transform;
-            rt.anchoredPosition = new Vector2(startX + i * spacing, 0f);
-            rt.localScale = Vector3.one;
+            // ìœ„ì¹˜ (ìˆ˜í‰ ë°°ì—´)
+            var rt = go.transform as RectTransform;
+            rt.anchoredPosition = new Vector2(startX + spacing * i, 0f);
+            rt.sizeDelta = new Vector2(cardWidth, rt.sizeDelta.y);
 
             spawned.Add(ui);
         }
     }
 
-    void OnClickCard(int handIndex)
+    // ì¹´ë“œ í´ë¦­ ì½œë°± (CardUI â†’ ì—¬ê¸°ë¡œ)
+    public void OnClickCard(int handIndex)
     {
-        // Ä«µå »ç¿ë ¡æ µ¦ ¸Ç ¹ØÀ¸·Î
-        var bd = BattleDeckRuntime.Instance;
-        if (bd != null && bd.UseCardToBottom(handIndex))
+        // í„´/ì œí•œ ì²´í¬
+        if (TurnManager.Instance == null || TurnManager.Instance.currentTurn != TurnState.PlayerTurn)
         {
-            Refresh(); // ¼ÕÆĞ °»½Å
-            // ÇÑ ÅÏ 1Àå Á¦ÇÑ: ¹Ù·Î ÅÏ Á¾·á
-            if (TurnManager.Instance != null)
-                TurnManager.Instance.EndPlayerTurn();
+            Debug.Log("[BattleHandUI] ì§€ê¸ˆì€ í”Œë ˆì´ì–´ í„´ì´ ì•„ë‹˜");
+            return;
         }
+        if (usedThisTurn)
+        {
+            Debug.Log("[BattleHandUI] ì´ë²ˆ í„´ì—ëŠ” ì´ë¯¸ ì¹´ë“œë¥¼ ì‚¬ìš©í•¨");
+            return;
+        }
+
+        var deck = BattleDeckRuntime.Instance;
+        if (deck == null) return;
+        if (handIndex < 0 || handIndex >= deck.hand.Count) return;
+
+        string id = deck.hand[handIndex];
+
+        // CardX.cs íƒ€ì…ì„ ì°¾ì•„ì„œ íŒ¨í„´ êº¼ë‚´ê¸°
+        var t = FindTypeByName(id);
+        if (t == null)
+        {
+            Debug.LogWarning($"[BattleHandUI] ì¹´ë“œ íƒ€ì…ì„ ëª» ì°¾ìŒ: {id}");
+            return;
+        }
+
+        StartCoroutine(Co_UseCardAndAttack(handIndex, t));
+    }
+
+    IEnumerator Co_UseCardAndAttack(int handIndex, Type cardType)
+    {
+        usedThisTurn = true;
+
+        // ì„ì‹œ ì˜¤ë¸Œì íŠ¸ë¡œ ICardPattern ì½ê¸°
+        var go = new GameObject($"_PlayerCard_{cardType.Name}");
+        float total = 0f;
+
+        try
+        {
+            var comp = go.AddComponent(cardType) as ICardPattern;
+            if (comp == null) yield break;
+
+            var timings = comp.Timings ?? new float[16];
+
+            // ì  ë³´ë“œì— ê³µê²© ì—°ì¶œ
+            attackController.ShowPattern(comp.Pattern16, timings, AttackController.Panel.Enemy);
+            total = attackController.GetSequenceDuration(timings);
+        }
+        finally
+        {
+            Destroy(go);
+        }
+
+        // ì¹´ë“œ ì‚¬ìš© â†’ ë± ë§¨ë°‘ìœ¼ë¡œ
+        BattleDeckRuntime.Instance.UseCardToBottom(handIndex);
+        Refresh(); // ì†íŒ¨ ì¦‰ì‹œ ë°˜ì˜
+
+        // ì—°ì¶œ ëë‚  ë•Œê¹Œì§€ ê¸°ë‹¤ë¦¬ê³  í„´ ì¢…ë£Œ
+        if (total > 0f) yield return new WaitForSeconds(total);
+        TurnManager.Instance.EndPlayerTurn();
+    }
+
+    static Type FindTypeByName(string typeName)
+    {
+        var asm = typeof(BattleHandUI).Assembly;
+        return asm.GetTypes().FirstOrDefault(t => t.Name == typeName && typeof(MonoBehaviour).IsAssignableFrom(t));
     }
 }

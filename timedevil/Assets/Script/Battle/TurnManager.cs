@@ -18,6 +18,8 @@ public class TurnManager : MonoBehaviour
 
     [Header("Enemy Controller")]
     [SerializeField] private EnemyController enemyController;
+    [SerializeField] private BattleHandUI handUI;
+
 
     [Header("Delays")]
     [Tooltip("적 턴 시작 시 잠깐의 '고민시간' (초)")]
@@ -44,15 +46,12 @@ public class TurnManager : MonoBehaviour
         currentTurn = TurnState.PlayerTurn;
         SetButtons(true);
 
-        // 손패 보충 규칙: 3장 미만이면 1장 드로우
-        var bd = BattleDeckRuntime.Instance;
-        if (bd != null) bd.DrawOneIfNeeded();
-
-        // 손패 UI 갱신
-        if (handUI) handUI.Refresh();
+        // 손패 갱신 책임은 BattleHandUI 쪽으로 넘김
+        if (handUI) handUI.OnPlayerTurnStart();
 
         Debug.Log("🔷 플레이어 턴 시작");
     }
+
 
     /// <summary>
     /// 외부에서 호출: 이 턴의 카드 사용권을 소모(한 턴 1장 제한)
