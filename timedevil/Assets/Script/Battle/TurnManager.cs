@@ -7,7 +7,6 @@ public enum TurnState { PlayerTurn, EnemyTurn }
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance;
-    public BattleHandUI handUI;
     public TurnState currentTurn;
 
     [Header("UI Buttons (플레이어 턴 활성/비활성)")]

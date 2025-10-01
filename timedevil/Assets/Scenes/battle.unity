@@ -4465,13 +4465,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddd3871dfa80b314db00cb8987246cac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handUI: {fileID: 1004298718}
   currentTurn: 0
   cardBtn: {fileID: 330041200}
   moveBtn: {fileID: 1896065542}
   itemBtn: {fileID: 90887675}
   runBtn: {fileID: 381067379}
   enemyController: {fileID: 51068151}
+  handUI: {fileID: 1004298718}
   enemyThinkDelay: 0.1
 --- !u!114 &726002408
 MonoBehaviour:
@@ -4489,7 +4489,7 @@ MonoBehaviour:
   cardGroup: {fileID: 1004298714}
   cardImage: {fileID: 0}
   cardImageButton: {fileID: 0}
-  attackController: {fileID: 1535859928}
+  attackController: {fileID: 0}
   resourcesFolder: my_asset
 --- !u!114 &726002409
 MonoBehaviour:
@@ -4552,8 +4552,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 535d63962e538ee44bda1cd2a532a663, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handIndex: 0
-  cardId: 
   image: {fileID: 7763240557767218279}
 --- !u!114 &726002413
 MonoBehaviour:
@@ -5255,8 +5253,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardGroup: {fileID: 1004298715}
-  cardUIPrefab: {fileID: 7763240557767218278}
+  cardUiPrefab: {fileID: 7763240557767218278}
   resourcesFolder: my_asset
+  attackController: {fileID: 0}
   cardWidth: 120
   maxSpacing: 140
   minSpacing: 40
@@ -7982,7 +7981,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f505f51f8609904a9638495f319e0e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackController: {fileID: 1535859928}
+  attackController: {fileID: 0}
   enemyTypeName: Enemy1
 --- !u!4 &1695260126
 Transform:
