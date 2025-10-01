@@ -3,11 +3,11 @@ using UnityEngine.UI;
 
 public class CardUI : MonoBehaviour
 {
-    [HideInInspector] public int handIndex;              // BattleHandUI°¡ ¼¼ÆÃ
-    [HideInInspector] public string cardId;              // º¸¿©ÁÖ´Â Ä«µåID
-    public Image image;                                  // Ä«µå ÀÛÀº ¾ÆÀÌÄÜ/UI ÀÌ¹ÌÁö
+    [HideInInspector] public int handIndex;              // BattleHandUIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [HideInInspector] public string cardId;              // ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ Ä«ï¿½ï¿½ID
+    public Image image;                                  // Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/UI ï¿½Ì¹ï¿½ï¿½ï¿½
 
-    System.Action<int> onClick;                          // BattleHandUI°¡ µî·Ï
+    System.Action<int> onClick;                          // BattleHandUIï¿½ï¿½ ï¿½ï¿½ï¿½
 
     public void Setup(int index, string id, Sprite sprite, System.Action<int> click)
     {
@@ -20,5 +20,7 @@ public class CardUI : MonoBehaviour
     public void OnClick()
     {
         onClick?.Invoke(handIndex);
+        Debug.Log($"ì¹´ë“œ í´ë¦­ë¨: {cardId}");
+    // BattleDeckRuntime.Instance.UseCardToBottom(index); ì´ëŸ° ë™ì‘ì„ ì—¬ê¸°ì„œ í˜¸ì¶œ ê°€ëŠ¥
     }
 }

@@ -4403,11 +4403,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 726002405}
+  - component: {fileID: 726002413}
   - component: {fileID: 726002406}
   - component: {fileID: 726002407}
   - component: {fileID: 726002408}
   - component: {fileID: 726002409}
   - component: {fileID: 726002410}
+  - component: {fileID: 726002412}
   - component: {fileID: 726002411}
   m_Layer: 0
   m_Name: BattleManager
@@ -4538,6 +4540,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialHandSize: 3
   maxHandSize: 3
+--- !u!114 &726002412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726002403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 535d63962e538ee44bda1cd2a532a663, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  handIndex: 0
+  cardId: 
+  image: {fileID: 7763240557767218279}
+--- !u!114 &726002413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726002403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90a50729aa10d174c96bea82d3c63668, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  saveOnDisable: 0
+  saveOnQuit: 0
 --- !u!1 &730729535
 GameObject:
   m_ObjectHideFlags: 0
@@ -9374,6 +9405,22 @@ PrefabInstance:
     - target: {fileID: 2174678085802134086, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
       propertyPath: m_Name
       value: hand
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204361607251701597, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 726002412}
+    - target: {fileID: 3204361607251701597, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnClick
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204361607251701597, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: CardUI, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204361607251701597, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 8805244710254691775, guid: 254cbcb21fa35734992d1a94814e6688, type: 3}
       propertyPath: m_Pivot.x
