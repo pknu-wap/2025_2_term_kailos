@@ -4535,7 +4535,7 @@ MonoBehaviour:
   minGrid: {x: 0, y: 0}
   maxGrid: {x: 3, y: 3}
   tileSize: 1
-  totalDuration: 0.6
+  totalDuration: 0.3
   holdAtEdge: 0.05
   lockInputDuringEvade: 1
 --- !u!114 &726002411
