@@ -4,16 +4,24 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 카드/덱 화면에서 슬롯 그려주고 선택/이동 처리.
+/// - Card 패널: 보유(owned) 중 덱에 없는 카드들
+/// - Deck 패널: 덱 목록 그대로
+/// - E키: 현재 영역에서 반대 영역으로 한 장 이동
+/// - 덱은 중복 불가 + 최대 13장 제한
+/// - W키: 이전 씬으로 복귀 (SceneHistory.LastSceneName 사용)
+/// </summary>
 public class CardSceneController : MonoBehaviour
 {
     [Header("UI Panels")]
-    [SerializeField] private Transform cardPanel;   // 보유 카드 영역
-    [SerializeField] private Transform deckPanel;   // 덱 영역
-    [SerializeField] private Image explainImage;    // 설명(큰 미리보기)
-    [SerializeField] private RectTransform selector;// 주황 선택 박스
+    [SerializeField] private Transform cardPanel;    // 보유 카드 영역
+    [SerializeField] private Transform deckPanel;    // 덱 영역
+    [SerializeField] private Image explainImage;     // 확대 미리보기
+    [SerializeField] private RectTransform selector; // 주황 박스
 
     [Header("Prefab & Resources")]
-    [SerializeField] private GameObject cardSlotPrefab;  // Image 하나만 있는 프리팹
+    [SerializeField] private GameObject cardSlotPrefab;        // Image 하나 들어있는 프리팹
     [SerializeField] private string resourcesFolder = "my_asset"; // Resources/my_asset/<CardId>
 
     // 내부 상태
@@ -28,13 +36,13 @@ public class CardSceneController : MonoBehaviour
         var data = runtime != null ? runtime.Data : new CardSaveData();
 
         var owned = data.owned ?? new List<string>();
-        var deck  = data.deck  ?? new List<string>();
+        var deck = data.deck ?? new List<string>();
 
-        // 1) Card 패널: "보유 - 덱" 차집합만 표시 (이미 덱에 있는 카드는 제외)
+        // Card 패널: owned - deck
         foreach (var id in owned.Where(id => !deck.Contains(id)))
             AddSlotToPanel(cardPanel, cardSlots, id);
 
-        // 2) Deck 패널: 덱 목록 그대로 표시
+        // Deck 패널: deck 그대로
         foreach (var id in deck)
             AddSlotToPanel(deckPanel, deckSlots, id);
 
@@ -42,54 +50,36 @@ public class CardSceneController : MonoBehaviour
         UpdateExplain();
     }
 
-void Update()
-{
-    HandleInput(); // 원래 있던 입력 처리 (카드 선택, 이동 등)
-
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
-            {
-                Time.timeScale = 1f; // 혹시 멈춰 있으면 풀기
-                SceneManager.LoadScene(SceneHistory.LastSceneName);
-            }
-            else
-            {
-                Debug.LogWarning("[CardSceneController] 이전 씬 기록이 없습니다.");
-            }
-            return;
-        }
+    void Update()
+    {
+        HandleInput();
     }
-
 
     // ----------------------------------------------------
 
     void HandleInput()
     {
-        // ✅ W: 직전 씬으로 돌아가기 (Card 씬 공통 단축키)
+        // W: 이전 씬으로 복귀
         if (Input.GetKeyDown(KeyCode.W))
         {
             if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
             {
-                Time.timeScale = 1f; // 메뉴 등에서 0으로 멈춰있을 수 있으니 복구
+                Time.timeScale = 1f;
                 SceneManager.LoadScene(SceneHistory.LastSceneName);
             }
             else
             {
-                Debug.LogWarning("[CardSceneController] 이전 씬 기록이 없습니다.");
+                Debug.LogWarning("[CardScene] 이전 씬 기록이 없습니다.");
             }
-            return; // W 처리했으면 더 진행 안 함
+            return;
         }
 
         var list = inDeck ? deckSlots : cardSlots;
 
         if (list.Count == 0)
         {
-            // 선택 가능한 슬롯이 없으면 설명/셀렉터 갱신만
             UpdateSelector();
             UpdateExplain();
-
-            // 영역 전환만 허용
             if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
             {
                 inDeck = !inDeck;
@@ -116,14 +106,14 @@ void Update()
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
-            if (!inDeck)
-                MoveCard_toDeck_and_RemoveFromCard();
-            else
-                MoveCard_toCard_and_RemoveFromDeck(); // 필요 없으면 주석 처리
+            if (!inDeck) MoveCard_toDeck_and_RemoveFromCard();
+            else MoveCard_toCard_and_RemoveFromDeck();
         }
     }
 
-    // Card → Deck 이동 + Card에서 제거 (요구사항 1번 해결)
+    // ----- 이동 로직 -----
+
+    // Card → Deck (중복 불가 + 13장 제한)
     void MoveCard_toDeck_and_RemoveFromCard()
     {
         if (cardSlots.Count == 0) return;
@@ -132,29 +122,32 @@ void Update()
         var id = slot.cardId;
         if (string.IsNullOrEmpty(id)) return;
 
-        // 덱 데이터 갱신(중복 방지)
-        var data = CardStateRuntime.Instance.Data;
-        data.deck ??= new List<string>();
-        if (!data.deck.Contains(id))
-        {
-            data.deck.Add(id);
+        var rt = CardStateRuntime.Instance;
+        if (rt == null) { Debug.LogWarning("[CardScene] CardStateRuntime 없음"); return; }
 
-            // 덱 UI에 추가
-            AddSlotToPanel(deckPanel, deckSlots, id);
+        if (!rt.TryAddToDeck(id))
+        {
+            if (rt.DeckContains(id))
+                Debug.LogWarning("[CardScene] 이미 덱에 있는 카드입니다.");
+            else if (rt.DeckCount >= CardStateRuntime.MAX_DECK)
+                Debug.LogWarning($"[CardScene] 덱이 가득 찼습니다. (최대 {CardStateRuntime.MAX_DECK}장)");
+            return;
         }
 
-        // ✅ Card 패널에서 제거(슬롯 파괴 + 리스트 제거)
+        // 덱 UI에 추가
+        AddSlotToPanel(deckPanel, deckSlots, id);
+
+        // 카드 패널에서 제거
         var removedGO = slot.gameObject;
         cardSlots.RemoveAt(currentIndex);
         Destroy(removedGO);
 
-        // 선택 인덱스 보정
         currentIndex = Mathf.Clamp(currentIndex, 0, Mathf.Max(0, cardSlots.Count - 1));
-
-        UpdateSelector(); UpdateExplain();
+        UpdateSelector();
+        UpdateExplain();
     }
 
-    // (옵션) Deck → Card 이동 + Deck에서 제거
+    // Deck → Card (되돌리기)
     void MoveCard_toCard_and_RemoveFromDeck()
     {
         if (deckSlots.Count == 0) return;
@@ -163,24 +156,21 @@ void Update()
         var id = slot.cardId;
         if (string.IsNullOrEmpty(id)) return;
 
-        // 덱 데이터 갱신
-        var data = CardStateRuntime.Instance.Data;
-        if (data.deck != null) data.deck.Remove(id);
+        var rt = CardStateRuntime.Instance;
+        if (rt != null) rt.RemoveFromDeck(id);
 
-        // 카드 UI에 추가 (보유 목록에 있다면 단순 표시; 없으면 표시만 해도 무방)
         AddSlotToPanel(cardPanel, cardSlots, id);
 
-        // ✅ Deck 패널에서 제거
         var removedGO = slot.gameObject;
         deckSlots.RemoveAt(currentIndex);
         Destroy(removedGO);
 
         currentIndex = Mathf.Clamp(currentIndex, 0, Mathf.Max(0, deckSlots.Count - 1));
-
-        UpdateSelector(); UpdateExplain();
+        UpdateSelector();
+        UpdateExplain();
     }
 
-    // ----------------------------------------------------
+    // ----- 슬롯/UI -----
 
     void AddSlotToPanel(Transform parent, List<CardSlot> list, string cardId)
     {
@@ -197,26 +187,20 @@ void Update()
     void UpdateSelector()
     {
         var list = inDeck ? deckSlots : cardSlots;
-        if (list.Count == 0)
-        {
-            // 슬롯이 없으면 셀렉터를 잠깐 숨기는 것도 방법 (원하면 selector.gameObject.SetActive(false);)
-            return;
-        }
+        if (list.Count == 0) return;
 
         currentIndex = Mathf.Clamp(currentIndex, 0, list.Count - 1);
-        selector.position = list[currentIndex].transform.position;
+        if (selector) selector.position = list[currentIndex].transform.position;
     }
 
     void UpdateExplain()
     {
         var list = inDeck ? deckSlots : cardSlots;
-        if (list.Count == 0)
-        {
-            if (explainImage) explainImage.sprite = null;
-            return;
-        }
+        if (explainImage == null) return;
+
+        if (list.Count == 0) { explainImage.sprite = null; return; }
 
         var slot = list[currentIndex];
-        if (explainImage) explainImage.sprite = slot.image ? slot.image.sprite : null;
+        explainImage.sprite = slot.image ? slot.image.sprite : null;
     }
 }
