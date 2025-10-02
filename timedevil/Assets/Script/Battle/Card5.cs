@@ -8,10 +8,10 @@ public class Card5 : MonoBehaviour, ICardPattern
     // 16칸의 발동 시간 (예: 0=즉시, 1=1초 뒤, 2=2초 뒤 ...)
     [SerializeField] private float[] timings = new float[16]
     {
-        0f, 1f, 2f, 3f,
-        0f, 1f, 2f, 3f,
-        0f, 1f, 2f, 3f,
-        0f, 1f, 2f, 3f
+        0f, 0f, 0f, 0f,
+        0f, 0f, 0f, 0f,
+        0f, 0f, 0f, 0f,
+        0f, 0f, 0f, 0f
     };
 
     public string CardImagePath => cardImagePath;
