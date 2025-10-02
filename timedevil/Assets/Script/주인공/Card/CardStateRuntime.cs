@@ -6,6 +6,9 @@ public class CardStateRuntime : MonoBehaviour
 {
     public static CardStateRuntime Instance { get; private set; }
 
+    // ✅ 덱 최대 장수
+    public const int MAX_DECK = 13;
+
     [Header("자동 저장 옵션 (기본 꺼짐)")]
     public bool saveOnDisable = false;
     public bool saveOnQuit = false;
@@ -14,7 +17,7 @@ public class CardStateRuntime : MonoBehaviour
 
     void Awake()
     {
-        // ✅ 싱글톤 + 씬 전환 유지
+        // 싱글톤 + 씬 유지
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -23,7 +26,7 @@ public class CardStateRuntime : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // 파일이 없으면 빈 상태로 시작(자동 생성 X)
+        // 파일이 없으면 비어있는 상태로 시작
         Data = CardSaveStore.Load();
 
 #if UNITY_EDITOR
@@ -53,8 +56,10 @@ public class CardStateRuntime : MonoBehaviour
 #endif
     }
 
+    // ----- Owned 관리 -----
     public bool AddOwned(string cardId)
     {
+        if (string.IsNullOrEmpty(cardId)) return false;
         if (Data.owned == null) Data.owned = new System.Collections.Generic.List<string>();
         if (!Data.owned.Contains(cardId))
         {
@@ -73,9 +78,34 @@ public class CardStateRuntime : MonoBehaviour
         return removed;
     }
 
+    // ----- Deck 관리 -----
+    public int DeckCount => Data.deck?.Count ?? 0;
+    public bool DeckContains(string id) => Data.deck != null && Data.deck.Contains(id);
+
+    /// <summary>중복 금지 + 최대 13장 제한</summary>
+    public bool TryAddToDeck(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return false;
+        if (Data.deck == null) Data.deck = new System.Collections.Generic.List<string>();
+        if (Data.deck.Contains(id)) return false;              // 중복 불가
+        if (Data.deck.Count >= MAX_DECK) return false;         // 13장 제한
+        Data.deck.Add(id);
+        return true;
+    }
+
+    public bool RemoveFromDeck(string id)
+    {
+        if (Data.deck == null) return false;
+        return Data.deck.Remove(id);
+    }
+
     public void SetDeck(System.Collections.Generic.IEnumerable<string> ids)
     {
         Data.deck = ids?.ToList() ?? new System.Collections.Generic.List<string>();
+        if (Data.deck.Count > MAX_DECK)
+            Data.deck = Data.deck.Take(MAX_DECK).ToList();
+        // 중복 제거
+        Data.deck = Data.deck.Distinct().ToList();
     }
 
     // --- Helpers ---
@@ -83,6 +113,7 @@ public class CardStateRuntime : MonoBehaviour
     {
         return IsEmpty(Data) && !File.Exists(CardSaveStore.GetPath());
     }
+
     private static bool IsEmpty(CardSaveData d)
     {
         if (d == null) return true;
