@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,49 +7,65 @@ using UnityEngine;
 public class BattleHandUI : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private RectTransform cardGroup;   // card_group
-    [SerializeField] private GameObject cardUiPrefab;
+    [SerializeField] private RectTransform cardGroup;      // 카드가 놓일 부모(항상 Active)
+    [SerializeField] private GameObject cardUiPrefab;      // Image+Button+CardUI 달린 프리팹
     [SerializeField] private string resourcesFolder = "my_asset";
     [SerializeField] private AttackController attackController;
 
     [Header("Layout")]
     [SerializeField] private float cardWidth = 120f;
-    [SerializeField] private float maxSpacing = 140f;
-    [SerializeField] private float minSpacing = 40f;
+    [SerializeField] private float maxSpacing = 140f;      // 손패 적을 때 간격
+    [SerializeField] private float minSpacing = 40f;       // 손패 많을 때(겹치기) 간격
     [SerializeField] private float horizontalPadding = 40f;
 
-    readonly List<CardUI> spawned = new();
-    bool usedThisTurn = false;
+    private readonly List<CardUI> spawned = new();
+    private bool usedThisTurn = false;
+    private CanvasGroup cg;                                // card_group의 CanvasGroup
+
+    void Awake()
+    {
+        if (!cardGroup)
+        {
+            Debug.LogError("[BattleHandUI] cardGroup 미지정");
+            return;
+        }
+        cg = cardGroup.GetComponent<CanvasGroup>();
+        if (!cg) cg = cardGroup.gameObject.AddComponent<CanvasGroup>();
+        SetVisible(false); // 시작은 닫힘
+    }
 
     void Start()
     {
-        Refresh(); // 시작 시 데이터만 반영 (표시는 TurnManager가 제어)
+        Refresh(); // 데이터는 그려두되, 표시는 TurnManager가 제어
     }
 
-    // TurnManager가 호출
+    // ---------- 표시/숨김 ----------
+    public void SetVisible(bool on)
+    {
+        if (!cg) return;
+        cg.alpha = on ? 1f : 0f;
+        cg.interactable = on;
+        cg.blocksRaycasts = on;
+        Debug.Log($"[BattleHandUI] SetVisible({on}) → alpha={cg.alpha}, interactable={cg.interactable}, blocks={cg.blocksRaycasts}");
+
+    }
+    public bool IsVisible() => cg && cg.alpha > 0.5f && cg.blocksRaycasts;
+    public void OpenAndRefresh() { SetVisible(true); Refresh(); }
+    public void Close() => SetVisible(false);
+
+    // ---------- 턴 진입 ----------
     public void OnPlayerTurnStart()
     {
         usedThisTurn = false;
-        BattleDeckRuntime.Instance?.DrawOneIfNeeded();
-        Refresh();                  // 데이터 갱신
-        // SetVisible(false)는 TurnManager가 호출
+        BattleDeckRuntime.Instance?.DrawOneIfNeeded(); // 3장 미만이면 1장 드로우
+        Refresh();
+        SetVisible(false); // 기본은 닫아둠(카드 버튼으로 열기)
     }
 
-    public void SetVisible(bool on)
-    {
-        if (cardGroup) cardGroup.gameObject.SetActive(on);
-    }
-
-    public void ToggleVisible()
-    {
-        if (!cardGroup) return;
-        cardGroup.gameObject.SetActive(!cardGroup.gameObject.activeSelf);
-        if (cardGroup.gameObject.activeSelf) Refresh(); // 열릴 때 새로 그림
-    }
-
+    // ---------- 렌더링 ----------
     public void Refresh()
     {
-        if (cardGroup == null || cardUiPrefab == null) return;
+        if (!cardGroup || !cardUiPrefab) return;
 
         foreach (var c in spawned) if (c) Destroy(c.gameObject);
         spawned.Clear();
@@ -64,11 +81,15 @@ public class BattleHandUI : MonoBehaviour
         for (int i = 0; i < n; i++)
         {
             string id = deck.hand[i];
+
             var go = Instantiate(cardUiPrefab, cardGroup);
             var ui = go.GetComponent<CardUI>() ?? go.AddComponent<CardUI>();
+
+            // 예: Resources/my_asset/Card5.png
             var sp = Resources.Load<Sprite>($"{resourcesFolder}/{id}");
             ui.Init(this, i, sp);
 
+            // 수평 배치
             var rt = (RectTransform)go.transform;
             rt.anchoredPosition = new Vector2(startX + spacing * i, 0f);
             rt.sizeDelta = new Vector2(cardWidth, rt.sizeDelta.y);
@@ -77,10 +98,12 @@ public class BattleHandUI : MonoBehaviour
         }
     }
 
+    // ---------- 클릭 -> 사용/공격/턴종료 ----------
     public void OnClickCard(int handIndex)
     {
-        Debug.Log($"[HandUI] OnClickCard index={handIndex}");
-        if (TurnManager.Instance == null || TurnManager.Instance.currentTurn != TurnState.PlayerTurn) return;
+        if (!IsVisible()) return;
+        if (TurnManager.Instance == null ||
+            TurnManager.Instance.currentTurn != TurnState.PlayerTurn) return;
         if (usedThisTurn) return;
 
         var deck = BattleDeckRuntime.Instance;
@@ -88,42 +111,50 @@ public class BattleHandUI : MonoBehaviour
 
         string id = deck.hand[handIndex];
         var t = FindTypeByName(id);
-        if (t == null) { Debug.LogWarning($"[HandUI] 카드 타입 없음: {id}"); return; }
+        if (t == null)
+        {
+            Debug.LogWarning($"[BattleHandUI] 카드 타입 없음: {id}");
+            return;
+        }
 
         StartCoroutine(Co_UseCardAndAttack(handIndex, t));
     }
 
-    System.Collections.IEnumerator Co_UseCardAndAttack(int handIndex, Type cardType)
+    private IEnumerator Co_UseCardAndAttack(int handIndex, Type cardType)
     {
         usedThisTurn = true;
-        SetVisible(false);
+        SetVisible(false); // 입력 차단 & 숨김
 
-        var go = new GameObject($"_PlayerCard_{cardType.Name}");
+        // 패턴 정보 획득용 임시 GO
+        var tmp = new GameObject($"_PlayerCard_{cardType.Name}");
         float total = 0f;
-
         try
         {
-            var comp = go.AddComponent(cardType) as ICardPattern;
+            var comp = tmp.AddComponent(cardType) as ICardPattern;
             if (comp == null) yield break;
 
             var timings = comp.Timings ?? new float[16];
             attackController.ShowPattern(comp.Pattern16, timings, AttackController.Panel.Enemy);
             total = attackController.GetSequenceDuration(timings);
         }
-        finally { Destroy(go); }
+        finally
+        {
+            Destroy(tmp);
+        }
 
+        // 사용 카드 → 덱 맨 아래
         BattleDeckRuntime.Instance.UseCardToBottom(handIndex);
-        Refresh();
+        Refresh(); // 손패 즉시 반영(닫힌 상태에서도 내부 데이터 갱신)
 
         if (total > 0f) yield return new WaitForSeconds(total);
-
-        // 턴 종료 → TurnManager가 여기서 UI를 닫음
         TurnManager.Instance.EndPlayerTurn();
     }
 
-    static Type FindTypeByName(string typeName)
+    // ---------- 유틸 ----------
+    private static Type FindTypeByName(string typeName)
     {
         var asm = typeof(BattleHandUI).Assembly;
-        return asm.GetTypes().FirstOrDefault(t => t.Name == typeName && typeof(MonoBehaviour).IsAssignableFrom(t));
+        return asm.GetTypes().FirstOrDefault(
+            t => t.Name == typeName && typeof(MonoBehaviour).IsAssignableFrom(t));
     }
 }

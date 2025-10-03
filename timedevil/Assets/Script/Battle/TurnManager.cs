@@ -7,6 +7,7 @@ public enum TurnState { PlayerTurn, EnemyTurn }
 public class TurnManager : MonoBehaviour
 {
     public static TurnManager Instance;
+
     public TurnState currentTurn;
 
     [Header("UI Buttons (플레이어 턴 활성/비활성)")]
@@ -19,55 +20,49 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private EnemyController enemyController;
 
     [Header("Hand UI")]
-    [SerializeField] private BattleHandUI handUI;   // ← 손패 UI 레퍼런스
+    [SerializeField] private BattleHandUI handUI;
 
     [Header("Delays")]
-    [Tooltip("적 턴 시작 시 잠깐의 '고민시간'(초)")]
     public float enemyThinkDelay = 0.6f;
-
-    public bool usedCardThisTurn { get; private set; }
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
+
+        // 🔧 참조 보강: 씬에서 안 채워져 있어도 자동 주입
+        if (handUI == null) handUI = FindObjectOfType<BattleHandUI>();
+
+        // 🔧 버튼-이벤트 자동 연결(중복 방지)
+        if (cardBtn != null)
+        {
+            cardBtn.onClick.RemoveListener(OnPressCardButton);
+            cardBtn.onClick.AddListener(OnPressCardButton);
+        }
     }
 
     void Start()
     {
-        // 시작 시 손패 UI는 닫아둔다
         if (handUI) handUI.SetVisible(false);
         StartPlayerTurn();
     }
 
-    // --------------- Player Turn ---------------
-
     public void StartPlayerTurn()
     {
         currentTurn = TurnState.PlayerTurn;
-        usedCardThisTurn = false;
         SetButtons(true);
 
-        // 손패 보충/갱신(하지만 UI는 닫아둔다)
         if (handUI)
         {
             handUI.OnPlayerTurnStart();
-            handUI.SetVisible(false); // 기본 닫힘, Card 버튼으로 열기
+            handUI.SetVisible(false);
         }
 
         Debug.Log("🔷 플레이어 턴 시작");
     }
 
-    public bool TryConsumeCardUseThisTurn()
-    {
-        if (usedCardThisTurn) return false;
-        usedCardThisTurn = true;
-        return true;
-    }
-
     public void EndPlayerTurn()
     {
-        // 엔드 페이즈: 3장 초과분은 덱 밑으로
         var bd = BattleDeckRuntime.Instance;
         if (bd != null)
         {
@@ -75,10 +70,9 @@ public class TurnManager : MonoBehaviour
                 bd.UseCardToBottom(bd.hand.Count - 1);
         }
 
-        // 손패 UI는 턴이 끝나면 반드시 닫는다
         if (handUI)
         {
-            handUI.Refresh();      // 반영
+            handUI.Refresh();
             handUI.SetVisible(false);
         }
 
@@ -86,29 +80,20 @@ public class TurnManager : MonoBehaviour
         StartCoroutine(Co_EnemyTurn());
     }
 
-    // --------------- Enemy Turn ---------------
-
     IEnumerator Co_EnemyTurn()
     {
         currentTurn = TurnState.EnemyTurn;
         Debug.Log("🔶 적 턴 시작");
 
-        // 혹시 모를 열림 상태 방지
         if (handUI) handUI.SetVisible(false);
 
-        if (enemyThinkDelay > 0f)
-            yield return new WaitForSeconds(enemyThinkDelay);
-
-        if (enemyController != null)
-            yield return enemyController.ExecuteOneAction();
-        else
-            Debug.LogWarning("[TurnManager] EnemyController 미연결");
+        if (enemyThinkDelay > 0f) yield return new WaitForSeconds(enemyThinkDelay);
+        if (enemyController != null) yield return enemyController.ExecuteOneAction();
+        else Debug.LogWarning("[TurnManager] EnemyController 미연결");
 
         Debug.Log("🔶 적 턴 종료");
         StartPlayerTurn();
     }
-
-    // --------------- Helpers ---------------
 
     void SetButtons(bool on)
     {
@@ -116,5 +101,22 @@ public class TurnManager : MonoBehaviour
         if (moveBtn) moveBtn.interactable = on;
         if (itemBtn) itemBtn.interactable = on;
         if (runBtn) runBtn.interactable = on;
+    }
+
+    // ✅ Card 버튼이 눌리면 반드시 여기로 들어옴
+    public void OnPressCardButton()
+    {
+        Debug.Log("[TurnManager] Card 버튼 눌림!");
+        if (currentTurn != TurnState.PlayerTurn || handUI == null) return;
+
+        Debug.Log("[TurnManager] Card 버튼 클릭 → HandUI.OpenAndRefresh()");
+        handUI.OpenAndRefresh();   // 내부에서 CanvasGroup(α/Interact/Blocks) 켬
+        SetButtons(false);         // (선택) 패널 열린 동안 다른 버튼 비활성
+    }
+
+    public void OnCardPanelClosed()
+    {
+        if (handUI) handUI.Close();
+        SetButtons(true);
     }
 }
