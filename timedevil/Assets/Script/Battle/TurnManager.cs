@@ -111,7 +111,6 @@ public class TurnManager : MonoBehaviour
 
         Debug.Log("[TurnManager] Card 버튼 클릭 → HandUI.OpenAndRefresh()");
         handUI.OpenAndRefresh();   // 내부에서 CanvasGroup(α/Interact/Blocks) 켬
-        SetButtons(false);         // (선택) 패널 열린 동안 다른 버튼 비활성
     }
 
     public void OnCardPanelClosed()

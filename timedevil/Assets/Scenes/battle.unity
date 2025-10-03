@@ -1182,21 +1182,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 726002406}
-        m_TargetAssemblyTypeName: MoveController, Assembly-CSharp
-        m_MethodName: OnMoveButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1004298718}
-        m_TargetAssemblyTypeName: BattleHandUI, Assembly-CSharp
-        m_MethodName: ToggleHand
+      - m_Target: {fileID: 726002407}
+        m_TargetAssemblyTypeName: TurnManager, Assembly-CSharp
+        m_MethodName: OnPressCardButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4492,7 +4480,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726002403}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a8d54920a34580d4e88a2e5672c43b93, type: 3}
   m_Name: 
@@ -5265,7 +5253,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57c4deb4abbdea43886613b9a2ec80c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardGroup: {fileID: 1004298715}
   cardUiPrefab: {fileID: 7763240557767218278}
   resourcesFolder: my_asset
   attackController: {fileID: 1535859928}
