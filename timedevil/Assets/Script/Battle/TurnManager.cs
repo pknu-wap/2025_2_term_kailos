@@ -43,7 +43,8 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
-        if (handUI) handUI.SetVisible(false);
+        if (handUI) handUI.SetVisible(false, "TurnManager.Start");
+
         StartPlayerTurn();
     }
 

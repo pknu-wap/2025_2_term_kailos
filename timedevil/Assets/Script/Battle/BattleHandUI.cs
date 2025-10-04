@@ -46,13 +46,13 @@ public class BattleHandUI : MonoBehaviour
         usedThisTurn = false;
         BattleDeckRuntime.Instance?.DrawOneIfNeeded(); // 3장 미만이면 1장 드로우
         Refresh();
-        SetVisible(false); // 기본은 닫힌 상태(카드 버튼으로 열기)
+        SetVisible(false, "OnPlayerTurnStart");        // 기본은 닫힌 상태(카드 버튼으로 열기)
     }
 
     /// <summary>TurnManager: 카드 버튼 눌렸을 때 호출.</summary>
     public void OpenAndRefresh()
     {
-        SetVisible(true);
+        SetVisible(true, "OpenAndRefresh");
         Refresh();
     }
 
