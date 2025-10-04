@@ -30,10 +30,8 @@ public class TurnManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
 
-        // 🔧 참조 보강: 씬에서 안 채워져 있어도 자동 주입
         if (handUI == null) handUI = FindObjectOfType<BattleHandUI>();
 
-        // 🔧 버튼-이벤트 자동 연결(중복 방지)
         if (cardBtn != null)
         {
             cardBtn.onClick.RemoveListener(OnPressCardButton);
@@ -44,7 +42,6 @@ public class TurnManager : MonoBehaviour
     void Start()
     {
         if (handUI) handUI.SetVisible(false, "TurnManager.Start");
-
         StartPlayerTurn();
     }
 
@@ -56,7 +53,7 @@ public class TurnManager : MonoBehaviour
         if (handUI)
         {
             handUI.OnPlayerTurnStart();
-            handUI.SetVisible(false);
+            handUI.SetVisible(false, "StartPlayerTurn");
         }
 
         Debug.Log("🔷 플레이어 턴 시작");
@@ -74,7 +71,7 @@ public class TurnManager : MonoBehaviour
         if (handUI)
         {
             handUI.Refresh();
-            handUI.SetVisible(false);
+            handUI.SetVisible(false, "EndPlayerTurn");
         }
 
         SetButtons(false);
@@ -86,7 +83,7 @@ public class TurnManager : MonoBehaviour
         currentTurn = TurnState.EnemyTurn;
         Debug.Log("🔶 적 턴 시작");
 
-        if (handUI) handUI.SetVisible(false);
+        if (handUI) handUI.SetVisible(false, "EnemyTurn.Start");
 
         if (enemyThinkDelay > 0f) yield return new WaitForSeconds(enemyThinkDelay);
         if (enemyController != null) yield return enemyController.ExecuteOneAction();
@@ -104,14 +101,13 @@ public class TurnManager : MonoBehaviour
         if (runBtn) runBtn.interactable = on;
     }
 
-    // ✅ Card 버튼이 눌리면 반드시 여기로 들어옴
     public void OnPressCardButton()
     {
         Debug.Log("[TurnManager] Card 버튼 눌림!");
         if (currentTurn != TurnState.PlayerTurn || handUI == null) return;
 
         Debug.Log("[TurnManager] Card 버튼 클릭 → HandUI.OpenAndRefresh()");
-        handUI.OpenAndRefresh();   // 내부에서 CanvasGroup(α/Interact/Blocks) 켬
+        handUI.OpenAndRefresh();
     }
 
     public void OnCardPanelClosed()
