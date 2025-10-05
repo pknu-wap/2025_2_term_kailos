@@ -9319,6 +9319,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2084521561}
   - component: {fileID: 2084521562}
+  - component: {fileID: 2084521564}
+  - component: {fileID: 2084521563}
   m_Layer: 0
   m_Name: Player_Stone
   m_TagString: Untagged
@@ -9382,7 +9384,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -169592983, guid: 9e0d88770e70fa248828953c61c6e351, type: 3}
+  m_Sprite: {fileID: -1188948087, guid: 0da34eb1b310adb42b6da6aff206662b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -9393,6 +9395,52 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2084521563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2084521560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80fbfc47b847bc643bab5b3bf1ab7c1b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tileSize: 1
+  moveDuration: 0.15
+  idleDown: {fileID: -1188948087, guid: 0da34eb1b310adb42b6da6aff206662b, type: 3}
+  idleLeft: {fileID: -1179496608, guid: 0da34eb1b310adb42b6da6aff206662b, type: 3}
+  idleRight: {fileID: -482879361, guid: 0da34eb1b310adb42b6da6aff206662b, type: 3}
+  idleUp: {fileID: 57164551, guid: 0da34eb1b310adb42b6da6aff206662b, type: 3}
+  walkDownState: Walk_Down
+  walkLeftState: Walk_Left
+  walkRightState: Walk_Right
+  walkUpState: Walk_Up
+  gridOrigin: {fileID: 0}
+  minGrid: {x: 0, y: 0}
+  maxGrid: {x: 3, y: 3}
+--- !u!95 &2084521564
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2084521560}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d9342ad41e26fc74aa4b777806bd09e8, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &7763240557767218276
 PrefabInstance:
   m_ObjectHideFlags: 0
