@@ -15,7 +15,6 @@ public class CardUI : MonoBehaviour
         if (!image) image = GetComponent<Image>();
         if (image) image.sprite = sprite;
 
-        // 버튼 연결(프리팹에서 연결해둔 경우 중복 연결 안 되도록 체크)
         var btn = GetComponent<Button>();
         if (btn)
         {
@@ -24,9 +23,9 @@ public class CardUI : MonoBehaviour
         }
     }
 
-    public void OnClick()
+    private void OnClick()
     {
         if (owner == null) return;
-        owner.OnClickCard(index);
+        owner.OnClickCard(index);   // BattleHandUI에서 받아 처리
     }
 }

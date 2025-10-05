@@ -5253,7 +5253,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57c4deb4abbdea43886613b9a2ec80c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUiPrefab: {fileID: 7763240557767218278}
+  cardUIPrefab: {fileID: 7763240557767218278}
   resourcesFolder: my_asset
   attackController: {fileID: 1535859928}
   cardWidth: 120

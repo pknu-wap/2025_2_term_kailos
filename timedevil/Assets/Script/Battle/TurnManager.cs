@@ -41,7 +41,9 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
-        if (handUI) handUI.SetVisible(false, "TurnManager.Start");
+        // ❌ 불필요 → 초기 NRE 원인
+        // if (handUI) handUI.SetVisible(false, "TurnManager.Start");
+
         StartPlayerTurn();
     }
 
