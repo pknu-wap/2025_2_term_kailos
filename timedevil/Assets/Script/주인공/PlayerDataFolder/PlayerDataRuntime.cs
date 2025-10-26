@@ -5,24 +5,42 @@ public class PlayerDataRuntime : MonoBehaviour
 {
     public static PlayerDataRuntime Instance { get; private set; }
 
-    [Header("Active Player Data (Runtime)")]
-    public PlayerData data = new PlayerData();
+    [Header("Auto Save 옵션")]
+    public bool saveOnDisable = false;
+    public bool saveOnQuit = true;
+
+    [Header("Data")]
+    public PlayerData Data;   // 인스펙터에서 기본값 설정 가능
 
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
-        // 첫 실행 시 기본값 보장
-        if (data == null) data = new PlayerData();
-        if (string.IsNullOrEmpty(data.playerName)) data.InitDefaults();
+        // 씬에 PlayerDataRuntime가 이미 있고 Data가 비어있다면 파일에서 로드
+        if (Data == null)
+            Data = PlayerDataStore.Load();
+
+        // 파일에도 없으면 기본값 생성 (원하면 이 부분 삭제 가능)
+        if (Data == null)
+        {
+            Data = new PlayerData();
+            Data.InitDefaults("Player", 100, 10, 5, 5);
+        }
     }
 
-    // 편의 메서드들 (선택)
-    public void SetDefaults(string name = "Player", int hp = 100, int atk = 10, int def = 5, int spd = 5)
-        => data.InitDefaults(name, hp, atk, def, spd);
+    public void SaveNow()
+    {
+        PlayerDataStore.Save(Data);
+    }
 
-    public PlayerData Snapshot()
-        => JsonUtility.FromJson<PlayerData>(JsonUtility.ToJson(data)); // 얕은 스냅샷
+    void OnDisable()
+    {
+        if (saveOnDisable) SaveNow();
+    }
+
+    void OnApplicationQuit()
+    {
+        if (saveOnQuit) SaveNow();
+    }
 }
