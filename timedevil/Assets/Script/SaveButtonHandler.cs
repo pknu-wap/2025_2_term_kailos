@@ -1,16 +1,41 @@
+// SaveButtonHandler.cs
 using UnityEngine;
 
 public class SaveButtonHandler : MonoBehaviour
 {
-    public void OnClickSave()
+    // 카드만 저장
+    public void SaveCardsOnly()
     {
         if (CardStateRuntime.Instance != null)
-            CardStateRuntime.Instance.SaveNow();
+        {
+            CardStateRuntime.Instance.SaveNow(); // 내부에서 card_state.json 등으로 저장
+            Debug.Log("[SaveButtonHandler] Saved Cards");
+        }
+        else
+        {
+            Debug.LogWarning("[SaveButtonHandler] CardStateRuntime.Instance is null");
+        }
     }
 
-    public void OnClickToggleTalk(GameObject target)
+    // 플레이어만 저장
+    public void SavePlayerOnly()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.Action(target);
+        if (PlayerDataRuntime.Instance != null)
+        {
+            PlayerDataRuntime.Instance.SaveNow(); // 내부에서 player_data.json 등으로 저장
+            Debug.Log("[SaveButtonHandler] Saved PlayerData");
+        }
+        else
+        {
+            Debug.LogWarning("[SaveButtonHandler] PlayerDataRuntime.Instance is null");
+        }
+    }
+
+    // 둘 다 저장
+    public void SaveAll()
+    {
+        SaveCardsOnly();
+        SavePlayerOnly();
+        Debug.Log("[SaveButtonHandler] Saved Cards + PlayerData");
     }
 }
