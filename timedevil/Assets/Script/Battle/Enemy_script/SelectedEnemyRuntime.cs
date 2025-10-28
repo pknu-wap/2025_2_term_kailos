@@ -1,18 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
+// SelectedEnemyRuntime.cs
 using UnityEngine;
 
 public class SelectedEnemyRuntime : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static SelectedEnemyRuntime Instance { get; private set; }
+
+    [Tooltip("씬 전환 시 넘겨 받을 적 이름 (예: Enemy1)")]
+    public string enemyName = "Enemy1";
+
+    void Awake()
     {
-        
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetEnemyName(string name)
     {
-        
+        if (!string.IsNullOrEmpty(name)) enemyName = name;
     }
 }

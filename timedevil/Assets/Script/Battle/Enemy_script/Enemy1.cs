@@ -1,20 +1,35 @@
+// Enemy1.cs
 using UnityEngine;
 
-public class Enemy1 : MonoBehaviour, ICardPattern
+public class Enemy1 : MonoBehaviour
 {
-    [SerializeField] private string cardImagePath = "my_asset/Enemy1";
-    [SerializeField] private string pattern16 = "1111111111111111";
+    [Header("Identity")]
+    public string enemyName = "Enemy1";
 
-    // 16칸의 발동 시간 (예: 전부 0초 → 동시에 발동)
-    [SerializeField] private float[] timings = new float[16]
+    [Header("Stats")]
+    public int maxHP = 60;
+    public int currentHP = 60;
+    public int attack = 8;
+    public int defense = 3;
+    public int speed = 4;
+
+    [Header("Cards (optional for later)")]
+    // 추후 AI/행동 로직에서 사용할 카드 ID들(필요 없으면 비워둬도 됨)
+    public string[] deck = new string[] { "Card1", "Card2", "Card3" };
+
+    // 에디터에서 값 바꿨을 때 정합성 보정
+    private void OnValidate()
     {
-        0f, 0f, 0f, 0f,
-        0f, 4f, 3f, 0f,
-        0f, 1f, 2f, 0f,
-        0f, 0f, 0f, 0f
-    };
+        maxHP = Mathf.Max(1, maxHP);
+        currentHP = Mathf.Clamp(currentHP, 0, maxHP);
+        attack = Mathf.Max(0, attack);
+        defense = Mathf.Max(0, defense);
+        speed = Mathf.Max(0, speed);
+    }
 
-    public string CardImagePath => cardImagePath;
-    public string Pattern16 => pattern16;
-    public float[] Timings => timings;
+    [ContextMenu("Reset HP to Max")]
+    private void ResetHPToMax()
+    {
+        currentHP = maxHP;
+    }
 }
