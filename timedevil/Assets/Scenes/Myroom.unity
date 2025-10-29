@@ -4404,6 +4404,7 @@ GameObject:
   - component: {fileID: 890267958}
   - component: {fileID: 890267959}
   - component: {fileID: 890267960}
+  - component: {fileID: 890267961}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -4480,6 +4481,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   battleSceneName: battle
+--- !u!114 &890267961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890267955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da8822cde0518b942a2f21717d25eb87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  saveOnDisable: 0
+  saveOnQuit: 1
+  Data:
+    playerName: Player
+    maxHP: 100
+    currentHP: 100
+    attack: 10
+    defense: 5
+    speed: 5
+    emotionPositive: 0
+    emotionNegative: 0
 --- !u!1 &922923307
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,7 +11,7 @@ public class Enemy1 : MonoBehaviour
     public int currentHP = 60;
     public int attack = 8;
     public int defense = 3;
-    public int speed = 4;
+    public int speed = 6;
 
     [Header("Cards (optional for later)")]
     // 추후 AI/행동 로직에서 사용할 카드 ID들(필요 없으면 비워둬도 됨)

@@ -1,35 +1,38 @@
+ï»¿// BattleMenuController.cs
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BattleMenuController : MonoBehaviour
 {
     [Header("Order: 0=Card, 1=Item, 2=Run")]
-    [SerializeField] private GameObject[] entries;   // CardPanel, ItemPanel, RunPanel
+    [SerializeField] private GameObject[] entries;
 
     [Header("Highlight")]
     [SerializeField] private Color selectedColor = new Color(0.7f, 1f, 0.7f, 1f);
     [SerializeField] private Color normalColor = Color.white;
-
-    // (ÃßÈÄ ¼±/ÈÄ°ø ·ÎÁ÷ ºÙÀÏ ¶§ ÄÑ°í ²ø ¼ö ÀÖ°Ô)
     [SerializeField] private bool inputEnabled = true;
 
     private int index = 0;
     private Image[] images;
 
+    // âœ… í¬ì»¤ìŠ¤ ë³€ê²½ì„ ì™¸ë¶€ì— ì•Œë ¤ì£¼ëŠ” ì´ë²¤íŠ¸
+    public event Action<int> OnMenuFocusChanged;
+    public event Action<int> FocusChanged;
+    public int CurrentIndex { get; private set; }
+
     void Awake()
     {
-        // ÆĞ³Îµé¿¡ ºÙÀº Image Ä³½Ã
         images = new Image[entries.Length];
         for (int i = 0; i < entries.Length; i++)
-        {
-            if (entries[i] != null)
-                images[i] = entries[i].GetComponent<Image>();
-        }
+            if (entries[i] != null) images[i] = entries[i].GetComponent<Image>();
     }
 
     void Start()
     {
         SetSelection(0);
+        // âœ… ì‹œì‘ ì‹œì—ë„ í•œ ë²ˆ ì•Œë ¤ì£¼ê¸°
+        OnMenuFocusChanged?.Invoke(index);
     }
 
     void Update()
@@ -45,32 +48,24 @@ public class BattleMenuController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             string name = (index == 0) ? "Card" : (index == 1) ? "Item" : "Run";
-            Debug.Log($"[BattleMenu] E pressed ¡æ {name} selected (index={index})");
-            // TODO: ³ªÁß¿¡ ¿©±â¼­ ½ÇÁ¦ µ¿ÀÛ(Ä«µå ÇÚµå ¿­±â/¾ÆÀÌÅÛ Ã¢/µµÁÖ È®ÀÎ µî) È£Ãâ
+            Debug.Log($"[BattleMenu] E pressed â†’ {name} selected (index={index})");
         }
     }
 
-    public void EnableInput(bool on)
-    {
-        inputEnabled = on;
-        // ÀÔ·ÂÀÌ ¸·ÇûÀ» ¶§µµ ÇÏÀÌ¶óÀÌÆ®´Â À¯Áö(¿øÇÏ¸é ¿©±â¼­ ¸ğµÎ normal·Î ¹Ù²ãµµ µÊ)
-    }
+    public void EnableInput(bool on) => inputEnabled = on;
 
     private void SetSelection(int newIndex)
     {
+        CurrentIndex = Mathf.Clamp(newIndex, 0, entries.Length - 1);
         index = Mathf.Clamp(newIndex, 0, entries.Length - 1);
 
         for (int i = 0; i < entries.Length; i++)
-        {
-            if (images[i] == null) continue;
-            images[i].color = (i == index) ? selectedColor : normalColor;
-        }
+            if (images[i] != null)
+                images[i].color = (i == index) ? selectedColor : normalColor;
 
-        // ¼±ÅÃµÈ ÆĞ³ÎÀ» ¾à°£ Å°¿ì°í ½Í´Ù¸é(¼±ÅÃ»çÇ×):
-        // for (int i = 0; i < entries.Length; i++)
-        // {
-        //     if (entries[i] == null) continue;
-        //     entries[i].transform.localScale = (i == index) ? Vector3.one * 1.03f : Vector3.one;
-        // }
+        // âœ… í¬ì»¤ìŠ¤ ë°”ë€” ë•Œë§ˆë‹¤ ì•Œë¦¼
+        OnMenuFocusChanged?.Invoke(index);
+        FocusChanged?.Invoke(CurrentIndex);
     }
+
 }

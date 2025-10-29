@@ -22,6 +22,11 @@ public class EnemyDataManager : MonoBehaviour
     public MonoBehaviour currentEnemyComp;   // Enemy1 등 실제 컴포넌트
     public EnemySnapshot snapshot;           // 읽어온 값 보관
 
+    /// <summary>
+    /// TurnManager 등에서 읽기 좋게 노출하는 읽기 전용 프로퍼티(추천).
+    /// </summary>
+    public MonoBehaviour CurrentEnemyComponent => currentEnemyComp;
+
     [Serializable]
     public struct EnemySnapshot
     {
