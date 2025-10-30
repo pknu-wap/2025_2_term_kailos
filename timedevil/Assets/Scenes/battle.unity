@@ -290,6 +290,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Card
       objectReference: {fileID: 0}
+    - target: {fileID: 3496468367479007433, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4426371405572097045, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 74e4a3f892b21714c8a14ddd5d0a36ee, type: 3}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -352,7 +360,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 18
+      value: -180
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -549,13 +557,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d57c4deb4abbdea43886613b9a2ec80c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  handArea: {fileID: 860620048}
   cardUIPrefab: {fileID: 176631158}
   resourcesFolder: my_asset
-  attackController: {fileID: 0}
   cardWidth: 120
-  maxSpacing: 140
   minSpacing: 40
   horizontalPadding: 40
+  canvasGroup: {fileID: 860620051}
 --- !u!1 &424294691
 GameObject:
   m_ObjectHideFlags: 0
@@ -893,7 +901,6 @@ GameObject:
   m_Component:
   - component: {fileID: 726002405}
   - component: {fileID: 726002413}
-  - component: {fileID: 726002412}
   - component: {fileID: 726002411}
   m_Layer: 0
   m_Name: BattleManager
@@ -931,19 +938,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   initialHandSize: 3
   maxHandSize: 3
---- !u!114 &726002412
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 726002403}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 535d63962e538ee44bda1cd2a532a663, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  image: {fileID: 0}
 --- !u!114 &726002413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -969,6 +963,7 @@ GameObject:
   - component: {fileID: 860620048}
   - component: {fileID: 860620050}
   - component: {fileID: 860620049}
+  - component: {fileID: 860620051}
   m_Layer: 5
   m_Name: Hand
   m_TagString: Untagged
@@ -1033,6 +1028,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 860620047}
   m_CullTransparentMesh: 1
+--- !u!225 &860620051
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860620047}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1021224431
 GameObject:
   m_ObjectHideFlags: 0
@@ -4176,9 +4183,22 @@ MonoBehaviour:
   - {fileID: 327880351}
   - {fileID: 424294691}
   - {fileID: 492703977}
-  selectedColor: {r: 0.7, g: 1, b: 0.7, a: 1}
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
   inputEnabled: 1
+  onFocusChanged:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 327880355}
+        m_TargetAssemblyTypeName: BattleHandUI, Assembly-CSharp
+        m_MethodName: OnMenuFocusChanged
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1069897050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4221,11 +4241,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   descriptionText: {fileID: 1367395971}
-  menu: {fileID: 1069897049}
+  menu: {fileID: 0}
   msgCard: "Card\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgItem: "Item\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgRun: "\uB3C4\uB9DD\uCE69\uB2C8\uB2E4."
+  handCanvasGroup: {fileID: 860620051}
   clearOnAwake: 1
+  logDebug: 0
 --- !u!1 &1234915015
 GameObject:
   m_ObjectHideFlags: 0
