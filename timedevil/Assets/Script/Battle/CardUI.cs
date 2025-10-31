@@ -4,7 +4,6 @@ using UnityEngine.UI;
 public class CardUI : MonoBehaviour
 {
     [SerializeField] private Image image;
-
     private BattleHandUI owner;
     private int index;
 
@@ -12,12 +11,21 @@ public class CardUI : MonoBehaviour
     {
         this.owner = owner;
         this.index = index;
+
+        if (!image) image = GetComponent<Image>();
         if (image) image.sprite = sprite;
+
+        var btn = GetComponent<Button>();
+        if (btn)
+        {
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(OnClick);
+        }
     }
 
-    // Button OnClick 에 연결
-    public void OnClick()
+    private void OnClick()
     {
-        owner?.OnClickCard(index);
+        if (owner == null) return;
+        owner.OnClickCard(index);   // BattleHandUI에서 받아 처리
     }
 }
