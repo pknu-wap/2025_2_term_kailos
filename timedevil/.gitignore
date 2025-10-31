@@ -14,7 +14,6 @@
 ElvGames/
 UI Project/
 RafaelMatos/
-
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
 *.blend1.meta
@@ -100,5 +99,4 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
-timedevil/ProjectSettings/ProjectSettings.asset
 /ProjectSettings.asset
