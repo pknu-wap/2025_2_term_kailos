@@ -1,17 +1,5 @@
 fileFormatVersion: 2
-<<<<<<< Updated upstream
-<<<<<<<< Updated upstream:timedevil/Assets/Script/Battle/Card_script/CardUI.cs.meta
 guid: 7cb406db9019aec468ee22c9ebdea27c
-========
-guid: 9ed5532307d528e408609419fcc9596a
->>>>>>>> Stashed changes:timedevil/Assets/Script/Battle/BattleMenuHandBinder.cs.meta
-=======
-<<<<<<< HEAD:timedevil/Assets/Script/Battle/CardUI.cs.meta
-guid: 1b73e9188e5c7524fa2ff7aabaf6e4f4
-=======
-guid: 7cb406db9019aec468ee22c9ebdea27c
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79:timedevil/Assets/Script/Battle/Card_script/CardUI.cs.meta
->>>>>>> Stashed changes
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2

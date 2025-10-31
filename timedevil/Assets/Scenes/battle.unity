@@ -294,19 +294,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
     - target: {fileID: 4426371405572097045, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 74e4a3f892b21714c8a14ddd5d0a36ee, type: 3}
-<<<<<<< Updated upstream
-=======
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -369,19 +360,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_AnchoredPosition.x
-<<<<<<< Updated upstream
       value: -180
-=======
-<<<<<<< HEAD
-      value: -177
-=======
-      value: -180
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -281
+      value: -285
       objectReference: {fileID: 0}
     - target: {fileID: 5623988259087644966, guid: 347e09cf7ca584c488a11bb343186cf8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -496,6 +479,7 @@ GameObject:
   - component: {fileID: 327880352}
   - component: {fileID: 327880354}
   - component: {fileID: 327880353}
+  - component: {fileID: 327880355}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -561,8 +545,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 327880351}
   m_CullTransparentMesh: 1
-<<<<<<< HEAD
-=======
 --- !u!114 &327880355
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -582,10 +564,6 @@ MonoBehaviour:
   minSpacing: 40
   horizontalPadding: 40
   canvasGroup: {fileID: 860620051}
-<<<<<<< Updated upstream
-=======
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
 --- !u!1 &424294691
 GameObject:
   m_ObjectHideFlags: 0
@@ -985,13 +963,6 @@ GameObject:
   - component: {fileID: 860620048}
   - component: {fileID: 860620050}
   - component: {fileID: 860620049}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-  - component: {fileID: 860620052}
-=======
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
   - component: {fileID: 860620051}
   m_Layer: 5
   m_Name: Hand
@@ -1057,34 +1028,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 860620047}
   m_CullTransparentMesh: 1
-<<<<<<< Updated upstream
 --- !u!225 &860620051
-=======
-<<<<<<< HEAD
---- !u!114 &860620051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 860620047}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d57c4deb4abbdea43886613b9a2ec80c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cardUIPrefab: {fileID: 176631158}
-  resourcesFolder: my_asset
-  attackController: {fileID: 0}
-  cardWidth: 120
-  maxSpacing: 140
-  minSpacing: 40
-  horizontalPadding: 40
---- !u!225 &860620052
-=======
---- !u!225 &860620051
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
 CanvasGroup:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4216,7 +4160,6 @@ GameObject:
   - component: {fileID: 1069897050}
   - component: {fileID: 1069897049}
   - component: {fileID: 1069897052}
-  - component: {fileID: 1069897053}
   m_Layer: 0
   m_Name: BattleManager_UI
   m_TagString: Untagged
@@ -4240,14 +4183,6 @@ MonoBehaviour:
   - {fileID: 327880351}
   - {fileID: 424294691}
   - {fileID: 492703977}
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-  selectedColor: {r: 0.7, g: 1, b: 0.7, a: 1}
-  normalColor: {r: 1, g: 1, b: 1, a: 1}
-  inputEnabled: 0
-=======
->>>>>>> Stashed changes
   inputEnabled: 1
   onFocusChanged:
     m_PersistentCalls:
@@ -4264,10 +4199,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-<<<<<<< Updated upstream
-=======
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
 --- !u!114 &1069897050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4316,29 +4247,7 @@ MonoBehaviour:
   msgRun: "\uB3C4\uB9DD\uCE69\uB2C8\uB2E4."
   handCanvasGroup: {fileID: 860620051}
   clearOnAwake: 1
-<<<<<<< Updated upstream
   logDebug: 0
-=======
-<<<<<<< HEAD
---- !u!114 &1069897053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1069897048}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ed5532307d528e408609419fcc9596a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  menu: {fileID: 1069897049}
-  hand: {fileID: 860620051}
-  applyOnEnable: 1
-=======
-  logDebug: 0
->>>>>>> ba18b172bfd51ffca4970fd4549e0728dd6d1a79
->>>>>>> Stashed changes
 --- !u!1 &1234915015
 GameObject:
   m_ObjectHideFlags: 0
