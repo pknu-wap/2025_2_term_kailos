@@ -1,0 +1,52 @@
+using UnityEngine;
+
+public class InventoryCursor : MonoBehaviour
+{
+    [Header("필수 참조")]
+    [SerializeField] private RectTransform highlight;
+
+    [Header("행 설정")]
+    [SerializeField] private int rowCount = 6;
+    [SerializeField] private float rowHeight = 60f;
+    [SerializeField] private Vector2 topAnchoredPos = Vector2.zero;
+
+    [Header("상태")]
+    [SerializeField] private int currentIndex = 0;
+
+    private void Reset()
+    {
+        if (!highlight) highlight = GetComponent<RectTransform>();
+    }
+
+    private void Start()
+    {
+        SetToIndex(currentIndex);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow)) Move(-1);
+        else if (Input.GetKeyDown(KeyCode.DownArrow)) Move(+1);
+    }
+
+    private void Move(int delta)
+    {
+        int next = Mathf.Clamp(currentIndex + delta, 0, rowCount - 1);
+        if (next == currentIndex) return;
+        currentIndex = next;
+        SetToIndex(currentIndex);
+    }
+
+    private void SetToIndex(int index)
+    {
+        Vector2 pos = topAnchoredPos + new Vector2(0f, -rowHeight * index);
+        highlight.anchoredPosition = pos;
+    }
+
+    // ★ 페이지가 바뀔 때 호출: 맨 윗칸으로 이동
+    public void ResetToTop()
+    {
+        currentIndex = 0;
+        SetToIndex(currentIndex);
+    }
+}
