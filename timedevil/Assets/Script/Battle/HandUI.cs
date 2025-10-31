@@ -1,32 +1,40 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class HandUI : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private RectTransform row;        // Hand ÆĞ³Î(ÀÚ±â ÀÚ½ÅÀÌ¸é ºñ¿öµµ µÊ)
-    [SerializeField] private GameObject cardPrefab;    // Image 1°³ ÀÌ»ó Æ÷ÇÔµÈ °£´Ü ÇÁ¸®ÆÕ
+    [SerializeField] private RectTransform row;        // Hand ì»¨í…Œì´ë„ˆ
+    [SerializeField] private GameObject cardPrefab;    // ë‹¨ìˆœ Image í”„ë¦¬íŒ¹
     [SerializeField] private string resourcesFolder = "my_asset";
 
     [Header("Layout (single row, left aligned)")]
     [SerializeField] private float leftPadding = 8f;
-    [SerializeField] private float cardWidth = 120f; // ºÙ¿©¼­ ¹èÄ¡ÇÏ¹Ç·Î °£°İ=Æø
+    [SerializeField] private float cardWidth = 120f; // ë¶™ì—¬ì„œ ë°°ì¹˜
+
+    [Header("Select Overlay")]
+    [SerializeField] private RectTransform select;     // âœ… ì£¼í™© í”„ë ˆì„ ì´ë¯¸ì§€
+    [SerializeField] private Vector2 selectPadding = new Vector2(8f, 8f);
 
     private readonly List<GameObject> spawned = new();
+
+    // ì„ íƒ ëª¨ë“œ ìƒíƒœ
+    private bool selecting = false;
+    private int selectIndex = -1;
 
     void Awake()
     {
         if (!row) row = (RectTransform)transform;
-        // ½ÃÀÛ ½Ã¿£ Ä«µå ÀÌ¹ÌÁö¸¸ ¼û°ÜµĞ´Ù
         HideCards();
+        if (select) select.gameObject.SetActive(false);   // ì²˜ìŒì—” ìˆ¨ê¹€
     }
 
     void OnEnable()
     {
         if (BattleDeckRuntime.Instance != null)
             BattleDeckRuntime.Instance.OnHandChanged += RebuildFromHand;
-        // ¾À ½ÃÀÛ Á÷ÈÄ ¼ÕÆĞ°¡ ÀÌ¹Ì ÀÖÀ» ¼ö ÀÖÀ¸´Ï ÇÑ ¹ø ¸ÂÃçµÎ±â
+
         RebuildFromHand();
     }
 
@@ -36,12 +44,26 @@ public class HandUI : MonoBehaviour
             BattleDeckRuntime.Instance.OnHandChanged -= RebuildFromHand;
     }
 
-    /// <summary>ÇöÀç ¼ÕÆĞ(BattleDeckRuntime.hand) ±âÁØÀ¸·Î Ä«µå ¾ÆÀÌÄÜÀ» ½Ï °¥¾Æ³¢¿ò.</summary>
+    void Update()
+    {
+        if (!selecting) return;
+
+        // ì„ íƒëª¨ë“œì¼ ë•Œë§Œ ì´ë™/ì·¨ì†Œ ì…ë ¥ì„ ë°›ìŒ
+        int count = spawned.Count;
+        if (count == 0) { ExitSelectMode(); return; }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+            SetSelectIndex((selectIndex - 1 + count) % count);
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+            SetSelectIndex((selectIndex + 1) % count);
+        else if (Input.GetKeyDown(KeyCode.Q))
+            ExitSelectMode(); // ì„ íƒ ì·¨ì†Œ
+    }
+
+    /// <summary>í˜„ì¬ ì†íŒ¨ ê¸°ì¤€ìœ¼ë¡œ ì¹´ë“œ ì•„ì´ì½˜ ì „ë¶€ ì¬ìƒì„± + ì™¼ìª½ë¶€í„° ë¶™ì—¬ ë°°ì¹˜.</summary>
     public void RebuildFromHand()
     {
         if (!row) row = (RectTransform)transform;
-
-        // ÇÁ¸®ÆÕ ¾øÀ¸¸é ¾Æ¹« °Íµµ ÇÏÁö ¾ÊÀ½
         if (!cardPrefab) return;
 
         var rt = BattleDeckRuntime.Instance;
@@ -50,7 +72,6 @@ public class HandUI : MonoBehaviour
         var hand = rt.GetHandIds();
         ClearSpawned();
 
-        // ¿ŞÂÊ ºÙ¿©¼­ ¹èÄ¡
         float x = leftPadding;
         for (int i = 0; i < hand.Count; i++)
         {
@@ -75,11 +96,13 @@ public class HandUI : MonoBehaviour
             itemRT.anchoredPosition = new Vector2(x, 0f);
             itemRT.sizeDelta = new Vector2(cardWidth, itemRT.sizeDelta.y);
 
-            x += cardWidth; // °£°İ ¾øÀÌ ¹Ù·Î ºÙÀÌ±â
+            x += cardWidth;
         }
+
+        // ì†íŒ¨ê°€ ë°”ë€Œë©´ ì„ íƒëª¨ë“œëŠ” í•´ì œ(ì•ˆì „í•˜ê²Œ)
+        ExitSelectMode();
     }
 
-    /// <summary>·±Å¸ÀÓÀ¸·Î »ı¼ºÇß´ø Ä«µå ¿ÀºêÁ§Æ® ÀüºÎ Á¦°Å.</summary>
     private void ClearSpawned()
     {
         for (int i = 0; i < spawned.Count; i++)
@@ -87,17 +110,74 @@ public class HandUI : MonoBehaviour
         spawned.Clear();
     }
 
-    /// <summary>»ı¼ºµÈ Ä«µåµé¸¸ º¸ÀÌ±â.</summary>
     public void ShowCards()
     {
         for (int i = 0; i < spawned.Count; i++)
             if (spawned[i]) spawned[i].SetActive(true);
     }
 
-    /// <summary>»ı¼ºµÈ Ä«µåµé¸¸ ¼û±â±â(Hand ¿ÀºêÁ§Æ®´Â °è¼Ó ÄÑµÒ).</summary>
     public void HideCards()
     {
         for (int i = 0; i < spawned.Count; i++)
             if (spawned[i]) spawned[i].SetActive(false);
+        if (select) select.gameObject.SetActive(false); // ì„ íƒ í”„ë ˆì„ë„ í•¨ê»˜ ìˆ¨ê¹€
+        selecting = false;
+        selectIndex = -1;
+    }
+
+    // ---------- ì„ íƒ ëª¨ë“œ ----------
+
+    /// <summary>Cardê°€ Eë¡œ ì„ íƒëì„ ë•Œ í˜¸ì¶œ â†’ ì„ íƒëª¨ë“œ ì§„ì…, ì˜¤ë¥¸ìª½ ë ì¹´ë“œë¶€í„°.</summary>
+    public void EnterSelectMode()
+    {
+        int count = spawned.Count;
+        if (count == 0 || !select) return;
+
+        selecting = true;
+        select.gameObject.SetActive(true);
+        // ì˜¤ë¥¸ìª½ ë ì¹´ë“œ(ê°€ì¥ ë§ˆì§€ë§‰)
+        SetSelectIndex(count - 1);
+    }
+
+    /// <summary>ì„ íƒëª¨ë“œ ì¢…ë£Œ(ì·¨ì†Œ/Q).</summary>
+    public void ExitSelectMode()
+    {
+        selecting = false;
+        selectIndex = -1;
+        if (select) select.gameObject.SetActive(false);
+    }
+
+    private void SetSelectIndex(int idx)
+    {
+        if (spawned.Count == 0 || !select) return;
+
+        selectIndex = Mathf.Clamp(idx, 0, spawned.Count - 1);
+        var target = (RectTransform)spawned[selectIndex].transform;
+
+        // selectë¥¼ Hand ì¢Œí‘œê³„ì—ì„œ íƒ€ê²Ÿ ìœ„ì¹˜/í¬ê¸°ì— ë§ì¶”ê¸°
+        select.SetParent(row, worldPositionStays: false);
+        select.anchorMin = select.anchorMax = new Vector2(0f, 0.5f);
+        select.pivot = new Vector2(0f, 0.5f);
+
+        // íŒ¨ë”©ì„ ì¤€ í…Œë‘ë¦¬ë¡œ ë³´ì´ê²Œ
+        var size = target.sizeDelta + selectPadding * 2f;
+        var pos = target.anchoredPosition - new Vector2(selectPadding.x, 0f);
+
+        select.sizeDelta = new Vector2(size.x, Mathf.Max(size.y, 0f));
+        select.anchoredPosition = new Vector2(pos.x, 0f);
+
+        // ê²¹ì¹  ê°€ëŠ¥ì„± ëŒ€ë¹„ ë§¨ ìœ„ë¡œ
+        select.SetAsLastSibling();
+    }
+
+    /// <summary>í˜„ì¬ ì„ íƒëª¨ë“œ ì¤‘ì¸ì§€ í™•ì¸.</summary>
+    public bool IsSelecting() => selecting;
+    public int CardCount => spawned.Count;
+
+
+    public RectTransform GetCardRect(int index)
+    {
+        if (index < 0 || index >= spawned.Count || !spawned[index]) return null;
+        return (RectTransform)spawned[index].transform;
     }
 }

@@ -1296,6 +1296,8 @@ MonoBehaviour:
   resourcesFolder: my_asset
   leftPadding: 8
   cardWidth: 240
+  select: {fileID: 2047237471}
+  selectPadding: {x: 8, y: 8}
 --- !u!1 &1021224431
 GameObject:
   m_ObjectHideFlags: 0
@@ -4416,6 +4418,8 @@ GameObject:
   - component: {fileID: 1069897050}
   - component: {fileID: 1069897049}
   - component: {fileID: 1069897052}
+  - component: {fileID: 1069897053}
+  - component: {fileID: 1069897054}
   m_Layer: 0
   m_Name: BattleManager_UI
   m_TagString: Untagged
@@ -4456,6 +4460,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onSubmit:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &1069897050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4506,6 +4513,36 @@ MonoBehaviour:
   handCanvasGroup: {fileID: 860620051}
   clearOnAwake: 1
   logDebug: 0
+--- !u!114 &1069897053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1069897048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bc5a6315bdcea043b0fe466094d81cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menu: {fileID: 1069897049}
+  hand: {fileID: 860620052}
+--- !u!114 &1069897054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1069897048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a58998074885735439538da4e77d8790, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menu: {fileID: 1069897049}
+  hand: {fileID: 860620052}
+  selector: {fileID: 2047237472}
+  wrap: 1
 --- !u!1 &1234915015
 GameObject:
   m_ObjectHideFlags: 0
