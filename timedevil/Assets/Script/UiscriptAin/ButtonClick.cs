@@ -65,7 +65,7 @@ public class InventoryPageManagerKeys : MonoBehaviour
 
         if (pageText) pageText.text = $"{page} / {totalPages}";
 
-        if (resetCursor && cursor != null)
+        if (resetCursor && cursor != null) 
             cursor.ResetToTop();
     }
 }
