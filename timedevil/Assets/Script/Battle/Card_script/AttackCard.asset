@@ -15,7 +15,8 @@ MonoBehaviour:
   id: Card1
   displayName: "\uCE74\uB4DC1"
   type: 0
-  display: "\uC751\uC560\uC751\uC560\uC751\uC560"
+  display: "\uD478\uB978\uB208\uC758\uBC31\uB8E1\n\uCE74\uC774\uBC14\uC0AC\uC7A5\uC774
+    \uC4F0\uB358 \uCE74\uB4DC\uB2E4. \uC5C4\uCCAD\uB098\uAC8C \uAC15\uD574\uBCF4\uC778\uB2E4."
   cost: 1
   positive: 0
   negative: 0
