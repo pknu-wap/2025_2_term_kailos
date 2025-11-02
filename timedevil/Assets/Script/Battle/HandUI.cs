@@ -5,29 +5,37 @@ using UnityEngine.UI;
 public class HandUI : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private RectTransform row;        // Hand 컨테이너
-    [SerializeField] private GameObject cardPrefab;    // 단순 Image 프리팹
+    [SerializeField] private RectTransform row;
+    [SerializeField] private GameObject cardPrefab;
     [SerializeField] private string resourcesFolder = "my_asset";
 
     [Header("Layout (single row, left aligned)")]
     [SerializeField] private float leftPadding = 8f;
-    [SerializeField] private float cardWidth = 120f; // 붙여서 배치
+    [SerializeField] private float cardWidth = 120f;
 
     [Header("Select Overlay")]
-    [SerializeField] private RectTransform select;     // ✅ 주황 프레임 이미지
+    [SerializeField] private RectTransform select;
     [SerializeField] private Vector2 selectPadding = new Vector2(8f, 8f);
 
     private readonly List<GameObject> spawned = new();
+    private readonly List<string> handIdsSnapshot = new();
+    public IReadOnlyList<string> VisibleHandIds => handIdsSnapshot;
 
-    // 선택 모드 상태
     private bool selecting = false;
     private int selectIndex = -1;
+
+    public event System.Action<bool> onSelectModeChanged;
+    public event System.Action<int> onSelectIndexChanged;
+
+    public bool IsInSelectMode => selecting;
+    public int CurrentSelectIndex => selectIndex;
+    public int CardCount => handIdsSnapshot.Count;
 
     void Awake()
     {
         if (!row) row = (RectTransform)transform;
         HideCards();
-        if (select) select.gameObject.SetActive(false);   // 처음엔 숨김
+        if (select) select.gameObject.SetActive(false);
     }
 
     void OnEnable()
@@ -44,63 +52,43 @@ public class HandUI : MonoBehaviour
             BattleDeckRuntime.Instance.OnHandChanged -= RebuildFromHand;
     }
 
-    void Update()
-    {
-        if (!selecting) return;
+    // 🚫 입력은 여기서 처리하지 않습니다! (중복 이동 방지)
 
-        // 선택모드일 때만 이동/취소 입력을 받음
-        int count = spawned.Count;
-        if (count == 0) { ExitSelectMode(); return; }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-            SetSelectIndex((selectIndex - 1 + count) % count);
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-            SetSelectIndex((selectIndex + 1) % count);
-        else if (Input.GetKeyDown(KeyCode.Q))
-            ExitSelectMode(); // 선택 취소
-    }
-
-    /// <summary>현재 손패 기준으로 카드 아이콘 전부 재생성 + 왼쪽부터 붙여 배치.</summary>
     public void RebuildFromHand()
     {
         if (!row) row = (RectTransform)transform;
         if (!cardPrefab) return;
-
         var rt = BattleDeckRuntime.Instance;
         if (rt == null) return;
 
-        var hand = rt.GetHandIds();
-        ClearSpawned();
+        handIdsSnapshot.Clear();
+        var live = rt.GetHandIds();
+        if (live != null) handIdsSnapshot.AddRange(live);
 
+        ClearSpawned();
         float x = leftPadding;
-        for (int i = 0; i < hand.Count; i++)
+        for (int i = 0; i < handIdsSnapshot.Count; i++)
         {
-            string id = hand[i];
+            string id = handIdsSnapshot[i];
             var go = Instantiate(cardPrefab, row);
             go.name = $"HandCard_{id}";
             spawned.Add(go);
 
-            var img = go.GetComponentInChildren<Image>();
-            if (!img) img = go.AddComponent<Image>();
-
-            Sprite s = null;
-            if (!string.IsNullOrEmpty(id))
-                s = Resources.Load<Sprite>($"{resourcesFolder}/{id}");
-            img.sprite = s;
+            var img = go.GetComponentInChildren<Image>() ?? go.AddComponent<Image>();
+            img.sprite = !string.IsNullOrEmpty(id) ? Resources.Load<Sprite>($"{resourcesFolder}/{id}") : null;
             img.preserveAspect = true;
             img.raycastTarget = true;
 
-            var itemRT = (RectTransform)go.transform;
-            itemRT.anchorMin = itemRT.anchorMax = new Vector2(0f, 0.5f);
-            itemRT.pivot = new Vector2(0f, 0.5f);
-            itemRT.anchoredPosition = new Vector2(x, 0f);
-            itemRT.sizeDelta = new Vector2(cardWidth, itemRT.sizeDelta.y);
+            var rtItem = (RectTransform)go.transform;
+            rtItem.anchorMin = rtItem.anchorMax = new Vector2(0f, 0.5f);
+            rtItem.pivot = new Vector2(0f, 0.5f);
+            rtItem.anchoredPosition = new Vector2(x, 0f);
+            rtItem.sizeDelta = new Vector2(cardWidth, rtItem.sizeDelta.y);
 
             x += cardWidth;
         }
 
-        // 손패가 바뀌면 선택모드는 해제(안전하게)
-        ExitSelectMode();
+        ExitSelectMode(); // 손패가 바뀌면 선택 해제
     }
 
     private void ClearSpawned()
@@ -120,64 +108,73 @@ public class HandUI : MonoBehaviour
     {
         for (int i = 0; i < spawned.Count; i++)
             if (spawned[i]) spawned[i].SetActive(false);
-        if (select) select.gameObject.SetActive(false); // 선택 프레임도 함께 숨김
+        if (select) select.gameObject.SetActive(false);
         selecting = false;
         selectIndex = -1;
     }
 
-    // ---------- 선택 모드 ----------
-
-    /// <summary>Card가 E로 선택됐을 때 호출 → 선택모드 진입, 오른쪽 끝 카드부터.</summary>
+    // ---- 선택모드 공개 API ----
     public void EnterSelectMode()
     {
-        int count = spawned.Count;
-        if (count == 0 || !select) return;
-
+        if (CardCount == 0) return;
         selecting = true;
-        select.gameObject.SetActive(true);
-        // 오른쪽 끝 카드(가장 마지막)
-        SetSelectIndex(count - 1);
+        if (select) select.gameObject.SetActive(true);
+        onSelectModeChanged?.Invoke(true);
+
+        SetSelectIndexPublic(CardCount - 1); // 오른쪽 끝부터
     }
 
-    /// <summary>선택모드 종료(취소/Q).</summary>
     public void ExitSelectMode()
     {
+        if (!selecting) return;
         selecting = false;
+        onSelectModeChanged?.Invoke(false);
         selectIndex = -1;
         if (select) select.gameObject.SetActive(false);
     }
 
-    private void SetSelectIndex(int idx)
+    public void MoveSelect(int delta)
     {
-        if (spawned.Count == 0 || !select) return;
-
-        selectIndex = Mathf.Clamp(idx, 0, spawned.Count - 1);
-        var target = (RectTransform)spawned[selectIndex].transform;
-
-        // select를 Hand 좌표계에서 타겟 위치/크기에 맞추기
-        select.SetParent(row, worldPositionStays: false);
-        select.anchorMin = select.anchorMax = new Vector2(0f, 0.5f);
-        select.pivot = new Vector2(0f, 0.5f);
-
-        // 패딩을 준 테두리로 보이게
-        var size = target.sizeDelta + selectPadding * 2f;
-        var pos = target.anchoredPosition - new Vector2(selectPadding.x, 0f);
-
-        select.sizeDelta = new Vector2(size.x, Mathf.Max(size.y, 0f));
-        select.anchoredPosition = new Vector2(pos.x, 0f);
-
-        // 겹칠 가능성 대비 맨 위로
-        select.SetAsLastSibling();
+        if (!selecting || CardCount == 0) return;
+        int next = selectIndex + delta;
+        // 기본 래핑
+        next = (next % CardCount + CardCount) % CardCount;
+        SetSelectIndexPublic(next);
     }
 
-    /// <summary>현재 선택모드 중인지 확인.</summary>
-    public bool IsSelecting() => selecting;
-    public int CardCount => spawned.Count;
+    public void SetSelectIndexPublic(int idx)
+    {
+        if (CardCount == 0) return;
 
+        int prev = selectIndex;
+        selectIndex = Mathf.Clamp(idx, 0, CardCount - 1);
+        if (selectIndex != prev) onSelectIndexChanged?.Invoke(selectIndex);
+
+        if (select && selectIndex >= 0 && selectIndex < spawned.Count)
+        {
+            var target = (RectTransform)spawned[selectIndex].transform;
+            select.SetParent(row, false);
+            select.anchorMin = select.anchorMax = new Vector2(0f, 0.5f);
+            select.pivot = new Vector2(0f, 0.5f);
+
+            var size = target.sizeDelta + selectPadding * 2f;
+            var pos = target.anchoredPosition - new Vector2(selectPadding.x, 0f);
+
+            select.sizeDelta = new Vector2(size.x, Mathf.Max(size.y, 0f));
+            select.anchoredPosition = new Vector2(pos.x, 0f);
+            select.SetAsLastSibling();
+        }
+    }
 
     public RectTransform GetCardRect(int index)
     {
         if (index < 0 || index >= spawned.Count || !spawned[index]) return null;
         return (RectTransform)spawned[index].transform;
+    }
+
+    public string GetVisibleIdAt(int index)
+    {
+        if (index < 0 || index >= handIdsSnapshot.Count) return null;
+        return handIdsSnapshot[index];
     }
 }

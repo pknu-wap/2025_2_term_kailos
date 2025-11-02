@@ -7,7 +7,7 @@ public class PlayerDataRuntime : MonoBehaviour
 
     [Header("Auto Save 옵션")]
     public bool saveOnDisable = false;
-    public bool saveOnQuit = true;
+    public bool saveOnQuit = false;
 
     [Header("Data")]
     public PlayerData Data;   // 인스펙터에서 기본값 설정 가능

@@ -1,4 +1,4 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 
 public class DescriptionPanelController : MonoBehaviour
@@ -7,16 +7,18 @@ public class DescriptionPanelController : MonoBehaviour
     [SerializeField] private TMP_Text descriptionText;
 
     [Header("Sources")]
-    [SerializeField] private BattleMenuController menu;    // 0=Card, 1=Item, 2=End, 3=Run
+    [SerializeField] private BattleMenuController menu;
+    [SerializeField] private HandUI hand;
+    [SerializeField] private CardDatabaseSO database;
 
     [Header("Messages")]
-    [TextArea] public string msgCard = "Card¸¦ ¼±ÅÃÇÕ´Ï´Ù.";
-    [TextArea] public string msgItem = "ItemÀ» ¼±ÅÃÇÕ´Ï´Ù.";
-    [TextArea] public string msgEnd = "ÅÏ¿£µåÇÕ´Ï´Ù.";
-    [TextArea] public string msgRun = "µµ¸ÁÄ¨´Ï´Ù.";
+    [TextArea] public string msgCard = "Cardë¥¼ ì„ íƒí•©ë‹ˆë‹¤.";
+    [TextArea] public string msgItem = "Itemì„ ì„ íƒí•©ë‹ˆë‹¤.";
+    [TextArea] public string msgEnd = "í„´ì—”ë“œí•©ë‹ˆë‹¤.";
+    [TextArea] public string msgRun = "ë„ë§ì¹©ë‹ˆë‹¤.";
 
     [Header("Optional Refs")]
-    [SerializeField] private CanvasGroup handCanvasGroup;  // Run(3)ÀÏ ¶§¸¸ ¼û±è
+    [SerializeField] private CanvasGroup handCanvasGroup;
     [SerializeField] private bool clearOnAwake = true;
     [SerializeField] private bool logDebug = false;
 
@@ -25,27 +27,37 @@ public class DescriptionPanelController : MonoBehaviour
     void Reset()
     {
         if (!descriptionText) descriptionText = GetComponentInChildren<TMP_Text>();
-        if (!menu) menu = FindObjectOfType<BattleMenuController>();
+        if (!menu) menu = FindObjectOfType<BattleMenuController>(true);
+        if (!hand) hand = FindObjectOfType<HandUI>(true);
     }
 
     void Awake()
     {
         if (!descriptionText) descriptionText = GetComponentInChildren<TMP_Text>();
-        if (!menu) menu = FindObjectOfType<BattleMenuController>();
+        if (!menu) menu = FindObjectOfType<BattleMenuController>(true);
+        if (!hand) hand = FindObjectOfType<HandUI>(true);
     }
 
     void OnEnable()
     {
-        if (menu) menu.onFocusChanged.AddListener(OnFocusChanged);
-
-        int cur = menu ? menu.Index : 0;
-        Apply(cur);
-        _lastIndex = cur;
+        if (menu) menu.onFocusChanged.AddListener(OnMenuFocusChanged);
+        if (hand != null)
+        {
+            hand.onSelectModeChanged += _ => RefreshNow();
+            hand.onSelectIndexChanged += _ => RefreshNow();
+        }
+        _lastIndex = menu ? menu.Index : 0;
+        RefreshNow();
     }
 
     void OnDisable()
     {
-        if (menu) menu.onFocusChanged.RemoveListener(OnFocusChanged);
+        if (menu) menu.onFocusChanged.RemoveListener(OnMenuFocusChanged);
+        if (hand != null)
+        {
+            hand.onSelectModeChanged -= _ => RefreshNow();
+            hand.onSelectIndexChanged -= _ => RefreshNow();
+        }
     }
 
     void Start()
@@ -57,32 +69,23 @@ public class DescriptionPanelController : MonoBehaviour
     {
         if (menu && menu.Index != _lastIndex)
         {
-            Apply(menu.Index);
             _lastIndex = menu.Index;
+            RefreshNow();
         }
     }
 
-    private void OnFocusChanged(int index)
+    private void OnMenuFocusChanged(int idx)
     {
-        Apply(index);
-        _lastIndex = index;
+        _lastIndex = idx;
+        RefreshNow();
     }
 
-    private void Apply(int index)
+    private void RefreshNow()
     {
-        // 0=Card, 1=Item, 2=End, 3=Run
-        string msg = index switch
-        {
-            0 => msgCard,
-            1 => msgItem,
-            2 => msgEnd,
-            3 => msgRun,
-            _ => string.Empty
-        };
+        if (!descriptionText) return;
 
-        if (descriptionText) descriptionText.text = msg;
+        int index = menu ? menu.Index : 0;
 
-        // Run(3)ÀÏ ¶§¸¸ Hand ÆĞ³Î ¼û±è
         if (handCanvasGroup)
         {
             bool showHand = (index != 3);
@@ -91,6 +94,42 @@ public class DescriptionPanelController : MonoBehaviour
             handCanvasGroup.blocksRaycasts = showHand;
         }
 
-        if (logDebug) Debug.Log($"[DescPanel] focus={index} ¡æ \"{msg}\"");
+        // ë©”ë‰´ê°€ Cardì´ê³  ì„ íƒëª¨ë“œë©´ í˜„ì¬ ì„ íƒ ì¹´ë“œì˜ SO ì„¤ëª…
+        if (index == 0 && hand != null && hand.IsInSelectMode)
+        {
+            string msg = GetCurrentCardDisplay() ?? msgCard;
+            descriptionText.text = msg;
+            if (logDebug) Debug.Log($"[DescPanel] selecting idx={hand.CurrentSelectIndex}, msg={msg}");
+            return;
+        }
+
+        // ê¸°ë³¸ ë©”ì‹œì§€
+        descriptionText.text = index switch
+        {
+            0 => msgCard,
+            1 => msgItem,
+            2 => msgEnd,
+            3 => msgRun,
+            _ => string.Empty
+        };
+    }
+
+    private string GetCurrentCardDisplay()
+    {
+        if (database == null || hand == null) return null;
+
+        var ids = hand.VisibleHandIds; // HandUI ìŠ¤ëƒ…ìƒ·(í™”ë©´ ìˆœì„œ ë³´ì¥)
+        if (ids == null || ids.Count == 0) return null;
+
+        int i = Mathf.Clamp(hand.CurrentSelectIndex, 0, ids.Count - 1);
+        string id = ids[i];
+
+        var so = database.GetById(id);
+        if (!so)
+        {
+            if (logDebug) Debug.LogWarning($"[DescPanel] DB miss for id={id}");
+            return $"(ë“±ë¡ë˜ì§€ ì•Šì€ ì¹´ë“œ: {id})";
+        }
+        return so.display;
     }
 }

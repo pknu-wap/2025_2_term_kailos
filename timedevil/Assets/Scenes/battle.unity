@@ -1174,8 +1174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 865e18b6073433b468d860ab1e2a1c4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialHandSize: 3
-  maxHandSize: 3
+  initialHandSize: 6
+  maxHandSize: 6
 --- !u!114 &726002413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4505,7 +4505,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   descriptionText: {fileID: 1367395971}
-  menu: {fileID: 0}
+  menu: {fileID: 1069897049}
+  hand: {fileID: 860620052}
+  database: {fileID: 11400000, guid: c0cc44962aa33464ca629e77b4d09b2b, type: 2}
   msgCard: "Card\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgItem: "Item\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgEnd: "\uD134\uC5D4\uB4DC\uD569\uB2C8\uB2E4."
@@ -4520,7 +4522,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1069897048}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6bc5a6315bdcea043b0fe466094d81cb, type: 3}
   m_Name: 
@@ -4541,7 +4543,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   menu: {fileID: 1069897049}
   hand: {fileID: 860620052}
-  selector: {fileID: 2047237472}
+  externalSelector: {fileID: 0}
   wrap: 1
 --- !u!1 &1234915015
 GameObject:

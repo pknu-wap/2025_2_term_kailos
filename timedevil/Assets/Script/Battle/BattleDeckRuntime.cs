@@ -13,8 +13,8 @@ public class BattleDeckRuntime : MonoBehaviour
     public readonly List<string> hand = new();
 
     [Header("Rules")]
-    [SerializeField] private int initialHandSize = 3; // 초기 드로우
-    [SerializeField] private int maxHandSize = 3;     // 손패 최대
+    [SerializeField] private int initialHandSize = 5; // 초기 드로우
+    [SerializeField] private int maxHandSize = 5;     // 손패 최대
 
     // 손패가 바뀌면 UI가 구독해서 리빌드
     public event Action OnHandChanged;
