@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "name": "Potion",
+      "quantity": 3,
+      "description": "HP를 50 회복합니다.",
+      "spritePath": "ItemIcons/Potion"
+    },
+    {
+      "name": "Elixir",
+      "quantity": 1,
+      "description": "모든 능력치를 회복합니다.",
+      "spritePath": "ItemIcons/Elixir"
+    },
+    {
+      "name": "Key",
+      "quantity": 2,
+      "description": "문을 여는 열쇠입니다.",
+      "spritePath": "ItemIcons/Key"
+    }
+  ]
+}
+
