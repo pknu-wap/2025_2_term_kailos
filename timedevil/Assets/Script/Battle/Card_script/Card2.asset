@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ab7059ed9806584bab32746afc3b7b5, type: 3}
-  m_Name: AttackCard
+  m_Name: Card2
   m_EditorClassIdentifier: 
-  id: Card1
-  displayName: "\uCE74\uB4DC1"
+  id: Card2
+  displayName: "\uCE74\uB4DC2"
   type: 0
-  display: "\uD478\uB978\uB208\uC758\uBC31\uB8E1\n\uCE74\uC774\uBC14\uC0AC\uC7A5\uC774
-    \uC4F0\uB358 \uCE74\uB4DC\uB2E4. \uC5C4\uCCAD\uB098\uAC8C \uAC15\uD574\uBCF4\uC778\uB2E4."
+  display: "\uC0AC\uC774\uBC84 \uB4DC\uB798\uACE4\n\uC790\uC2E0\uD544\uB4DC\uC704\uC5D0
+    \uBAAC\uC2A4\uD130\uCE74\uB4DC\uAC00 \uC5C6\uC73C\uBA74 \uD2B9\uC218\uC18C\uD658\uD560\uC218\uC788\uB294
+    \uC5C4\uCCAD \uD558\uC774\uD55C \uCE74\uB4DC"
   cost: 1
   positive: 0
   negative: 0

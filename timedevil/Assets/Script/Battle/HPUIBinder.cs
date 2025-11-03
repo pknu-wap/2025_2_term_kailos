@@ -1,102 +1,108 @@
-using System;
+ï»¿// HPUIBinder.cs (êµì²´)
 using System.Reflection;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// ÀüÅõ UI¿¡ HP¸¦ "ÇöÀç/ÃÖ´ë" ÇüÅÂ·Î Ç¥½ÃÇØ ÁÖ´Â ¹ÙÀÎ´õ.
-/// - PlayerData´Â Á÷Á¢ ÂüÁ¶(SerializeField ¶Ç´Â ·±Å¸ÀÓ ÁÖÀÔ)
-/// - Enemy´Â ÄÄÆ÷³ÍÆ®(¿¹: Enemy1)¿¡¼­ public int currentHP, maxHP¸¦ ¹İ»ç·Î ÀĞ´Â´Ù
-/// </summary>
+/// ì „íˆ¬ UIì— HPë¥¼ "í˜„ì¬/ìµœëŒ€" í˜•íƒœë¡œ í‘œì‹œ.
+/// ìš°ì„  EnemyRuntimeê°€ ìˆìœ¼ë©´ ê·¸ ê°’ì„ ì‚¬ìš©, ì—†ìœ¼ë©´ ê¸°ì¡´ ì»´í¬ë„ŒíŠ¸ ë¦¬í”Œë ‰ì…˜ìœ¼ë¡œ í´ë°±.
 public class HPUIBinder : MonoBehaviour
 {
     [Header("Player UI")]
-    [SerializeField] private TMP_Text playerHpText;   // ¿¹: "HP : 32 / 50"
+    [SerializeField] private TMP_Text playerHpText;
 
     [Header("Enemy UI")]
-    [SerializeField] private TMP_Text enemyHpText;    // ¿¹: "HP : 12 / 60"
+    [SerializeField] private TMP_Text enemyHpText;
 
     [Header("Sources")]
-    [SerializeField] private PlayerData playerData;   // ¾øÀ¸¸é Start¿¡¼­ ½ÃµµÇØ¼­ ÁÖÀÔ
+    [SerializeField] private PlayerData playerData;     // Startì—ì„œ PlayerDataRuntimeë¡œ ë³´ì¶© ê°€ëŠ¥
+    [SerializeField] private EnemyRuntime enemyRuntime; // ìƒˆ ê²½ë¡œ(ìš°ì„  ì‚¬ìš©)
 
-    // Enemy ÄÄÆ÷³ÍÆ®(Enemy1, Enemy2 µî). ÇÊµå¸íÀ» ¹İ»ç·Î ÀĞ´Â´Ù.
+    // í´ë°±: ì˜ˆì „ Enemy ì»´í¬ë„ŒíŠ¸(Enemy1 ë“±)
     private MonoBehaviour enemyComp;
     private FieldInfo enemyCurHpField;
     private FieldInfo enemyMaxHpField;
 
-    // ---------------- Public API ----------------
-
-    /// <summary>ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ(·±Å¸ÀÓ) ¹ÙÀÎµù. ¾øÀ¸¸é SerializeField °ª »ç¿ë.</summary>
+    // ---- Public API ----
     public void BindPlayer(PlayerData data)
     {
         playerData = data;
+        Refresh();
     }
 
-    /// <summary>Àû ÄÄÆ÷³ÍÆ® ¹ÙÀÎµù(Enemy1 µî). public int currentHP, maxHP ÇÊµå¸¦ Ã£´Â´Ù.</summary>
+    public void BindEnemyRuntime(EnemyRuntime rt)
+    {
+        if (enemyRuntime != null) enemyRuntime.OnChanged -= Refresh;
+        enemyRuntime = rt;
+        if (enemyRuntime != null) enemyRuntime.OnChanged += Refresh;
+        Refresh();
+    }
+
+    // ì˜› ë°©ì‹(í´ë°±) ìœ ì§€
     public void BindEnemy(MonoBehaviour enemy)
     {
         enemyComp = enemy;
         CacheEnemyHPFields(enemyComp);
+        Refresh();
     }
 
-    /// <summary>Áï½Ã UI »õ·Î°íÄ§.</summary>
     public void Refresh()
     {
         // Player
         if (playerHpText != null && playerData != null)
-        {
             playerHpText.text = $"HP : {playerData.currentHP} / {playerData.maxHP}";
-        }
 
-        // Enemy
-        if (enemyHpText != null && enemyComp != null && enemyCurHpField != null && enemyMaxHpField != null)
+        // Enemy: Runtime ìš°ì„ 
+        if (enemyHpText != null)
         {
-            int cur = Mathf.Max(0, (int)enemyCurHpField.GetValue(enemyComp));
-            int max = Mathf.Max(1, (int)enemyMaxHpField.GetValue(enemyComp));
-            enemyHpText.text = $"HP : {cur} / {max}";
+            if (enemyRuntime != null)
+            {
+                enemyHpText.text = $"HP : {enemyRuntime.currentHP} / {enemyRuntime.maxHP}";
+            }
+            else if (enemyComp != null && enemyCurHpField != null && enemyMaxHpField != null)
+            {
+                int cur = Mathf.Max(0, (int)enemyCurHpField.GetValue(enemyComp));
+                int max = Mathf.Max(1, (int)enemyMaxHpField.GetValue(enemyComp));
+                enemyHpText.text = $"HP : {cur} / {max}";
+            }
         }
     }
 
-    // ---------------- Unity lifecycle ----------------
-
+    // ---- Unity ----
     private void Start()
     {
-        // ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ°¡ ºñ¾î ÀÖÀ¸¸é ·±Å¸ÀÓ ½Ì±ÛÅæ/ÄÁÅØ½ºÆ®¿¡¼­ ½Ãµµ
         if (playerData == null)
         {
-            // ÀÌ¹Ì °¡Áö°í ÀÖ´Â ·±Å¸ÀÓ °ü¸®ÀÚ°¡ ÀÖÀ¸¸é °Å±â¼­ ²¨³» ¾²¼¼¿ä.
-            // ¿¹: PlayerDataRuntime.Instance?.Data
             var runtime = FindObjectOfType<PlayerDataRuntime>();
             if (runtime != null) playerData = runtime.Data;
         }
 
-        // ¾À µé¾î¿ÀÀÚ¸¶ÀÚ ÇÑ ¹ø °»½Å
+        if (enemyRuntime == null)
+            enemyRuntime = EnemyRuntime.Instance;
+
+        if (enemyRuntime != null)
+            enemyRuntime.OnChanged += Refresh;
+
         Refresh();
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        // °ªÀÌ ÀÚÁÖ ¹Ù²ğ ¼ö ÀÖÀ¸´Ï °£´ÜÈ÷ ¸Å ÇÁ·¹ÀÓ °»½Å (¿øÇÏ¸é Á¦°ÅÇÏ°í ÀÌº¥Æ® ±â¹İÀ¸·Î È£Ãâ)
-        Refresh();
+        if (enemyRuntime != null)
+            enemyRuntime.OnChanged -= Refresh;
     }
 
-    // ---------------- Helpers ----------------
-
+    // ---- Helpers (fallback) ----
     private void CacheEnemyHPFields(MonoBehaviour comp)
     {
         enemyCurHpField = null;
         enemyMaxHpField = null;
-
         if (comp == null) return;
 
         var t = comp.GetType();
-        // Enemy1.cs¿¡¼­ public int currentHP, maxHP ¶ó°í ÇßÀ¸¹Ç·Î ÀÌ¸§ ±×´ë·Î Ã£´Â´Ù.
         enemyCurHpField = t.GetField("currentHP", BindingFlags.Public | BindingFlags.Instance);
         enemyMaxHpField = t.GetField("maxHP", BindingFlags.Public | BindingFlags.Instance);
 
         if (enemyCurHpField == null || enemyMaxHpField == null)
-        {
-            Debug.LogWarning($"[HPUIBinder] Enemy '{t.Name}'¿¡¼­ currentHP / maxHP ÇÊµå¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
-        }
+            Debug.LogWarning($"[HPUIBinder] Enemy '{t.Name}'ì—ì„œ currentHP / maxHP í•„ë“œë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
     }
 }

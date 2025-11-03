@@ -52,7 +52,7 @@ public class HandUI : MonoBehaviour
             BattleDeckRuntime.Instance.OnHandChanged -= RebuildFromHand;
     }
 
-    // 🚫 입력은 여기서 처리하지 않습니다! (중복 이동 방지)
+    // 입력은 여기서 처리하지 않음
 
     public void RebuildFromHand()
     {
@@ -88,7 +88,9 @@ public class HandUI : MonoBehaviour
             x += cardWidth;
         }
 
-        ExitSelectMode(); // 손패가 바뀌면 선택 해제
+        // 손패 변경 시 선택 해제되더라도, 다음 진입에서 회색 방지
+        ExitSelectMode();
+        ShowCards(); // ✅ 항상 켜 두기 (중요)
     }
 
     private void ClearSpawned()
@@ -117,6 +119,8 @@ public class HandUI : MonoBehaviour
     public void EnterSelectMode()
     {
         if (CardCount == 0) return;
+
+        ShowCards();                 // ✅ 재진입 시 반드시 on
         selecting = true;
         if (select) select.gameObject.SetActive(true);
         onSelectModeChanged?.Invoke(true);
@@ -137,8 +141,7 @@ public class HandUI : MonoBehaviour
     {
         if (!selecting || CardCount == 0) return;
         int next = selectIndex + delta;
-        // 기본 래핑
-        next = (next % CardCount + CardCount) % CardCount;
+        next = (next % CardCount + CardCount) % CardCount; // 래핑
         SetSelectIndexPublic(next);
     }
 
