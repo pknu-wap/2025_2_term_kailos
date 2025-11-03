@@ -1,64 +1,62 @@
+// Assets/Script/Battle/CostController.cs
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CostController : MonoBehaviour
 {
-    [Header("UI")]
-    [SerializeField] private TMP_Text costText;    // "Cost :" 텍스트
+    [Header("Values")]
+    [SerializeField] private int max = 10;
+    [SerializeField] private int current = 10;
 
-    [Header("Rule")]
-    [SerializeField] private int maxPerTurn = 10;
+    [Header("Optional UI")]
+    [SerializeField] private TMP_Text text;     // "AC 7/10" 같은 표시를 원하면 연결
+    [SerializeField] private Slider slider;     // 게이지를 쓰면 연결
 
-    public int Current { get; private set; }
-    public int Max => maxPerTurn;
+    public int Current => current;
+    public int Max => max;
 
-    public System.Action<int, int> onCostChanged;
+    void Start() => Refresh();
 
-    void Reset()
+    /// <summary>현재 코스트를 정확히 value로 설정.</summary>
+    public void ResetTo(int value)
     {
-        if (!costText) costText = GetComponentInChildren<TMP_Text>(true);
+        current = Mathf.Clamp(value, 0, max);
+        Refresh();
     }
 
-    void Awake()
+    /// <summary>최대치로 리셋.</summary>
+    public void ResetToMax()
     {
-        if (!costText) costText = GetComponentInChildren<TMP_Text>(true);
-        ResetTurn(); // 첫 표시
+        current = max;
+        Refresh();
     }
 
-    public void SetMax(int max)
-    {
-        maxPerTurn = Mathf.Max(0, max);
-        Current = Mathf.Min(Current, maxPerTurn);
-        RefreshUI();
-    }
-
-    public void ResetTurn()
-    {
-        Current = maxPerTurn;
-        RefreshUI();
-    }
-
+    /// <summary>코스트를 amount만큼 지불. 충분하면 차감하고 true, 부족하면 false.</summary>
     public bool TryPay(int amount)
     {
         if (amount <= 0) return true;
-        if (Current < amount) return false;
-
-        Current -= amount;
-        RefreshUI();
+        if (current < amount) return false;
+        current -= amount;
+        Refresh();
         return true;
     }
 
-    public void Refund(int amount)
+    /// <summary>코스트 보충(+/- 모두 허용, 0~max로 클램프).</summary>
+    public void Add(int amount)
     {
-        if (amount <= 0) return;
-        Current = Mathf.Min(maxPerTurn, Current + amount);
-        RefreshUI();
+        current = Mathf.Clamp(current + amount, 0, max);
+        Refresh();
     }
 
-    private void RefreshUI()
+    private void Refresh()
     {
-        if (costText)
-            costText.text = $"Cost : {Current}/{maxPerTurn}";
-        onCostChanged?.Invoke(Current, maxPerTurn);
+        if (text) text.text = $"AC {current}/{max}";
+        if (slider)
+        {
+            slider.minValue = 0;
+            slider.maxValue = max;
+            slider.value = current;
+        }
     }
 }

@@ -1,9 +1,9 @@
-﻿// BattleDeckRuntime.cs (교체본)
+﻿// Assets/Script/Battle/BattleDeckRuntime.cs
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BattleDeckRuntime : MonoBehaviour
+public class BattleDeckRuntime : MonoBehaviour, IHandReadable   // ⬅︎ 인터페이스 추가
 {
     public static BattleDeckRuntime Instance { get; private set; }
 
@@ -13,10 +13,10 @@ public class BattleDeckRuntime : MonoBehaviour
     public readonly List<string> hand = new();
 
     [Header("Rules")]
-    [SerializeField] private int initialHandSize = 5; // 초기 드로우
-    [SerializeField] private int maxHandSize = 5;     // 손패 최대
+    [SerializeField] private int initialHandSize = 3; // 필요에 맞게
+    [SerializeField] private int maxHandSize = 3;
 
-    // 손패가 바뀌면 UI가 구독해서 리빌드
+    // HandUI가 구독하는 이벤트
     public event Action OnHandChanged;
 
     void Awake()
@@ -29,12 +29,10 @@ public class BattleDeckRuntime : MonoBehaviour
     {
         LoadDeckFromRuntime();
         Shuffle(deck);
-        DrawInitial();                // 초기 드로우 끝에 OnHandChanged가 반드시 쏴짐
-        if (hand.Count == 0)          // 혹시 초기 드로우가 0장일 수도 있으니 방어적으로 한 번 더
-            OnHandChanged?.Invoke();
+        DrawInitial();
+        if (hand.Count == 0) OnHandChanged?.Invoke();
     }
 
-    /// <summary>CardStateRuntime의 저장 덱을 읽어와 deck에 적재.</summary>
     public void LoadDeckFromRuntime()
     {
         deck.Clear();
@@ -64,22 +62,19 @@ public class BattleDeckRuntime : MonoBehaviour
         }
     }
 
-    /// <summary>초기 드로우.</summary>
     public void DrawInitial()
     {
-        Draw(Mathf.Min(initialHandSize, maxHandSize)); // Draw 내부에서 OnHandChanged 호출
+        Draw(Mathf.Min(initialHandSize, maxHandSize));
 #if UNITY_EDITOR
         Debug.Log($"[BattleDeckRuntime] 초기 드로우 → [{string.Join(", ", hand)}]");
 #endif
     }
 
-    /// <summary>손패가 가득이 아니라면 1장 드로우.</summary>
     public void DrawOneIfNeeded()
     {
         if (hand.Count < maxHandSize) Draw(1);
     }
 
-    /// <summary>n장 드로우. 실제로 이동이 있었다면 OnHandChanged 호출.</summary>
     public void Draw(int n)
     {
         bool moved = false;
@@ -96,21 +91,19 @@ public class BattleDeckRuntime : MonoBehaviour
         if (moved) OnHandChanged?.Invoke();
     }
 
-    /// <summary>손패에서 사용 → 덱 맨 밑으로.</summary>
     public bool UseCardToBottom(int handIndex)
     {
         if (handIndex < 0 || handIndex >= hand.Count) return false;
         string id = hand[handIndex];
         hand.RemoveAt(handIndex);
-        deck.Add(id);              // 맨 밑으로
-        OnHandChanged?.Invoke();   // UI 갱신 통지
+        deck.Add(id);
+        OnHandChanged?.Invoke();
         return true;
     }
 
-    /// <summary>UI에서 읽기용 손패 목록(읽기전용 뷰) 반환.</summary>
+    // IHandReadable 구현
     public IReadOnlyList<string> GetHandIds() => hand;
 
-    /// <summary>손패를 외부에서 통째로 교체해야 할 때 사용(테스트/효과 등).</summary>
     public void SetHand(List<string> newHand)
     {
         hand.Clear();

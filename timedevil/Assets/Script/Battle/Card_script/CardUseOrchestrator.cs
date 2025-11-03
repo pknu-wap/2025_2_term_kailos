@@ -17,7 +17,11 @@ public class CardUseOrchestrator : MonoBehaviour
     [SerializeField] private DrawController drawController;
     [SerializeField] private MoveController moveController;
 
-    bool busy;
+    [Header("ShowCard Preview")]
+    [SerializeField] private ShowCardController showCard;
+    [SerializeField] private float showSeconds = 3f;
+
+    private bool busy;
 
     void Reset()
     {
@@ -25,15 +29,14 @@ public class CardUseOrchestrator : MonoBehaviour
         if (!menu) menu = FindObjectOfType<BattleMenuController>(true);
         if (!costController) costController = FindObjectOfType<CostController>(true);
         if (!database) database = Resources.Load<CardDatabaseSO>("CardDatabase");
+        if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
     }
 
     public void UseCurrentSelected()
     {
         if (busy || hand == null || !hand.IsInSelectMode) return;
-
         int idx = hand.CurrentSelectIndex;
         if (idx < 0 || idx >= hand.CardCount) return;
-
         StartCoroutine(CoUseAtIndex(idx));
     }
 
@@ -41,39 +44,50 @@ public class CardUseOrchestrator : MonoBehaviour
     {
         busy = true;
 
-        // 1) SO 조회 (HandUI 스냅샷 기준)
+        // A) 카드 정보 확보
         string id = hand.GetVisibleIdAt(handIndex);
         if (string.IsNullOrEmpty(id))
         {
             Debug.LogWarning("[Orchestrator] empty id");
-            busy = false; yield break;
+            busy = false;
+            yield break;
         }
-
         var so = database ? database.GetById(id) : null;
         if (!so)
         {
             Debug.LogWarning($"[Orchestrator] SO not found for id={id}");
-            busy = false; yield break;
+            busy = false;
+            yield break;
         }
 
-        // 2) 코스트 체크/지불
-        if (costController)
+        // B) 코스트 체크
+        if (costController && !costController.TryPay(Mathf.Max(0, so.cost)))
         {
-            if (!costController.TryPay(Mathf.Max(0, so.cost)))
-            {
-                Debug.Log($"[Orchestrator] Not enough cost. need={so.cost}, cur={costController.Current}");
-                busy = false; yield break;
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[Orchestrator] CostController missing — skipping cost check.");
+            Debug.Log($"[Orchestrator] Not enough cost. need={so.cost}, cur={costController.Current}");
+            busy = false; // 선택모드 유지
+            yield break;
         }
 
-        // 3) 타입별 실행 (현재는 디버그/스텁)
+        // C) 즉시 손패에서 제거(덱 아래로 이동) → 화면에서 바로 사라짐
+        var bdr = BattleDeckRuntime.Instance;
+        if (bdr != null) bdr.UseCardToBottom(handIndex);
+
+        // HandUI가 리빌드될 시간을 한 프레임 부여
+        yield return null;
+
+        // D) 3초 프리뷰 (ShowCard)
+        if (showCard) yield return showCard.ShowForSecondsById(so.id, showSeconds);
+
+        // === 프리뷰 직후 안전 복구 ===
+        if (hand)
+        {
+            hand.EnableAllCardImages();
+            hand.RebuildFromHand();
+        }
+
+        // E) 타입별 실행
         Faction self = Faction.Player;
         Faction foe = Faction.Enemy;
-
         switch (so.type)
         {
             case CardType.Attack:
@@ -93,26 +107,23 @@ public class CardUseOrchestrator : MonoBehaviour
                 break;
         }
 
-        // 4) 패 소모(손패→덱 아래)
-        var bdr = BattleDeckRuntime.Instance;
-        if (bdr != null)
-            bdr.UseCardToBottom(handIndex);
+        // F) 카드 선택 모드로 복귀 (최종 안전 복구 포함)
+        if (hand)
+        {
+            hand.EnableAllCardImages();
+            hand.RebuildFromHand();
+        }
 
-        // 5) 한 프레임 대기(리빌드 보장)
-        yield return null;
-
-        // 6) 선택 모드로 복귀(+안전하게 ShowCards)
-        if (menu) menu.EnableInput(false);
+        if (menu) menu.EnableInput(false); // 메뉴는 잠깐 비활성
         if (hand && hand.CardCount > 0)
         {
-            hand.ShowCards();               // ✅ 혹시라도 꺼졌다면 켜기
             hand.EnterSelectMode();
             int nextIdx = Mathf.Clamp(handIndex, 0, hand.CardCount - 1);
             hand.SetSelectIndexPublic(nextIdx);
         }
         else
         {
-            if (menu) menu.EnableInput(true);
+            if (menu) menu.EnableInput(true); // 손패 비었으면 메뉴 입력 복구
         }
 
         busy = false;

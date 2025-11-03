@@ -1,14 +1,14 @@
-// SceneLoadContext.cs
+// Assets/Script/Battle/SceneLoadContext.cs
 using UnityEngine;
 
 public class SceneLoadContext : MonoBehaviour
 {
-    public static SceneLoadContext Instance;
+    public static SceneLoadContext Instance { get; private set; }
 
-    [Header("Next Battle Params")]
-    public string pendingEnemyName = "Enemy1";   // 버튼에서 채워서 battle 씬에서 읽음
+    [Tooltip("마이룸 등 선행 씬에서 전투 씬으로 넘길 적 ID")]
+    public string pendingEnemyName = null;
 
-    void Awake()
+    private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;

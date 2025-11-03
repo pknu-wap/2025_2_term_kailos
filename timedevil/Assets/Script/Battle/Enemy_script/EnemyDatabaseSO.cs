@@ -1,4 +1,3 @@
-// EnemyDatabaseSO.cs
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,23 +6,24 @@ public class EnemyDatabaseSO : ScriptableObject
 {
     public List<EnemySO> enemies = new();
 
-    private Dictionary<string, EnemySO> _map;
+    private Dictionary<string, EnemySO> map;
 
     void OnEnable()
     {
-        _map = new Dictionary<string, EnemySO>();
-        foreach (var so in enemies)
+        map = new Dictionary<string, EnemySO>();
+        foreach (var e in enemies)
         {
-            if (!so) continue;
-            if (!string.IsNullOrEmpty(so.enemyId) && !_map.ContainsKey(so.enemyId))
-                _map.Add(so.enemyId, so);
+            if (!e) continue;
+            var key = e.enemyId ?? "";
+            if (key.Length == 0) continue;
+            if (!map.ContainsKey(key))
+                map.Add(key, e);
         }
     }
 
     public EnemySO GetById(string id)
     {
-        if (string.IsNullOrEmpty(id) || _map == null) return null;
-        _map.TryGetValue(id, out var so);
-        return so;
+        if (map == null || string.IsNullOrEmpty(id)) return null;
+        return map.TryGetValue(id, out var so) ? so : null;
     }
 }

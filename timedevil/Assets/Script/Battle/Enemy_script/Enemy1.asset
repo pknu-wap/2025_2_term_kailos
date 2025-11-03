@@ -13,9 +13,14 @@ MonoBehaviour:
   m_Name: Enemy1
   m_EditorClassIdentifier: 
   enemyId: Enemy1
-  displayName: Enemy 1
-  maxHP: 60
+  displayName: Enemy1
+  baseHP: 60
   baseATK: 8
   baseDEF: 3
   baseSPD: 6
-  deckIds: []
+  deckIds:
+  - Card1
+  - Card2
+  - Card3
+  - Card4
+  - Card5
