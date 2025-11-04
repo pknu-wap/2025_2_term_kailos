@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿// Assets/Script/Battle/DescriptionPanelController.cs
+using TMPro;
 using UnityEngine;
 
 public class DescriptionPanelController : MonoBehaviour
@@ -16,6 +17,7 @@ public class DescriptionPanelController : MonoBehaviour
     [TextArea] public string msgItem = "Item을 선택합니다.";
     [TextArea] public string msgEnd = "턴엔드합니다.";
     [TextArea] public string msgRun = "도망칩니다.";
+    [TextArea] public string msgEnemyTurn = "상대턴입니다."; // ▶ 추가
 
     [Header("Optional Refs")]
     [SerializeField] private CanvasGroup handCanvasGroup;
@@ -23,6 +25,7 @@ public class DescriptionPanelController : MonoBehaviour
     [SerializeField] private bool logDebug = false;
 
     private int _lastIndex = -1;
+    private bool _forceEnemyTurn = false; // ▶ TurnManager가 켜고 끈다
 
     void Reset()
     {
@@ -80,9 +83,29 @@ public class DescriptionPanelController : MonoBehaviour
         RefreshNow();
     }
 
+    // ▶ TurnManager가 EnemyTurn 시작/종료 때 호출
+    public void SetEnemyTurn(bool on)
+    {
+        _forceEnemyTurn = on;
+        RefreshNow();
+    }
+
     private void RefreshNow()
     {
         if (!descriptionText) return;
+
+        // ▶ 적턴 고정 오버레이
+        if (_forceEnemyTurn)
+        {
+            if (handCanvasGroup)
+            {
+                handCanvasGroup.alpha = 0f;
+                handCanvasGroup.interactable = false;
+                handCanvasGroup.blocksRaycasts = false;
+            }
+            descriptionText.text = msgEnemyTurn;
+            return;
+        }
 
         int index = menu ? menu.Index : 0;
 

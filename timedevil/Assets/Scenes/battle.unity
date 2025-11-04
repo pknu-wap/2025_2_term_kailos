@@ -1157,7 +1157,6 @@ GameObject:
   - component: {fileID: 726002405}
   - component: {fileID: 726002413}
   - component: {fileID: 726002411}
-  - component: {fileID: 726002414}
   m_Layer: 0
   m_Name: BattleManager
   m_TagString: Untagged
@@ -1208,18 +1207,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   saveOnDisable: 0
   saveOnQuit: 0
---- !u!114 &726002414
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 726002403}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fec93ef646d5e5d4ea8a8912c4124bfb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &860620047
 GameObject:
   m_ObjectHideFlags: 0
@@ -4543,6 +4530,7 @@ MonoBehaviour:
   msgItem: "Item\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgEnd: "\uD134\uC5D4\uB4DC\uD569\uB2C8\uB2E4."
   msgRun: "\uB3C4\uB9DD\uCE69\uB2C8\uB2E4."
+  msgEnemyTurn: "\uC0C1\uB300\uD134\uC785\uB2C8\uB2E4."
   handCanvasGroup: {fileID: 860620051}
   clearOnAwake: 1
   logDebug: 0
@@ -8550,8 +8538,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1506870434}
+  - component: {fileID: 1506870435}
   m_Layer: 0
-  m_Name: EnemyDataManager
+  m_Name: EnemyManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8572,6 +8561,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1506870435
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506870432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4728fcdbff98dec44b625b425da89279, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  countdownSeconds: 5
 --- !u!1 &1522580512
 GameObject:
   m_ObjectHideFlags: 0
@@ -8983,6 +8985,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2043066780}
   - component: {fileID: 2043066779}
+  - component: {fileID: 2043066781}
   m_Layer: 0
   m_Name: TurnManager
   m_TagString: Untagged
@@ -9003,6 +9006,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   menu: {fileID: 1069897049}
+  enemyTurnController: {fileID: 1506870435}
+  handUI: {fileID: 860620052}
+  cost: {fileID: 1352731693}
+  desc: {fileID: 1069897052}
   enemyThinkDelay: 0.6
 --- !u!4 &2043066780
 Transform:
@@ -9019,6 +9026,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2043066781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2043066778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab8c26b5145d48041b675a5b5fa0ea20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  menu: {fileID: 1069897049}
 --- !u!1 &2047237470
 GameObject:
   m_ObjectHideFlags: 0
