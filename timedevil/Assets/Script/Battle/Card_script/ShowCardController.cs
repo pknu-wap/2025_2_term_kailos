@@ -1,20 +1,18 @@
-﻿// Assets/Script/Battle/Card_script/ShowCardController.cs
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ShowCardController : MonoBehaviour
 {
     [Header("Target")]
-    [SerializeField] private Image useImage;               // ✅ 씬의 UseImage 지정
+    [SerializeField] private Image useImage;                 // ShowCard 안의 이미지
     [SerializeField] private string resourcesFolder = "my_asset";
 
-    [Header("Fade (sec)")]
-    [SerializeField] private float fadeIn = 0.35f;
-    [SerializeField] private float hold = 2.30f;
-    [SerializeField] private float fadeOut = 0.35f;
+    [Header("Fade")]
+    [SerializeField] private float fadeIn = 0.25f;
+    [SerializeField] private float fadeOut = 0.25f;
 
-    private CanvasGroup _cg;
+    private CanvasGroup cg;
 
     void Reset()
     {
@@ -24,64 +22,50 @@ public class ShowCardController : MonoBehaviour
     void Awake()
     {
         if (!useImage) useImage = GetComponentInChildren<Image>(true);
-
-        // CanvasGroup 없으면 자동 추가 (페이드용)
-        _cg = GetComponent<CanvasGroup>();
-        if (_cg == null) _cg = gameObject.AddComponent<CanvasGroup>();
-
-        // 시작은 숨김
-        _cg.alpha = 0f;
-        useImage.enabled = false;
-        gameObject.SetActive(true); // 그룹 제어는 alpha로
+        cg = GetComponent<CanvasGroup>();
+        if (!cg) cg = gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        if (useImage) useImage.enabled = false;
     }
 
-    /// <summary>
-    /// 카드 ID로 스프라이트를 로드해서 페이드 인→홀드→아웃(총 약 3s) 재생.
-    /// 다른 UI에는 손 안댐.
-    /// </summary>
-    public IEnumerator PreviewById(string id)
+    public IEnumerator PreviewById(string id, float totalSeconds = 3f)
     {
         if (!useImage) yield break;
 
-        var sp = string.IsNullOrEmpty(id) ? null : Resources.Load<Sprite>($"{resourcesFolder}/{id}");
+        Sprite sp = string.IsNullOrEmpty(id) ? null : Resources.Load<Sprite>($"{resourcesFolder}/{id}");
         useImage.sprite = sp;
         useImage.enabled = sp != null;
 
-        // 페이드 인
-        yield return FadeTo(1f, Mathf.Max(0f, fadeIn));
-        // 홀드
-        yield return WaitForSecondsUnscaled(Mathf.Max(0f, hold));
-        // 페이드 아웃
-        yield return FadeTo(0f, Mathf.Max(0f, fadeOut));
+        float fin = Mathf.Max(0f, fadeIn);
+        float fout = Mathf.Max(0f, fadeOut);
+        float body = Mathf.Max(0f, totalSeconds - fin - fout);
 
-        // 정리
+        // fade in
+        if (fin > 0f)
+        {
+            float t = 0f;
+            while (t < fin) { t += Time.unscaledDeltaTime; cg.alpha = Mathf.Lerp(0f, 1f, t / fin); yield return null; }
+        }
+        else cg.alpha = 1f;
+
+        // hold
+        if (body > 0f)
+        {
+            float t = 0f;
+            while (t < body) { t += Time.unscaledDeltaTime; yield return null; }
+        }
+
+        // fade out
+        if (fout > 0f)
+        {
+            float t = 0f;
+            while (t < fout) { t += Time.unscaledDeltaTime; cg.alpha = Mathf.Lerp(1f, 0f, t / fout); yield return null; }
+        }
+        else cg.alpha = 0f;
+
+        // cleanup
+        cg.alpha = 0f;
         useImage.enabled = false;
         useImage.sprite = null;
-    }
-
-    private IEnumerator FadeTo(float target, float dur)
-    {
-        if (dur <= 0f) { _cg.alpha = target; yield break; }
-
-        float start = _cg.alpha;
-        float t = 0f;
-        while (t < dur)
-        {
-            t += Time.unscaledDeltaTime;
-            float k = Mathf.Clamp01(t / dur);
-            _cg.alpha = Mathf.Lerp(start, target, k);
-            yield return null;
-        }
-        _cg.alpha = target;
-    }
-
-    private static IEnumerator WaitForSecondsUnscaled(float s)
-    {
-        float t = s;
-        while (t > 0f)
-        {
-            t -= Time.unscaledDeltaTime;
-            yield return null;
-        }
     }
 }

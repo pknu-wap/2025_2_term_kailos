@@ -951,8 +951,13 @@ MonoBehaviour:
   hand: {fileID: 860620052}
   menu: {fileID: 1069897049}
   database: {fileID: 11400000, guid: c0cc44962aa33464ca629e77b4d09b2b, type: 2}
+  costController: {fileID: 1352731693}
   showCard: {fileID: 643248677}
   totalSeconds: 3
+  attackController: {fileID: 0}
+  supportController: {fileID: 0}
+  drawController: {fileID: 0}
+  moveController: {fileID: 0}
 --- !u!4 &593885362
 Transform:
   m_ObjectHideFlags: 0
@@ -1120,7 +1125,6 @@ MonoBehaviour:
   useImage: {fileID: 1522580513}
   resourcesFolder: my_asset
   fadeIn: 0.35
-  hold: 0.2
   fadeOut: 0.35
 --- !u!224 &643248678
 RectTransform:
