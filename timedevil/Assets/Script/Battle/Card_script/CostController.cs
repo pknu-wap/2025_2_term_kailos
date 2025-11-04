@@ -1,62 +1,64 @@
-// Assets/Script/Battle/CostController.cs
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CostController : MonoBehaviour
 {
-    [Header("Values")]
-    [SerializeField] private int max = 10;
-    [SerializeField] private int current = 10;
+    [Header("UI")]
+    [SerializeField] private TMP_Text costText;    // "Cost :" 텍스트
 
-    [Header("Optional UI")]
-    [SerializeField] private TMP_Text text;     // "AC 7/10" 같은 표시를 원하면 연결
-    [SerializeField] private Slider slider;     // 게이지를 쓰면 연결
+    [Header("Rule")]
+    [SerializeField] private int maxPerTurn = 10;
 
-    public int Current => current;
-    public int Max => max;
+    public int Current { get; private set; }
+    public int Max => maxPerTurn;
 
-    void Start() => Refresh();
+    public System.Action<int, int> onCostChanged;
 
-    /// <summary>현재 코스트를 정확히 value로 설정.</summary>
-    public void ResetTo(int value)
+    void Reset()
     {
-        current = Mathf.Clamp(value, 0, max);
-        Refresh();
+        if (!costText) costText = GetComponentInChildren<TMP_Text>(true);
     }
 
-    /// <summary>최대치로 리셋.</summary>
-    public void ResetToMax()
+    void Awake()
     {
-        current = max;
-        Refresh();
+        if (!costText) costText = GetComponentInChildren<TMP_Text>(true);
+        ResetTurn(); // 첫 표시
     }
 
-    /// <summary>코스트를 amount만큼 지불. 충분하면 차감하고 true, 부족하면 false.</summary>
+    public void SetMax(int max)
+    {
+        maxPerTurn = Mathf.Max(0, max);
+        Current = Mathf.Min(Current, maxPerTurn);
+        RefreshUI();
+    }
+
+    public void ResetTurn()
+    {
+        Current = maxPerTurn;
+        RefreshUI();
+    }
+
     public bool TryPay(int amount)
     {
         if (amount <= 0) return true;
-        if (current < amount) return false;
-        current -= amount;
-        Refresh();
+        if (Current < amount) return false;
+
+        Current -= amount;
+        RefreshUI();
         return true;
     }
 
-    /// <summary>코스트 보충(+/- 모두 허용, 0~max로 클램프).</summary>
-    public void Add(int amount)
+    public void Refund(int amount)
     {
-        current = Mathf.Clamp(current + amount, 0, max);
-        Refresh();
+        if (amount <= 0) return;
+        Current = Mathf.Min(maxPerTurn, Current + amount);
+        RefreshUI();
     }
 
-    private void Refresh()
+    private void RefreshUI()
     {
-        if (text) text.text = $"AC {current}/{max}";
-        if (slider)
-        {
-            slider.minValue = 0;
-            slider.maxValue = max;
-            slider.value = current;
-        }
+        if (costText)
+            costText.text = $"Cost : {Current}/{maxPerTurn}";
+        onCostChanged?.Invoke(Current, maxPerTurn);
     }
 }

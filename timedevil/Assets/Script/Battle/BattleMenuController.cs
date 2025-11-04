@@ -11,15 +11,9 @@ public class BattleMenuController : MonoBehaviour
     [Header("Input")]
     [SerializeField] private bool inputEnabled = true;
 
-    [Header("Events (generic + per entry)")]
+    [Header("Events")]
     public IntEvent onFocusChanged = new IntEvent();
-    public IntEvent onSubmit = new IntEvent();      // 인덱스를 통째로 쏘는 범용 이벤트
-
-    // 엔트리별 이벤트(인스펙터에서 연결해서 쓰기)
-    public UnityEvent onCardSubmit = new UnityEvent();
-    public UnityEvent onItemSubmit = new UnityEvent();
-    public UnityEvent onEndSubmit = new UnityEvent();
-    public UnityEvent onRunSubmit = new UnityEvent();
+    public IntEvent onSubmit = new IntEvent();   // ✅ 추가: E 키 제출 이벤트
 
     private int index = 0;
     public int Index => index;
@@ -42,19 +36,9 @@ public class BattleMenuController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // 공통 제출 이벤트(인덱스 함께)
-            onSubmit?.Invoke(index);
-
-            // 엔트리별 이벤트도 함께 발행
-            switch (index)
-            {
-                case 0: onCardSubmit?.Invoke(); break;
-                case 1: onItemSubmit?.Invoke(); break;
-                case 2: onEndSubmit?.Invoke(); break;   // ← 여기에 EndController.DoEndTurn 연결
-                case 3: onRunSubmit?.Invoke(); break;
-            }
-
-            Debug.Log($"[BattleMenu] E pressed → selected index={index}");
+            string name = index switch { 0 => "Card", 1 => "Item", 2 => "End", 3 => "Run", _ => $"Idx{index}" };
+            Debug.Log($"[BattleMenu] E pressed → {name} selected (index={index})");
+            onSubmit?.Invoke(index);   // ✅ 외부로 알림
         }
     }
 

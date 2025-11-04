@@ -1,22 +1,24 @@
-Ôªøusing UnityEngine;
+// EnemyRuntime.cs
+using System;
+using UnityEngine;
 
 public class EnemyRuntime : MonoBehaviour
 {
     public static EnemyRuntime Instance { get; private set; }
 
-    // Identity
-    public string EnemyId { get; private set; }
-    public string DisplayName { get; private set; }
+    [Header("Bound SO (read-only source)")]
+    [SerializeField] private EnemySO source;
 
-    // Stats
-    public int MaxHP { get; private set; }
-    public int CurrentHP { get; private set; }
-    public int ATK { get; private set; }
-    public int DEF { get; private set; }
-    public int SPD { get; private set; }   // ÌëúÏ§Ä Ïù¥Î¶Ñ
+    [Header("Runtime State")]
+    public string enemyId;
+    public string enemyName;
+    public int maxHP;
+    public int currentHP;
+    public int attack;
+    public int defense;
+    public int speed;
 
-    // TurnManager Ìò∏ÌôòÏö©(alias): enemyRt.speed Î°ú ÏùΩÏñ¥ÎèÑ OK
-    public int speed => SPD;
+    public event Action OnChanged; // HP/πˆ«¡ µÓ ªÛ≈¬ ∫Ø«“ ∂ß
 
     void Awake()
     {
@@ -26,50 +28,47 @@ public class EnemyRuntime : MonoBehaviour
 
     public void InitializeFromSO(EnemySO so)
     {
-        if (!so) { Debug.LogError("[EnemyRuntime] SO is null"); return; }
-
-        EnemyId = string.IsNullOrEmpty(so.enemyId) ? "Enemy" : so.enemyId;
-        DisplayName = string.IsNullOrEmpty(so.displayName) ? EnemyId : so.displayName;
-
-        MaxHP = Mathf.Max(1, so.baseHP);
-        CurrentHP = MaxHP;
-        ATK = Mathf.Max(0, so.baseATK);
-        DEF = Mathf.Max(0, so.baseDEF);
-        SPD = Mathf.Max(0, so.baseSPD);
-    }
-
-    // (Î†àÍ±∞Ïãú Enemy1 Î™®ÎÖ∏ÎπÑÌó§Ïù¥ÎπÑÏñ¥ Ìè¥Î∞±Ïö© ‚Äì ÌïÑÏöî ÏóÜÏúºÎ©¥ ÏßÄÏõåÎèÑ Îê®)
-    public void InitializeFromFallback(MonoBehaviour legacyComp)
-    {
-        if (!legacyComp) return;
-        var t = legacyComp.GetType();
-
-        int ReadInt(string name, int def)
+        source = so;
+        if (!so)
         {
-            var f = t.GetField(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            if (f == null) return def;
-            try { return Mathf.Max(0, (int)f.GetValue(legacyComp)); } catch { return def; }
+            Debug.LogError("[EnemyRuntime] EnemySO is null");
+            ResetToEmpty();
+            return;
         }
 
-        EnemyId = t.Name;
-        DisplayName = t.Name;
+        enemyId = so.enemyId;
+        enemyName = string.IsNullOrEmpty(so.displayName) ? so.enemyId : so.displayName;
+        maxHP = Mathf.Max(1, so.maxHP);
+        currentHP = maxHP;
+        attack = Mathf.Max(0, so.baseATK);
+        defense = Mathf.Max(0, so.baseDEF);
+        speed = Mathf.Max(0, so.baseSPD);
 
-        MaxHP = ReadInt("maxHP", 1);
-        CurrentHP = Mathf.Clamp(ReadInt("currentHP", MaxHP), 0, MaxHP);
-        ATK = ReadInt("attack", 0);
-        DEF = ReadInt("defense", 0);
-        SPD = ReadInt("speed", 0);
+        OnChanged?.Invoke();
+        Debug.Log($"[EnemyRuntime] Initialized: {enemyName} HP {currentHP}/{maxHP}, ATK {attack}, DEF {defense}, SPD {speed}");
     }
 
-    public void ApplyDamage(int dmg)
+    public void ResetToEmpty()
     {
-        if (dmg <= 0) return;
-        CurrentHP = Mathf.Max(0, CurrentHP - dmg);
+        enemyId = enemyName = "";
+        maxHP = currentHP = attack = defense = speed = 0;
+        OnChanged?.Invoke();
+    }
+
+    // --- ∞£¥‹ ¿Ø∆ø ---
+
+    public void TakeDamage(int raw)
+    {
+        int dmg = Mathf.Max(1, raw - defense);
+        currentHP = Mathf.Clamp(currentHP - dmg, 0, maxHP);
+        OnChanged?.Invoke();
     }
 
     public void Heal(int amount)
     {
-        if (amount <= 0) return;
-        CurrentHP = Mathf.Min(MaxHP, CurrentHP + amount);
+        currentHP = Mathf.Clamp(currentHP + Mathf.Max(0, amount), 0, maxHP);
+        OnChanged?.Invoke();
     }
+
+    public bool IsDead => currentHP <= 0;
 }

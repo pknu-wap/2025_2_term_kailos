@@ -33,13 +33,9 @@ public class HandMenuBinder : MonoBehaviour
 
     private void OnFocusChanged(int index)
     {
+        // 0=Card, 1=Item, 2=End, 3=Run
         if (!handUI) return;
 
-        // 선택 모드 중에는 절대 건드리지 않음 (오케스트레이션/ShowCard 중 섞임 방지)
-        if (handUI.IsInSelectMode)
-            return;
-
-        // 0=Card 일 때만 보여주고, 나머지는 숨김
         if (index == 0)
         {
             handUI.RebuildFromHand();
