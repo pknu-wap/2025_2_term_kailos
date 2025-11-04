@@ -1,4 +1,4 @@
-// BattleBootstrap.cs (교체)
+// BattleBootstrap.cs (SO-first only)
 using UnityEngine;
 
 public class BattleBootstrap : MonoBehaviour
@@ -10,9 +10,6 @@ public class BattleBootstrap : MonoBehaviour
     [SerializeField] private EnemyDatabaseSO enemyDatabase;
     [SerializeField] private string enemyIdOverride = "";     // 비우면 SelectedEnemyRuntime 사용
     [SerializeField] private EnemyRuntime enemyRuntimePrefab; // 없으면 런타임 자동 생성
-
-    [Header("Fallback (legacy component attach)")]
-    [SerializeField] private GameObject enemyHost; // hierarchy의 'none' 오브젝트(폴백용)
 
     private EnemyRuntime enemyRt;
 
@@ -27,7 +24,7 @@ public class BattleBootstrap : MonoBehaviour
         }
 
         // EnemyRuntime 확보
-        enemyRt = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>();
+        enemyRt = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>(true);
         if (enemyRt == null)
         {
             if (enemyRuntimePrefab != null)
@@ -49,52 +46,32 @@ public class BattleBootstrap : MonoBehaviour
 
         Debug.Log($"[BattleBootstrap] enemyId='{enemyId}'");
 
-        // 1) SO 경로 우선
-        bool initialized = false;
-        if (enemyDatabase != null)
+        // SO 경로만 사용
+        if (enemyDatabase == null)
         {
-            var so = enemyDatabase.GetById(enemyId);
-            if (so != null)
-            {
-                enemyRt.InitializeFromSO(so);
-                initialized = true;
-
-                // HP UI 바인딩
-                if (hpUIBinder != null)
-                {
-                    var pdr = PlayerDataRuntime.Instance ?? FindObjectOfType<PlayerDataRuntime>();
-                    if (pdr != null) hpUIBinder.BindPlayer(pdr.Data);
-                    hpUIBinder.BindEnemyRuntime(enemyRt);
-                    hpUIBinder.Refresh();
-                }
-
-                Debug.Log($"[BattleBootstrap] Initialized from EnemySO: {so.displayName} ({so.enemyId})");
-            }
+            Debug.LogError("[BattleBootstrap] EnemyDatabaseSO is missing.");
+            return;
         }
 
-        // 2) 폴백: 옛 EnemyFactory + HPUIBinder.BindEnemy
-        if (!initialized)
+        var so = enemyDatabase.GetById(enemyId);
+        if (so == null)
         {
-            Debug.LogWarning("[BattleBootstrap] Enemy SO not found or DB missing. Fallback to legacy component path.");
-
-            if (enemyHost == null)
-            {
-                var found = GameObject.Find("none");
-                if (found != null) enemyHost = found;
-            }
-
-            if (enemyHost == null)
-            {
-                Debug.LogError("[BattleBootstrap] enemyHost(null). 'none' 같은 빈 오브젝트를 배치/지정하세요.");
-                return;
-            }
-
-            var enemyComp = EnemyFactory.AttachEnemyByName(enemyHost, enemyId);
-            if (hpUIBinder != null)
-            {
-                hpUIBinder.BindEnemy(enemyComp);
-                hpUIBinder.Refresh();
-            }
+            Debug.LogError($"[BattleBootstrap] Enemy id '{enemyId}' not found in DB.");
+            return;
         }
+
+        enemyRt.InitializeFromSO(so);
+
+        // HP UI 바인딩
+        if (hpUIBinder != null)
+        {
+            var pdr = PlayerDataRuntime.Instance ?? FindObjectOfType<PlayerDataRuntime>(true);
+            if (pdr != null) hpUIBinder.BindPlayer(pdr.Data);
+
+            hpUIBinder.BindEnemyRuntime(enemyRt);
+            hpUIBinder.Refresh();
+        }
+
+        Debug.Log($"[BattleBootstrap] Initialized from EnemySO: {so.displayName} ({so.enemyId})");
     }
 }

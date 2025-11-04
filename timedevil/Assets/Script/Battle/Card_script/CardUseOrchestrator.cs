@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿// Assets/Script/Battle/Card_script/CardUseOrchestrator.cs
+using System.Collections;
 using UnityEngine;
 
 public enum Faction { Player, Enemy }
@@ -9,111 +10,62 @@ public class CardUseOrchestrator : MonoBehaviour
     [SerializeField] private HandUI hand;
     [SerializeField] private BattleMenuController menu;
     [SerializeField] private CardDatabaseSO database;
-    [SerializeField] private CostController costController;
 
-    [Header("Controllers")]
-    [SerializeField] private AttackController attackController;
-    [SerializeField] private SupportController supportController;
-    [SerializeField] private DrawController drawController;
-    [SerializeField] private MoveController moveController;
+    [Header("Preview")]
+    [SerializeField] private ShowCardController showCard;  // ✅ 새 컨트롤러 참조
+    [SerializeField] private float totalSeconds = 3f;      // 총 길이를 바꾸고 싶으면 아래 ShowCard에서 조절
 
-    bool busy;
+    private bool busy;
 
     void Reset()
     {
         if (!hand) hand = FindObjectOfType<HandUI>(true);
         if (!menu) menu = FindObjectOfType<BattleMenuController>(true);
-        if (!costController) costController = FindObjectOfType<CostController>(true);
         if (!database) database = Resources.Load<CardDatabaseSO>("CardDatabase");
+        if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
     }
 
     public void UseCurrentSelected()
     {
         if (busy || hand == null || !hand.IsInSelectMode) return;
-
         int idx = hand.CurrentSelectIndex;
         if (idx < 0 || idx >= hand.CardCount) return;
-
-        StartCoroutine(CoUseAtIndex(idx));
+        StartCoroutine(CoPreviewOnly(idx));
     }
 
-    private IEnumerator CoUseAtIndex(int handIndex)
+    /// <summary>
+    /// 카드 사용 대신 “미리보기만” 수행:
+    /// - Card Select 모드 → spectator(=선택모드 해제 + 메뉴 입력 차단)로 전환
+    /// - ShowCard 페이드 재생 (자기 손패는 계속 보임/비활성화 안함)
+    /// - 끝나면 다시 Card Select 모드 복귀, 같은 인덱스에 커서 복구
+    /// </summary>
+    private IEnumerator CoPreviewOnly(int handIndex)
     {
         busy = true;
 
-        // 1) SO 조회 (HandUI 스냅샷 기준)
         string id = hand.GetVisibleIdAt(handIndex);
         if (string.IsNullOrEmpty(id))
         {
-            Debug.LogWarning("[Orchestrator] empty id");
-            busy = false; yield break;
+            busy = false;
+            yield break;
         }
 
-        var so = database ? database.GetById(id) : null;
-        if (!so)
-        {
-            Debug.LogWarning($"[Orchestrator] SO not found for id={id}");
-            busy = false; yield break;
-        }
+        // spectator mod1: 선택모드만 잠시 해제, 메뉴 입력은 차단
+        if (hand.IsInSelectMode) hand.ExitSelectMode();
+        if (menu) menu.EnableInput(false); // spectator 동안 메뉴 키 입력 막기
+        hand.ShowCards();                  // 카드들은 계속 보이게
 
-        // 2) 코스트 체크/지불
-        if (costController)
-        {
-            if (!costController.TryPay(Mathf.Max(0, so.cost)))
-            {
-                Debug.Log($"[Orchestrator] Not enough cost. need={so.cost}, cur={costController.Current}");
-                busy = false; yield break;
-            }
-        }
+        // ShowCard 실행 (코스트/덱 조작 없음)
+        if (showCard != null)
+            yield return showCard.PreviewById(id);
         else
-        {
-            Debug.LogWarning("[Orchestrator] CostController missing — skipping cost check.");
-        }
+            yield return null;
 
-        // 3) 타입별 실행 (현재는 디버그/스텁)
-        Faction self = Faction.Player;
-        Faction foe = Faction.Enemy;
-
-        switch (so.type)
-        {
-            case CardType.Attack:
-                if (attackController) yield return attackController.Execute(so as AttackCardSO, self, foe);
-                break;
-            case CardType.Support:
-                if (supportController) yield return supportController.Execute(so as SupportCardSO, self, foe);
-                break;
-            case CardType.Draw:
-                if (drawController) yield return drawController.Execute(so as DrawCardSO, self, foe);
-                break;
-            case CardType.Move:
-                if (moveController) yield return moveController.Execute(so as MoveCardSO, self, foe);
-                break;
-            default:
-                Debug.Log($"[Orchestrator] UNKNOWN -> id={id}, cost={so.cost}");
-                break;
-        }
-
-        // 4) 패 소모(손패→덱 아래)
-        var bdr = BattleDeckRuntime.Instance;
-        if (bdr != null)
-            bdr.UseCardToBottom(handIndex);
-
-        // 5) 한 프레임 대기(리빌드 보장)
-        yield return null;
-
-        // 6) 선택 모드로 복귀(+안전하게 ShowCards)
+        // Card Select 모드 복귀
+        hand.EnterSelectMode();
+        hand.SetSelectIndexPublic(Mathf.Clamp(handIndex, 0, hand.CardCount - 1));
+        // 선택모드일 땐 메뉴 입력은 계속 OFF(HandSelectController가 관리)
         if (menu) menu.EnableInput(false);
-        if (hand && hand.CardCount > 0)
-        {
-            hand.ShowCards();               // ✅ 혹시라도 꺼졌다면 켜기
-            hand.EnterSelectMode();
-            int nextIdx = Mathf.Clamp(handIndex, 0, hand.CardCount - 1);
-            hand.SetSelectIndexPublic(nextIdx);
-        }
-        else
-        {
-            if (menu) menu.EnableInput(true);
-        }
 
         busy = false;
     }
