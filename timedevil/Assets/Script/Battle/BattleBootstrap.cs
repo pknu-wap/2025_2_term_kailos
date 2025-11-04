@@ -1,4 +1,4 @@
-// BattleBootstrap.cs (SO-first only)
+// Assets/Script/Battle/BattleBootstrap.cs
 using UnityEngine;
 
 public class BattleBootstrap : MonoBehaviour
@@ -8,14 +8,14 @@ public class BattleBootstrap : MonoBehaviour
 
     [Header("Enemy (SO-first)")]
     [SerializeField] private EnemyDatabaseSO enemyDatabase;
-    [SerializeField] private string enemyIdOverride = "";     // 비우면 SelectedEnemyRuntime 사용
+    [SerializeField] private string enemyIdOverride = "";     // 인스펙터에서 강제 지정 시 사용
     [SerializeField] private EnemyRuntime enemyRuntimePrefab; // 없으면 런타임 자동 생성
 
     private EnemyRuntime enemyRt;
 
-    private void Awake()
+    void Awake()
     {
-        // PlayerDataRuntime 보장(이미 Ensure 스크립트가 있으면 생략 가능)
+        // PlayerDataRuntime 보장
         if (PlayerDataRuntime.Instance == null)
         {
             var go = new GameObject("PlayerDataRuntime (Auto)");
@@ -27,32 +27,36 @@ public class BattleBootstrap : MonoBehaviour
         enemyRt = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>(true);
         if (enemyRt == null)
         {
-            if (enemyRuntimePrefab != null)
-                enemyRt = Instantiate(enemyRuntimePrefab);
-            else
-                enemyRt = new GameObject("EnemyRuntime").AddComponent<EnemyRuntime>();
+            enemyRt = enemyRuntimePrefab != null
+                ? Instantiate(enemyRuntimePrefab)
+                : new GameObject("EnemyRuntime").AddComponent<EnemyRuntime>();
         }
     }
 
-    private void Start()
+    void Start()
     {
-        // 대상 enemyId 결정
-        string enemyId = !string.IsNullOrWhiteSpace(enemyIdOverride)
-            ? enemyIdOverride
-            : (SelectedEnemyRuntime.Instance != null ? SelectedEnemyRuntime.Instance.enemyName : null);
-
-        if (string.IsNullOrWhiteSpace(enemyId))
-            enemyId = "Enemy1";
-
-        Debug.Log($"[BattleBootstrap] enemyId='{enemyId}'");
-
-        // SO 경로만 사용
         if (enemyDatabase == null)
         {
             Debug.LogError("[BattleBootstrap] EnemyDatabaseSO is missing.");
             return;
         }
 
+        // 1) 어떤 적을 쓸지 결정: SceneLoadContext → override → 기본값
+        string enemyId = null;
+
+        if (SceneLoadContext.Instance != null && !string.IsNullOrWhiteSpace(SceneLoadContext.Instance.pendingEnemyName))
+        {
+            enemyId = SceneLoadContext.Instance.pendingEnemyName;
+            // 읽었으면 재사용 방지를 위해 비움(원치 않으면 주석 처리)
+            SceneLoadContext.Instance.Consume();
+        }
+
+        if (string.IsNullOrWhiteSpace(enemyId))
+            enemyId = !string.IsNullOrWhiteSpace(enemyIdOverride) ? enemyIdOverride : "Enemy1";
+
+        Debug.Log($"[BattleBootstrap] resolved enemyId='{enemyId}'");
+
+        // 2) DB에서 SO 찾기
         var so = enemyDatabase.GetById(enemyId);
         if (so == null)
         {
@@ -60,9 +64,10 @@ public class BattleBootstrap : MonoBehaviour
             return;
         }
 
+        // 3) 런타임 초기화
         enemyRt.InitializeFromSO(so);
 
-        // HP UI 바인딩
+        // 4) HP UI 바인딩
         if (hpUIBinder != null)
         {
             var pdr = PlayerDataRuntime.Instance ?? FindObjectOfType<PlayerDataRuntime>(true);

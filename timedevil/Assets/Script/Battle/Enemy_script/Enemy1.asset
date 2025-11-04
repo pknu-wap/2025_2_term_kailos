@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy1
   m_EditorClassIdentifier: 
   enemyId: Enemy1
-  displayName: Enemy 1
+  displayName: Enemy1
   maxHP: 60
   baseATK: 8
   baseDEF: 3
