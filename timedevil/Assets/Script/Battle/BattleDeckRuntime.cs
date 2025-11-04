@@ -1,5 +1,4 @@
-﻿// BattleDeckRuntime.cs (교체본)
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,16 +6,13 @@ public class BattleDeckRuntime : MonoBehaviour
 {
     public static BattleDeckRuntime Instance { get; private set; }
 
-    // 배틀용 덱(섞인 상태)
     public readonly List<string> deck = new();
-    // 현재 손패
     public readonly List<string> hand = new();
 
     [Header("Rules")]
-    [SerializeField] private int initialHandSize = 5; // 초기 드로우
-    [SerializeField] private int maxHandSize = 5;     // 손패 최대
+    [SerializeField] private int initialHandSize = 5;
+    [SerializeField] private int maxHandSize = 5;
 
-    // 손패가 바뀌면 UI가 구독해서 리빌드
     public event Action OnHandChanged;
 
     void Awake()
@@ -27,15 +23,16 @@ public class BattleDeckRuntime : MonoBehaviour
 
     void Start()
     {
-        LoadDeckFromRuntime();
-        Shuffle(deck);
-        DrawInitial();                // 초기 드로우 끝에 OnHandChanged가 반드시 쏴짐
-        if (hand.Count == 0)          // 혹시 초기 드로우가 0장일 수도 있으니 방어적으로 한 번 더
-            OnHandChanged?.Invoke();
+        // 1) 즉시 시도
+        bool okNow = TryInitOnce();
+        if (!okNow)
+        {
+            // 2) 준비가 안 돼 있으면 몇 프레임 기다렸다가 한 번 더
+            StartCoroutine(CoRetryInit());
+        }
     }
 
-    /// <summary>CardStateRuntime의 저장 덱을 읽어와 deck에 적재.</summary>
-    public void LoadDeckFromRuntime()
+    bool TryInitOnce()
     {
         deck.Clear();
         hand.Clear();
@@ -45,14 +42,34 @@ public class BattleDeckRuntime : MonoBehaviour
 
         if (src == null || src.Count == 0)
         {
-            Debug.LogWarning("[BattleDeckRuntime] 덱이 비어 있음");
-            return;
+            // 아직 저장이 안 올라왔거나 덱이 비어있음
+            return false;
         }
 
         foreach (var id in src)
             if (!string.IsNullOrEmpty(id)) deck.Add(id);
 
+#if UNITY_EDITOR
         Debug.Log($"[BattleDeckRuntime] 덱 로드 완료: {deck.Count}장");
+#endif
+        Shuffle(deck);
+        DrawInitial();                    // 내부에서 OnHandChanged 발생 가능
+        if (hand.Count == 0) OnHandChanged?.Invoke(); // 그래도 한 번 보장
+        return true;
+    }
+
+    System.Collections.IEnumerator CoRetryInit()
+    {
+        // 최대 8프레임 정도만 기다렸다가 한 번 더 시도
+        for (int i = 0; i < 8; i++)
+        {
+            yield return null;
+            if (TryInitOnce()) yield break;
+        }
+
+        // 그래도 안 되면 최소 한 번은 UI를 갱신시켜 빈 상태를 반영
+        OnHandChanged?.Invoke();
+        Debug.LogWarning("[BattleDeckRuntime] 초기화 재시도 실패(덱 비어 있음). 저장/씬 세팅 확인 필요");
     }
 
     public static void Shuffle(List<string> list)
@@ -64,22 +81,19 @@ public class BattleDeckRuntime : MonoBehaviour
         }
     }
 
-    /// <summary>초기 드로우.</summary>
     public void DrawInitial()
     {
-        Draw(Mathf.Min(initialHandSize, maxHandSize)); // Draw 내부에서 OnHandChanged 호출
+        Draw(Mathf.Min(initialHandSize, maxHandSize));
 #if UNITY_EDITOR
         Debug.Log($"[BattleDeckRuntime] 초기 드로우 → [{string.Join(", ", hand)}]");
 #endif
     }
 
-    /// <summary>손패가 가득이 아니라면 1장 드로우.</summary>
     public void DrawOneIfNeeded()
     {
         if (hand.Count < maxHandSize) Draw(1);
     }
 
-    /// <summary>n장 드로우. 실제로 이동이 있었다면 OnHandChanged 호출.</summary>
     public void Draw(int n)
     {
         bool moved = false;
@@ -96,21 +110,18 @@ public class BattleDeckRuntime : MonoBehaviour
         if (moved) OnHandChanged?.Invoke();
     }
 
-    /// <summary>손패에서 사용 → 덱 맨 밑으로.</summary>
     public bool UseCardToBottom(int handIndex)
     {
         if (handIndex < 0 || handIndex >= hand.Count) return false;
         string id = hand[handIndex];
         hand.RemoveAt(handIndex);
-        deck.Add(id);              // 맨 밑으로
-        OnHandChanged?.Invoke();   // UI 갱신 통지
+        deck.Add(id);
+        OnHandChanged?.Invoke();
         return true;
     }
 
-    /// <summary>UI에서 읽기용 손패 목록(읽기전용 뷰) 반환.</summary>
     public IReadOnlyList<string> GetHandIds() => hand;
 
-    /// <summary>손패를 외부에서 통째로 교체해야 할 때 사용(테스트/효과 등).</summary>
     public void SetHand(List<string> newHand)
     {
         hand.Clear();
