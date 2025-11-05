@@ -19,6 +19,9 @@ public class TurnManager : MonoBehaviour
 
     [Header("Delays")]
     [SerializeField] private float enemyThinkDelay = 0.6f; // (카운트다운은 EnemyTurnController에서)
+    [SerializeField] private EnemyHandUI enemyHandUI;          // EnemyHandUI 참조
+    [SerializeField] private EnemyDeckRuntime enemyDeck;       // 적 덱 런타임
+    [SerializeField] private ItemHandUI itemHand;
 
     // 런타임 소스
     private PlayerDataRuntime pdr;     // 플레이어 런타임
@@ -26,6 +29,8 @@ public class TurnManager : MonoBehaviour
 
     private int playerSPD = 0;
     private int enemySPD = 0;
+
+
 
     public TurnState currentTurn { get; private set; } = TurnState.PlayerTurn;
 
@@ -40,6 +45,10 @@ public class TurnManager : MonoBehaviour
         if (!cost) cost = FindObjectOfType<CostController>(true);
         if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
         if (!deck) deck = BattleDeckRuntime.Instance ?? FindObjectOfType<BattleDeckRuntime>(true);
+        if (!enemyHandUI) enemyHandUI = FindObjectOfType<EnemyHandUI>(true);
+        if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
+        if (!itemHand) itemHand = FindObjectOfType<ItemHandUI>(true);
+
     }
 
     void Start()
@@ -75,36 +84,35 @@ public class TurnManager : MonoBehaviour
     {
         currentTurn = TurnState.PlayerTurn;
 
-        // ▶ 비용 10/10 리셋
         if (cost) cost.ResetTurn();
+        if (deck) deck.DrawOneIfNeeded();        // 플레이어 드로우
 
-        // ▶ 플레이어 턴 시작 시 1장 드로우 (가득 찼으면 내부에서 무시)
-        if (deck) deck.DrawOneIfNeeded();
-
-        // ▶ 카드 UI ON
         if (handUI) handUI.ShowCards();
-
-        // ▶ 메뉴 입력 ON
         if (menu) menu.EnableInput(true);
-
-        // ▶ 적턴 안내 해제
         if (desc) desc.SetEnemyTurn(false);
 
+        // 🔻 적 손패 숨김
+        if (enemyHandUI) enemyHandUI.HideAll();
+
         Debug.Log("🔷 플레이어 턴 시작 (드로우 1장 시도)");
+        if (itemHand) itemHand.SetEnemyTurn(false);
+
     }
 
+    // 적 턴 시작
     public void BeginEnemyTurn()
     {
+        if (itemHand) itemHand.SetEnemyTurn(true);
+
         currentTurn = TurnState.EnemyTurn;
 
-        // ▶ 메뉴 입력 OFF
         if (menu) menu.EnableInput(false);
-
-        // ▶ 카드 UI OFF (적 턴 동안 비활성화)
         if (handUI) handUI.HideCards();
-
-        // ▶ 적턴 안내 표시
         if (desc) desc.SetEnemyTurn(true);
+
+        // 🔺 적 손패 표시 (원하면 여기서 적도 드로우)
+        // if (enemyDeck) enemyDeck.DrawOneIfNeeded();  // <- 필요 없으면 주석
+        if (enemyHandUI) { enemyHandUI.gameObject.SetActive(true); enemyHandUI.RebuildFromHand(); }
 
         Debug.Log("🔶 적 턴 시작");
 
@@ -113,7 +121,7 @@ public class TurnManager : MonoBehaviour
 
     System.Collections.IEnumerator Co_RunEnemyTurnThenBack()
     {
-        if (enemyThinkDelay > 0f) yield return new WaitForSeconds(enemyThinkDelay);
+        // if (enemyThinkDelay > 0f) yield return new WaitForSeconds(enemyThinkDelay);
 
         if (enemyTurnController)
             yield return enemyTurnController.RunTurn();  // 내부에서 5,4,3,2,1 카운트다운

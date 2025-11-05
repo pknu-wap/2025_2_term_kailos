@@ -87,6 +87,16 @@ public class DescriptionPanelController : MonoBehaviour
     public void SetEnemyTurn(bool on)
     {
         _forceEnemyTurn = on;
+        // 적턴이면 숨기고, 아니면 현재 메뉴 인덱스 기준으로 다시 토글
+        if (hand != null)
+        {
+            if (on) hand.HideCards();
+            else
+            {
+                int idx = menu ? menu.Index : 0;
+                if (idx == 0) hand.ShowCards(); else hand.HideCards();
+            }
+        }
         RefreshNow();
     }
 
@@ -103,6 +113,9 @@ public class DescriptionPanelController : MonoBehaviour
                 handCanvasGroup.interactable = false;
                 handCanvasGroup.blocksRaycasts = false;
             }
+            // ⬇⬇⬇ 추가: HandUI 쪽도 확실히 숨김
+            if (hand != null) hand.HideCards();
+
             descriptionText.text = msgEnemyTurn;
             return;
         }
@@ -111,10 +124,17 @@ public class DescriptionPanelController : MonoBehaviour
 
         if (handCanvasGroup)
         {
-            bool showHand = (index != 3);
+            bool showHand = (index == 0); // 0=Card일 때만 손패 표시
             handCanvasGroup.alpha = showHand ? 1f : 0f;
             handCanvasGroup.interactable = showHand;
             handCanvasGroup.blocksRaycasts = showHand;
+        }
+
+        // ⬇⬇⬇ 추가: HandUI 오브젝트 자체도 토글(시각/입력 모두 일치)
+        if (hand != null)
+        {
+            if (index == 0) hand.ShowCards();
+            else hand.HideCards();
         }
 
         // 메뉴가 Card이고 선택모드면 현재 선택 카드의 SO 설명
