@@ -149,7 +149,8 @@ public class DescriptionPanelController : MonoBehaviour
 
         if (handCanvasGroup)
         {
-            bool showHand = (index == 0);
+            bool showHand = (index == 0 || index == 2);
+
             handCanvasGroup.alpha = showHand ? 1f : 0f;
             handCanvasGroup.interactable = showHand;
             handCanvasGroup.blocksRaycasts = showHand;
@@ -157,7 +158,7 @@ public class DescriptionPanelController : MonoBehaviour
 
         if (hand != null)
         {
-            if (index == 0) hand.ShowCards();
+            if (index == 0 || index == 2) hand.ShowCards();
             else hand.HideCards();
         }
 

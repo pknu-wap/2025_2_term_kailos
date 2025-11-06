@@ -113,6 +113,11 @@ public class CardUseOrchestrator : MonoBehaviour
             if (logDebug)
                 Debug.Log($"[Orchestrator] Explanation shown: {line}");
         }
+        if (drawController != null && so is DrawCardSO dso)
+        {
+            // 내 턴이므로 self = Player (적 턴은 나중에 Enemy로 호출 예정)
+            StartCoroutine(drawController.Execute(dso, Faction.Player));
+        }
 
         // E. ShowCard 프리뷰 (다른 UI엔 손대지 않음)
         if (showCard) yield return showCard.PreviewById(so.id, totalSeconds);

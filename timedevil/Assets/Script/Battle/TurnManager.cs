@@ -1,5 +1,4 @@
-﻿// Assets/Script/Battle/TurnManager.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum TurnState { PlayerTurn, EnemyTurn }
 
@@ -11,28 +10,25 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private BattleMenuController menu;
 
     [Header("Refs")]
-    [SerializeField] private EnemyTurnController enemyTurnController; // 적 턴 실행기
-    [SerializeField] private HandUI handUI;                            // 플레이어 카드 UI (적턴에 비활성 처리)
-    [SerializeField] private CostController cost;                      // ▶ 플레이어 턴 시작 시 10/10 리셋
-    [SerializeField] private DescriptionPanelController desc;          // ▶ 적턴 안내 "상대턴입니다"
-    [SerializeField] private BattleDeckRuntime deck;                   // ▶ 플레이어 턴 시작 시 1장 드로우
+    [SerializeField] private EnemyTurnController enemyTurnController;
+    [SerializeField] private HandUI handUI;
+    [SerializeField] private CostController cost;
+    [SerializeField] private DescriptionPanelController desc;
+    [SerializeField] private BattleDeckRuntime deck;
 
     [Header("Delays")]
-    [SerializeField] private float enemyThinkDelay = 0.6f; // (카운트다운은 EnemyTurnController에서)
-    [SerializeField] private EnemyHandUI enemyHandUI;          // EnemyHandUI 참조
-    [SerializeField] private EnemyDeckRuntime enemyDeck;       // 적 덱 런타임
+    [SerializeField] private float enemyThinkDelay = 0.6f;
+    [SerializeField] private EnemyHandUI enemyHandUI;
+    [SerializeField] private EnemyDeckRuntime enemyDeck;
     [SerializeField] private ItemHandUI itemHand;
 
-    // 런타임 소스
-    private PlayerDataRuntime pdr;     // 플레이어 런타임
-    private EnemyRuntime enemyRt;      // SO 기반 적 런타임
+    public bool IsPlayerDiscardPhase { get; private set; } = false;
+    public TurnState currentTurn { get; private set; } = TurnState.PlayerTurn;
 
+    private PlayerDataRuntime pdr;
+    private EnemyRuntime enemyRt;
     private int playerSPD = 0;
     private int enemySPD = 0;
-
-
-
-    public TurnState currentTurn { get; private set; } = TurnState.PlayerTurn;
 
     void Awake()
     {
@@ -48,7 +44,6 @@ public class TurnManager : MonoBehaviour
         if (!enemyHandUI) enemyHandUI = FindObjectOfType<EnemyHandUI>(true);
         if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
         if (!itemHand) itemHand = FindObjectOfType<ItemHandUI>(true);
-
     }
 
     void Start()
@@ -64,73 +59,116 @@ public class TurnManager : MonoBehaviour
     void ResolvePlayerData()
     {
         if (pdr && pdr.Data != null) playerSPD = Mathf.Max(0, pdr.Data.speed);
-        else { playerSPD = 0; Debug.LogWarning("[TurnManager] PlayerDataRuntime 또는 Data가 없습니다. SPD=0"); }
+        else { playerSPD = 0; Debug.LogWarning("[TurnManager] PlayerDataRuntime/Data 없음 → SPD=0"); }
     }
 
     void ResolveEnemyData()
     {
         if (enemyRt != null) enemySPD = Mathf.Max(0, enemyRt.speed);
-        else { enemySPD = 0; Debug.LogWarning("[TurnManager] EnemyRuntime을 찾지 못했습니다. SPD=0"); }
+        else { enemySPD = 0; Debug.LogWarning("[TurnManager] EnemyRuntime 없음 → SPD=0"); }
     }
 
     void DecideFirstTurn()
     {
         Debug.Log($"[TurnManager] SPD Compare => Player:{playerSPD} vs Enemy:{enemySPD}");
         if (enemySPD > playerSPD) BeginEnemyTurn();
-        else BeginPlayerTurn(); // 동속 포함
+        else BeginPlayerTurn();
     }
 
     public void BeginPlayerTurn()
     {
         currentTurn = TurnState.PlayerTurn;
+        IsPlayerDiscardPhase = false;
 
         if (cost) cost.ResetTurn();
-        if (deck) deck.DrawOneIfNeeded();        // 플레이어 드로우
+        if (deck) deck.DrawOneIfNeeded();
 
         if (handUI) handUI.ShowCards();
         if (menu) menu.EnableInput(true);
         if (desc) desc.SetEnemyTurn(false);
 
-        // 🔻 적 손패 숨김
         if (enemyHandUI) enemyHandUI.HideAll();
-
-        Debug.Log("🔷 플레이어 턴 시작 (드로우 1장 시도)");
         if (itemHand) itemHand.SetEnemyTurn(false);
 
+        Debug.Log("🔷 플레이어 턴 시작");
     }
 
-    // 적 턴 시작
     public void BeginEnemyTurn()
     {
         if (itemHand) itemHand.SetEnemyTurn(true);
 
         currentTurn = TurnState.EnemyTurn;
+        IsPlayerDiscardPhase = false;
 
         if (menu) menu.EnableInput(false);
         if (handUI) handUI.HideCards();
         if (desc) desc.SetEnemyTurn(true);
 
-        // 🔺 적 손패 표시 (원하면 여기서 적도 드로우)
-        // if (enemyDeck) enemyDeck.DrawOneIfNeeded();  // <- 필요 없으면 주석
         if (enemyHandUI) { enemyHandUI.gameObject.SetActive(true); enemyHandUI.RebuildFromHand(); }
 
         Debug.Log("🔶 적 턴 시작");
-
         StartCoroutine(Co_RunEnemyTurnThenBack());
     }
 
     System.Collections.IEnumerator Co_RunEnemyTurnThenBack()
     {
-        // if (enemyThinkDelay > 0f) yield return new WaitForSeconds(enemyThinkDelay);
-
         if (enemyTurnController)
-            yield return enemyTurnController.RunTurn();  // 내부에서 5,4,3,2,1 카운트다운
-
+            yield return enemyTurnController.RunTurn();
         Debug.Log("🔶 적 턴 종료 → 플레이어 턴");
         BeginPlayerTurn();
     }
 
-    // EndController에서 호출
+    // EndController → 여기로 호출
+    public void OnPlayerPressedEnd()
+    {
+        if (currentTurn != TurnState.PlayerTurn) return;
+
+        // 초과 없음 → 바로 턴 종료
+        if (deck == null || deck.OverCapCount <= 0)
+        {
+            OnPlayerActionCommitted();
+            return;
+        }
+
+        // ✅ 강제 버림 페이즈 진입
+        IsPlayerDiscardPhase = true;
+
+        if (menu) menu.EnableInput(false);     // 메뉴 입력 잠금
+        if (handUI)                            // 손패 선택 모드로 진입
+        {
+            handUI.ShowCards();
+            handUI.EnterSelectMode();
+        }
+
+        // 안내 문구 고정
+        if (desc)
+            desc.ShowTemporaryExplanation($"손패가 {deck.MaxHandSize}장을 초과했습니다. 버릴 카드를 선택하세요. (남은 초과: {deck.OverCapCount})");
+
+        Debug.Log($"[TurnManager] DiscardPhase 시작 — 초과 {deck.OverCapCount}장");
+    }
+
+    // HandSelectController가 한 장 버릴 때마다 호출
+    public void OnPlayerDiscardOne(int remainingOver)
+    {
+        if (!IsPlayerDiscardPhase) return;
+
+        if (remainingOver > 0)
+        {
+            if (desc)
+                desc.ShowTemporaryExplanation($"버릴 카드를 계속 선택하세요. (남은 초과: {remainingOver})");
+            return;
+        }
+
+        // 버림 완료
+        IsPlayerDiscardPhase = false;
+        if (desc) desc.ClearTemporaryMessage();
+
+        // 선택모드 종료하고 실제 턴 종료로 진행
+        if (handUI) handUI.ExitSelectMode();
+        OnPlayerActionCommitted();
+    }
+
+    // 기존 End 확정 시 호출되던 함수 (변경 없음)
     public void OnPlayerActionCommitted()
     {
         if (currentTurn != TurnState.PlayerTurn) return;

@@ -1,42 +1,54 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 public class DrawController : MonoBehaviour
 {
-    public IEnumerator Execute(DrawCardSO so, Faction self, Faction foe)
-    {
-        Debug.Log($"[DrawController] Execute: id={so.id}, name={so.displayName}, " +
-                  $"mode={so.drawMode}, amount={so.amount}, self={self}, foe={foe}");
+    [Header("Optional VFX (UpDraw only, once)")]
+    [SerializeField] private GameObject upDrawParticlePrefab;
+    [SerializeField] private float vfxLifetime = 1.2f;
 
-        // °£´ÜÇÑ »ùÇÃ µ¿ÀÛ (³ªÁß¿¡ ½ÇÁ¦ ±ÔÄ¢À¸·Î ±³Ã¼)
-        var deck = BattleDeckRuntime.Instance;
-        if (deck == null)
-        {
-            Debug.LogWarning("[DrawController] BattleDeckRuntime is null.");
-            yield break;
-        }
+    [Header("Anchors (where to spawn VFX)")]
+    [SerializeField] private Transform playerHandAnchor;
+    [SerializeField] private Transform enemyHandAnchor;
+
+    public IEnumerator Execute(DrawCardSO so, Faction self)
+    {
+        if (so == null) yield break;
 
         if (so.drawMode == DrawMode.UpDraw)
         {
-            // ÀÚ½ÅÀÌ µå·Î¿ì
             if (self == Faction.Player)
             {
-                deck.Draw(so.amount);
-                Debug.Log($"[DrawController] Player draws {so.amount}.");
+                var deck = BattleDeckRuntime.Instance;
+                if (deck != null) deck.Draw(so.amount, ignoreHandCap: true); // âœ… cap ë¬´ì‹œ
+                else Debug.LogWarning("[DrawController] BattleDeckRuntime is null (player).");
             }
             else
             {
-                // TODO: Àû µå·Î¿ì ±¸Çö (Àû µ¦/¼ÕÆÐ ½Ã½ºÅÛ ¿¬°á)
-                Debug.Log($"[DrawController] Enemy would draw {so.amount} (stub).");
+                var enemy = EnemyDeckRuntime.Instance;
+                if (enemy != null) enemy.Draw(so.amount, ignoreHandCap: true); // âœ… cap ë¬´ì‹œ
+                else Debug.LogWarning("[DrawController] EnemyDeckRuntime is null (enemy).");
             }
         }
-        else // AntiDraw
+        else
         {
-            // »ó´ë ¼ÕÆÐ¿¡¼­ ·£´ýÀ¸·Î ¹ö¸®±â(¾ÆÁ÷ ¹Ì±¸Çö: µð¹ö±×¸¸)
-            Debug.Log($"[DrawController] Force discard foe's {so.amount} card(s) (stub).");
-            // TODO: »ó´ë ¼ÕÆÐ ½Ã½ºÅÛ ¿¬°áÇØ¼­ ½ÇÁ¦ ¹ö¸®±â ±¸Çö
+            Debug.Log("[DrawController] AntiDraw is not implemented yet.");
+        }
+
+        if (upDrawParticlePrefab != null)
+        {
+            Transform anchor = (self == Faction.Player) ? playerHandAnchor : enemyHandAnchor;
+            Vector3 pos = anchor ? anchor.position : Vector3.zero;
+            var go = Instantiate(upDrawParticlePrefab, pos, Quaternion.identity);
+            if (vfxLifetime > 0f) Destroy(go, vfxLifetime);
         }
 
         yield return null;
+    }
+
+    public void SetAnchors(Transform player, Transform enemy)
+    {
+        playerHandAnchor = player;
+        enemyHandAnchor = enemy;
     }
 }

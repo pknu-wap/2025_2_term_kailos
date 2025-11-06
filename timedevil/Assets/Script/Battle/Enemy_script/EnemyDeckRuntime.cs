@@ -1,4 +1,4 @@
-// Assets/Script/Battle/EnemyDeckRuntime.cs
+ï»¿// Assets/Script/Battle/EnemyDeckRuntime.cs
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +7,7 @@ public class EnemyDeckRuntime : MonoBehaviour
 {
     public static EnemyDeckRuntime Instance { get; private set; }
 
-    [Header("DB (EnemySO¸¦ Ã£±â À§ÇØ ÇÊ¿ä)")]
+    [Header("DB (EnemySOë¥¼ ì°¾ê¸° ìœ„í•´ í•„ìš”)")]
     [SerializeField] private EnemyDatabaseSO enemyDatabase;
 
     public readonly List<string> deck = new();
@@ -28,7 +28,6 @@ public class EnemyDeckRuntime : MonoBehaviour
 
     void Start()
     {
-        // µ¥ÀÌÅÍ ÁØºñ »óÅÂ°¡ ¾À¸¶´Ù ´Ş¶ó¼­, ÇÃ·¹ÀÌ¾îÂÊ°ú ºñ½ÁÇÏ°Ô Àç½Ãµµ ·çÆ¾ Æ÷ÇÔ
         bool ok = TryInitOnce();
         if (!ok) StartCoroutine(CoRetryInit());
     }
@@ -50,7 +49,7 @@ public class EnemyDeckRuntime : MonoBehaviour
             if (!string.IsNullOrEmpty(id)) deck.Add(id);
 
 #if UNITY_EDITOR
-        Debug.Log($"[EnemyDeckRuntime] µ¦ ·Îµå ¿Ï·á: {deck.Count}Àå (EnemyId={enemyRt.enemyId})");
+        Debug.Log($"[EnemyDeckRuntime] ë± ë¡œë“œ ì™„ë£Œ: {deck.Count}ì¥ (EnemyId={enemyRt.enemyId})");
 #endif
         Shuffle(deck);
         DrawInitial();
@@ -66,7 +65,7 @@ public class EnemyDeckRuntime : MonoBehaviour
             if (TryInitOnce()) yield break;
         }
         OnHandChanged?.Invoke();
-        Debug.LogWarning("[EnemyDeckRuntime] ÃÊ±âÈ­ Àç½Ãµµ ½ÇÆĞ(Àû µ¦ ºñ¾î ÀÖÀ½ ¶Ç´Â DB ÂüÁ¶ ´©¶ô).");
+        Debug.LogWarning("[EnemyDeckRuntime] ì´ˆê¸°í™” ì¬ì‹œë„ ì‹¤íŒ¨(ì  ë± ë¹„ì–´ ìˆìŒ ë˜ëŠ” DB ì°¸ì¡° ëˆ„ë½).");
     }
 
     public static void Shuffle(List<string> list)
@@ -82,7 +81,7 @@ public class EnemyDeckRuntime : MonoBehaviour
     {
         Draw(Mathf.Min(initialHandSize, maxHandSize));
 #if UNITY_EDITOR
-        Debug.Log($"[EnemyDeckRuntime] ÃÊ±â µå·Î¿ì ¡æ [{string.Join(", ", hand)}]");
+        Debug.Log($"[EnemyDeckRuntime] ì´ˆê¸° ë“œë¡œìš° â†’ [{string.Join(", ", hand)}]");
 #endif
     }
 
@@ -91,20 +90,28 @@ public class EnemyDeckRuntime : MonoBehaviour
         if (hand.Count < maxHandSize) Draw(1);
     }
 
-    public void Draw(int n)
+    // âœ… ìƒˆ ì˜¤ë²„ë¡œë“œ: capì„ ë¬´ì‹œí• ì§€ ì„ íƒ ê°€ëŠ¥
+    public int Draw(int n, bool ignoreHandCap)
     {
-        bool moved = false;
+        int drawn = 0;
         for (int k = 0; k < n; k++)
         {
-            if (hand.Count >= maxHandSize) break;
+            if (!ignoreHandCap && hand.Count >= maxHandSize) break;
             if (deck.Count == 0) break;
 
             string top = deck[0];
             deck.RemoveAt(0);
             hand.Add(top);
-            moved = true;
+            drawn++;
         }
-        if (moved) OnHandChanged?.Invoke();
+        if (drawn > 0) OnHandChanged?.Invoke();
+        return drawn;
+    }
+
+    // âœ… ê¸°ì¡´ ì‹œê·¸ë‹ˆì²˜ëŠ” ìœ ì§€í•˜ë˜, ê¸°ë³¸ì ìœ¼ë¡œ capì„ ì§€í‚´
+    public void Draw(int n)
+    {
+        Draw(n, ignoreHandCap: false);
     }
 
     public bool UseCardToBottom(int handIndex)

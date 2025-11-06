@@ -1193,9 +1193,9 @@ MonoBehaviour:
   desc: {fileID: 0}
   logDebug: 0
   attackController: {fileID: 0}
-  supportController: {fileID: 0}
-  drawController: {fileID: 0}
-  moveController: {fileID: 0}
+  supportController: {fileID: 1201525409}
+  drawController: {fileID: 1201525411}
+  moveController: {fileID: 1201525410}
 --- !u!4 &593885362
 Transform:
   m_ObjectHideFlags: 0
@@ -4865,6 +4865,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d5d40b9d92dbe145a6f8f87d2eb750b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  upDrawParticlePrefab: {fileID: 0}
+  vfxLifetime: 1.2
+  playerHandAnchor: {fileID: 0}
+  enemyHandAnchor: {fileID: 0}
 --- !u!114 &1201525412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9434,6 +9438,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2084521561}
   - component: {fileID: 2084521562}
+  - component: {fileID: 2084521563}
   m_Layer: 0
   m_Name: Player_Stone
   m_TagString: Untagged
@@ -9508,6 +9513,27 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!95 &2084521563
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2084521560}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 842c86087bc23444e98aa2cd314d1a33, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2123949533
 GameObject:
   m_ObjectHideFlags: 0
