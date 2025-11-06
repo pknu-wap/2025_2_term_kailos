@@ -10,6 +10,8 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private CardDatabaseSO cardDatabase;
     [SerializeField] private CostController cost;
     [SerializeField] private ShowCardController showCard;
+    [SerializeField] private DescriptionPanelController desc;   // ✅ 추가
+
 
     [Header("Timings")]
     [SerializeField] private float previewSeconds = 1.2f;
@@ -18,21 +20,18 @@ public class EnemyTurnController : MonoBehaviour
     void Awake()
     {
         if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
-        if (!cardDatabase)
-            cardDatabase = Resources.Load<CardDatabaseSO>("CardDatabase");
+        if (!cardDatabase) cardDatabase = Resources.Load<CardDatabaseSO>("CardDatabase");
         if (!cost) cost = FindObjectOfType<CostController>(true);
         if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
-
+        if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);   // ✅ 추가
 
         Debug.Log($"[EnemyTurn] Controller bound on: {gameObject.scene.name}/{gameObject.name}");
-
     }
 
     public IEnumerator RunTurn()
     {
         if (enemyDeck == null || cost == null) yield break;
 
-        // 손패 모자라면 1장 드로우
         if (enemyDeck.GetHandIds().Count < enemyDeck.MaxHandSize)
             enemyDeck.DrawOneIfNeeded();
 
@@ -45,7 +44,6 @@ public class EnemyTurnController : MonoBehaviour
                 yield break;
             }
 
-            // 진단 로그: 현재 손패 + 남은 코스트
             Debug.Log($"[EnemyTurn] Hand= [{string.Join(", ", hand)}], Cost={cost.Current}");
 
             int playableIndex = -1;
@@ -57,13 +55,7 @@ public class EnemyTurnController : MonoBehaviour
                 string id = hand[i];
                 int c = GetCardCost(id);
                 Debug.Log($"[EnemyTurn] probe id={id}, cost={c}");
-                if (c <= cost.Current)
-                {
-                    playableIndex = i;
-                    playableCost = c;
-                    playableId = id;
-                    break;
-                }
+                if (c <= cost.Current) { playableIndex = i; playableCost = c; playableId = id; break; }
             }
 
             if (playableIndex < 0)
@@ -80,9 +72,30 @@ public class EnemyTurnController : MonoBehaviour
 
             Debug.Log($"[EnemyTurn] Play '{playableId}' (cost={playableCost})");
 
+            // ✅ 설명판에 적의 발동 대사(없으면 display/이름/id 순 폴백) 고정
+            if (desc && cardDatabase != null)
+            {
+                var so = cardDatabase.GetById(playableId);
+                if (so)
+                {
+                    string line =
+                        !string.IsNullOrEmpty(so.explanation) ? so.explanation :
+                        (!string.IsNullOrEmpty(so.display) ? so.display :
+                        (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
+                    desc.ShowTemporaryExplanation(line);
+                }
+            }
+
+            // ✅ 프리뷰 재생
             if (showCard != null)
                 yield return showCard.PreviewById(playableId, previewSeconds);
+            else
+                yield return null;
 
+            // ✅ 임시 문구 해제
+            if (desc) desc.ClearTemporaryMessage();
+
+            // 손패에서 사용 → 덱 밑으로
             enemyDeck.UseCardToBottom(playableIndex);
 
             if (playInterval > 0f)

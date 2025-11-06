@@ -15,6 +15,10 @@ public class CardUseOrchestrator : MonoBehaviour
     [SerializeField] private ShowCardController showCard;
     [SerializeField] private float totalSeconds = 3f;   // 페이드 포함 총 시간
 
+    [Header("UI Hooks")]
+    [SerializeField] private DescriptionPanelController desc; // 👈 관전 모드 대사 표시용
+    [SerializeField] private bool logDebug = false; // ← 옵션 로그
+
     // (효과 실행은 타이밍 안정화 후 다시 연결)
     [Header("Optional Effect Controllers (disabled for timing)")]
     [SerializeField] private AttackController attackController;
@@ -22,15 +26,21 @@ public class CardUseOrchestrator : MonoBehaviour
     [SerializeField] private DrawController drawController;
     [SerializeField] private MoveController moveController;
 
+
     private bool busy;
 
-    void Reset()
+    void Awake()
     {
+        // 💡 런타임에서도 안전하게 참조 보강
         if (!hand) hand = FindObjectOfType<HandUI>(true);
         if (!menu) menu = FindObjectOfType<BattleMenuController>(true);
         if (!database) database = Resources.Load<CardDatabaseSO>("CardDatabase");
         if (!costController) costController = FindObjectOfType<CostController>(true);
         if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
+        if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
+
+        if (logDebug && !desc)
+            Debug.LogWarning("[Orchestrator] DescriptionPanelController not found. Explanation won't show.");
     }
 
     public void UseCurrentSelected()
@@ -45,9 +55,9 @@ public class CardUseOrchestrator : MonoBehaviour
     /// 정확한 타이밍:
     /// 1) 카드 선택 → 코스트 즉시 지불(가능 여부 확인 포함)
     /// 2) 카드 즉시 사라짐(덱 아래로 이동)
-    /// 3) 관전모드(선택 해제 + 메뉴 입력 OFF)
+    /// 3) 관전모드(선택 해제 + 메뉴 입력 OFF) + 설명판에 explanation 고정
     /// 4) ShowCard 프리뷰(페이드 인/유지/아웃)
-    /// 5) 카드 선택 모드 복귀(메뉴 입력 OFF 유지: 선택 모드)
+    /// 5) 설명판 임시문구 해제 → 카드 선택 모드 복귀
     /// </summary>
     private IEnumerator Co_UseWithExactTiming(int handIndex)
     {
@@ -90,9 +100,26 @@ public class CardUseOrchestrator : MonoBehaviour
         hand.ExitSelectMode();
         if (menu) menu.EnableInput(false);
 
+        // 👉 설명판에 explanation 고정(비어있으면 display, 그마저 없으면 기본 폴백)
+        if (desc)
+        {
+            string line =
+                !string.IsNullOrEmpty(so.explanation) ? so.explanation :
+                (!string.IsNullOrEmpty(so.display) ? so.display :
+                (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
+
+            desc.ShowTemporaryExplanation(line);
+
+            if (logDebug)
+                Debug.Log($"[Orchestrator] Explanation shown: {line}");
+        }
+
         // E. ShowCard 프리뷰 (다른 UI엔 손대지 않음)
         if (showCard) yield return showCard.PreviewById(so.id, totalSeconds);
         else yield return null;
+
+        // 👉 설명판 임시문구 해제
+        if (desc) desc.ClearTemporaryMessage();
 
         // F. 카드 선택 모드 복귀(오른쪽 끝 유지 대신, 방금 위치로 보정)
         if (hand.CardCount > 0)
@@ -109,4 +136,6 @@ public class CardUseOrchestrator : MonoBehaviour
 
         busy = false;
     }
+
+
 }
