@@ -66,8 +66,10 @@ public class UndeadMover : MonoBehaviour
             Transform targetPoint = waypoints[currentWaypointIndex];
             Vector3 targetPosition = targetPoint.position;
 
+            // ▼▼▼ (수정) isWalking이 필요 없으므로 주석 처리 ▼▼▼
             // (선택 사항) 걷기 애니메이션 시작
-            if (animator != null) animator.SetBool("isWalking", true);
+            // if (animator != null) animator.SetBool("isWalking", true);
+            // ▲▲▲
 
             // 2. 목표 지점에 도착할 때까지 '이동' 루프
             while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
@@ -83,8 +85,10 @@ public class UndeadMover : MonoBehaviour
             // 3. 도착 완료 (정확한 위치로 보정)
             transform.position = targetPosition;
 
+            // ▼▼▼ (수정) isWalking이 필요 없으므로 주석 처리 ▼▼▼
             // (선택 사항) 멈춤 애니메이션
-            if (animator != null) animator.SetBool("isWalking", false);
+            // if (animator != null) animator.SetBool("isWalking", false);
+            // ▲▲▲
 
             // 4. 지점에서 잠시 대기
             if (waitAtPoint > 0)
