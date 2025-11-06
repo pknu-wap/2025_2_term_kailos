@@ -1,19 +1,24 @@
-ï»¿using System;
+// Assets/Script/Battle/EnemyDeckRuntime.cs
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BattleDeckRuntime : MonoBehaviour
+public class EnemyDeckRuntime : MonoBehaviour
 {
-    public static BattleDeckRuntime Instance { get; private set; }
+    public static EnemyDeckRuntime Instance { get; private set; }
+
+    [Header("DB (EnemySO¸¦ Ã£±â À§ÇØ ÇÊ¿ä)")]
+    [SerializeField] private EnemyDatabaseSO enemyDatabase;
 
     public readonly List<string> deck = new();
     public readonly List<string> hand = new();
 
     [Header("Rules")]
-    [SerializeField] private int initialHandSize = 5;
+    [SerializeField] private int initialHandSize = 3;
     [SerializeField] private int maxHandSize = 5;
 
     public event Action OnHandChanged;
+    public int MaxHandSize => maxHandSize;
 
     void Awake()
     {
@@ -23,13 +28,9 @@ public class BattleDeckRuntime : MonoBehaviour
 
     void Start()
     {
-        // 1) ì¦‰ì‹œ ì‹œë„
-        bool okNow = TryInitOnce();
-        if (!okNow)
-        {
-            // 2) ì¤€ë¹„ê°€ ì•ˆ ë¼ ìˆìœ¼ë©´ ëª‡ í”„ë ˆì„ ê¸°ë‹¤ë ¸ë‹¤ê°€ í•œ ë²ˆ ë”
-            StartCoroutine(CoRetryInit());
-        }
+        // µ¥ÀÌÅÍ ÁØºñ »óÅÂ°¡ ¾À¸¶´Ù ´Ş¶ó¼­, ÇÃ·¹ÀÌ¾îÂÊ°ú ºñ½ÁÇÏ°Ô Àç½Ãµµ ·çÆ¾ Æ÷ÇÔ
+        bool ok = TryInitOnce();
+        if (!ok) StartCoroutine(CoRetryInit());
     }
 
     bool TryInitOnce()
@@ -37,39 +38,35 @@ public class BattleDeckRuntime : MonoBehaviour
         deck.Clear();
         hand.Clear();
 
-        var rt = CardStateRuntime.Instance;
-        var src = rt != null ? rt.Data?.deck : null;
+        if (!enemyDatabase) enemyDatabase = FindObjectOfType<EnemyDatabaseSO>(true);
 
-        if (src == null || src.Count == 0)
-        {
-            // ì•„ì§ ì €ì¥ì´ ì•ˆ ì˜¬ë¼ì™”ê±°ë‚˜ ë±ì´ ë¹„ì–´ìˆìŒ
-            return false;
-        }
+        var enemyRt = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>(true);
+        if (!enemyRt || string.IsNullOrEmpty(enemyRt.enemyId)) return false;
 
-        foreach (var id in src)
+        var so = enemyDatabase ? enemyDatabase.GetById(enemyRt.enemyId) : null;
+        if (!so || so.deckIds == null || so.deckIds.Length == 0) return false;
+
+        foreach (var id in so.deckIds)
             if (!string.IsNullOrEmpty(id)) deck.Add(id);
 
 #if UNITY_EDITOR
-        Debug.Log($"[BattleDeckRuntime] ë± ë¡œë“œ ì™„ë£Œ: {deck.Count}ì¥");
+        Debug.Log($"[EnemyDeckRuntime] µ¦ ·Îµå ¿Ï·á: {deck.Count}Àå (EnemyId={enemyRt.enemyId})");
 #endif
         Shuffle(deck);
-        DrawInitial();                    // ë‚´ë¶€ì—ì„œ OnHandChanged ë°œìƒ ê°€ëŠ¥
-        if (hand.Count == 0) OnHandChanged?.Invoke(); // ê·¸ë˜ë„ í•œ ë²ˆ ë³´ì¥
+        DrawInitial();
+        if (hand.Count == 0) OnHandChanged?.Invoke();
         return true;
     }
 
     System.Collections.IEnumerator CoRetryInit()
     {
-        // ìµœëŒ€ 8í”„ë ˆì„ ì •ë„ë§Œ ê¸°ë‹¤ë ¸ë‹¤ê°€ í•œ ë²ˆ ë” ì‹œë„
         for (int i = 0; i < 8; i++)
         {
             yield return null;
             if (TryInitOnce()) yield break;
         }
-
-        // ê·¸ë˜ë„ ì•ˆ ë˜ë©´ ìµœì†Œ í•œ ë²ˆì€ UIë¥¼ ê°±ì‹ ì‹œì¼œ ë¹ˆ ìƒíƒœë¥¼ ë°˜ì˜
         OnHandChanged?.Invoke();
-        Debug.LogWarning("[BattleDeckRuntime] ì´ˆê¸°í™” ì¬ì‹œë„ ì‹¤íŒ¨(ë± ë¹„ì–´ ìˆìŒ). ì €ì¥/ì”¬ ì„¸íŒ… í™•ì¸ í•„ìš”");
+        Debug.LogWarning("[EnemyDeckRuntime] ÃÊ±âÈ­ Àç½Ãµµ ½ÇÆĞ(Àû µ¦ ºñ¾î ÀÖÀ½ ¶Ç´Â DB ÂüÁ¶ ´©¶ô).");
     }
 
     public static void Shuffle(List<string> list)
@@ -85,7 +82,7 @@ public class BattleDeckRuntime : MonoBehaviour
     {
         Draw(Mathf.Min(initialHandSize, maxHandSize));
 #if UNITY_EDITOR
-        Debug.Log($"[BattleDeckRuntime] ì´ˆê¸° ë“œë¡œìš° â†’ [{string.Join(", ", hand)}]");
+        Debug.Log($"[EnemyDeckRuntime] ÃÊ±â µå·Î¿ì ¡æ [{string.Join(", ", hand)}]");
 #endif
     }
 
