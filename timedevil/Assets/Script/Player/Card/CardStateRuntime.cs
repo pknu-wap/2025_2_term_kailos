@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Linq;
 using System.IO;
-
 public class CardStateRuntime : MonoBehaviour
 {
     public static CardStateRuntime Instance { get; private set; }
