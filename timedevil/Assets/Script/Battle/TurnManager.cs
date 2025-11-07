@@ -21,6 +21,8 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private EnemyHandUI enemyHandUI;
     [SerializeField] private EnemyDeckRuntime enemyDeck;
     [SerializeField] private ItemHandUI itemHand;
+    [SerializeField] private float enemyDiscardRevealDelay = 3f;   // ✅ 추가: 적 버림 후 보여줄 시간(초)
+
 
     public bool IsPlayerDiscardPhase { get; private set; } = false;
     public TurnState currentTurn { get; private set; } = TurnState.PlayerTurn;
@@ -100,6 +102,9 @@ public class TurnManager : MonoBehaviour
         currentTurn = TurnState.EnemyTurn;
         IsPlayerDiscardPhase = false;
 
+        if (cost) cost.ResetTurn();
+
+
         if (menu) menu.EnableInput(false);
         if (handUI) handUI.HideCards();
         if (desc) desc.SetEnemyTurn(true);
@@ -114,6 +119,25 @@ public class TurnManager : MonoBehaviour
     {
         if (enemyTurnController)
             yield return enemyTurnController.RunTurn();
+
+        // ✅ 적 손패 초과 자동 버림(덱 밑으로)
+        int dumped = 0;
+        if (enemyDeck != null)
+        {
+            dumped = enemyDeck.DiscardExcessToBottom(fromRight: true); // 오른쪽(마지막 카드)부터 버림
+            if (dumped > 0)
+            {
+                Debug.Log($"[TurnManager] Enemy discard {dumped} card(s) to meet cap {enemyDeck.MaxHandSize}");
+                if (enemyHandUI) enemyHandUI.RebuildFromHand(); // 적 손패 UI 갱신
+                                                                // (선호하면 약간의 연출 지연)
+                                                                // yield return new WaitForSeconds(0.2f);
+
+                // ✅ 3초(설정값) 동안 보여주기
+                if (enemyDiscardRevealDelay > 0f)
+                    yield return new WaitForSeconds(enemyDiscardRevealDelay);
+            }
+        }
+
         Debug.Log("🔶 적 턴 종료 → 플레이어 턴");
         BeginPlayerTurn();
     }

@@ -1349,6 +1349,7 @@ MonoBehaviour:
   cost: {fileID: 1352731693}
   showCard: {fileID: 643248677}
   desc: {fileID: 0}
+  drawController: {fileID: 1201525411}
   previewSeconds: 1.5
   playInterval: 0.3
 --- !u!1 &643248676
@@ -9321,10 +9322,11 @@ MonoBehaviour:
   cost: {fileID: 1352731693}
   desc: {fileID: 1069897052}
   deck: {fileID: 0}
-  enemyThinkDelay: 0.6
+  enemyThinkDelay: 3
   enemyHandUI: {fileID: 133108826}
   enemyDeck: {fileID: 1424331453}
   itemHand: {fileID: 334961076}
+  enemyDiscardRevealDelay: 3
 --- !u!4 &2043066780
 Transform:
   m_ObjectHideFlags: 0

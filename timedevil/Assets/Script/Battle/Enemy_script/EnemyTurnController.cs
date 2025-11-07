@@ -1,6 +1,5 @@
 ﻿// Assets/Script/Battle/Enemy_script/EnemyTurnController.cs
 using System.Collections;
-using System.Reflection;
 using UnityEngine;
 
 public class EnemyTurnController : MonoBehaviour
@@ -10,8 +9,11 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private CardDatabaseSO cardDatabase;
     [SerializeField] private CostController cost;
     [SerializeField] private ShowCardController showCard;
-    [SerializeField] private DescriptionPanelController desc;   // ✅ 추가
+    [SerializeField] private DescriptionPanelController desc;
 
+    // 👇 추가: 적도 Draw 효과를 실행하기 위해 DrawController 참조
+    [Header("Effect Controllers")]
+    [SerializeField] private DrawController drawController;
 
     [Header("Timings")]
     [SerializeField] private float previewSeconds = 1.2f;
@@ -23,7 +25,8 @@ public class EnemyTurnController : MonoBehaviour
         if (!cardDatabase) cardDatabase = Resources.Load<CardDatabaseSO>("CardDatabase");
         if (!cost) cost = FindObjectOfType<CostController>(true);
         if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
-        if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);   // ✅ 추가
+        if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
+        if (!drawController) drawController = FindObjectOfType<DrawController>(true); // ⭐ 자동 결선
 
         Debug.Log($"[EnemyTurn] Controller bound on: {gameObject.scene.name}/{gameObject.name}");
     }
@@ -72,38 +75,48 @@ public class EnemyTurnController : MonoBehaviour
 
             Debug.Log($"[EnemyTurn] Play '{playableId}' (cost={playableCost})");
 
-            // ✅ 설명판에 적의 발동 대사(없으면 display/이름/id 순 폴백) 고정
-            if (desc && cardDatabase != null)
+            // SO 가져오기 (타입 분기용)
+            BaseCardSO so = cardDatabase ? cardDatabase.GetById(playableId) : null;
+
+            // ▶ 설명(explanation) 고정: (explanation > display > displayName > id)
+            if (desc && so)
             {
-                var so = cardDatabase.GetById(playableId);
-                if (so)
-                {
-                    string line =
-                        !string.IsNullOrEmpty(so.explanation) ? so.explanation :
-                        (!string.IsNullOrEmpty(so.display) ? so.display :
-                        (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
-                    desc.ShowTemporaryExplanation(line);
-                }
+                string line =
+                    !string.IsNullOrEmpty(so.explanation) ? so.explanation :
+                    (!string.IsNullOrEmpty(so.display) ? so.display :
+                    (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
+                desc.ShowTemporaryExplanation(line);
             }
 
-            // ✅ 프리뷰 재생
+            // ▶ 효과 실행: Draw 카드면 적 진영으로 실행 (cap 무시)
+            if (so is DrawCardSO dso && drawController != null)
+            {
+                // 플레이어 쪽과 동일하게 프리뷰와 병렬 실행
+                StartCoroutine(drawController.Execute(dso, Faction.Enemy));
+            }
+            // (Support/Move/Attack는 다음 단계에서 각각의 컨트롤러를 붙여 동일 패턴으로 처리)
+
+            // ▶ ShowCard 프리뷰
             if (showCard != null)
                 yield return showCard.PreviewById(playableId, previewSeconds);
             else
                 yield return null;
 
-            // ✅ 임시 문구 해제
+            // ▶ 설명 해제
             if (desc) desc.ClearTemporaryMessage();
 
-            // 손패에서 사용 → 덱 밑으로
+            // ▶ 사용한 카드는 덱 맨 아래로
             enemyDeck.UseCardToBottom(playableIndex);
+
+            // (선택) 적 손패 UI 새로고침이 필요하면 여기서 호출
+            // var ui = FindObjectOfType<EnemyHandUI>(true);
+            // if (ui) ui.RebuildFromHand();
 
             if (playInterval > 0f)
                 yield return new WaitForSeconds(playInterval);
         }
     }
 
-    // ---- 코스트 추출을 견고하게 (필드명이 달라도 최대한 잡아줌) ----
     private int GetCardCost(string id)
     {
         if (string.IsNullOrEmpty(id) || cardDatabase == null)
@@ -119,25 +132,21 @@ public class EnemyTurnController : MonoBehaviour
             return 9999;
         }
 
-        // ✅ 자식 타입 먼저, 부모는 마지막
         if (so is AttackCardSO a) return Mathf.Max(0, a.cost);
         if (so is MoveCardSO m) return Mathf.Max(0, m.cost);
         if (so is SupportCardSO s) return Mathf.Max(0, s.cost);
         if (so is BaseCardSO b) return Mathf.Max(0, b.cost);
 
-        // ✅ 폴백: public/private field/property 모두 탐색
         var t = so.GetType();
         const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.Instance |
             System.Reflection.BindingFlags.Public |
             System.Reflection.BindingFlags.NonPublic;
 
-        // field: "cost"/"Cost"
         var f = t.GetField("cost", BF) ?? t.GetField("Cost", BF);
         if (f != null && f.FieldType == typeof(int))
             return Mathf.Max(0, (int)f.GetValue(so));
 
-        // property: "cost"/"Cost"
         var p = t.GetProperty("cost", BF) ?? t.GetProperty("Cost", BF);
         if (p != null && p.PropertyType == typeof(int) && p.CanRead)
             return Mathf.Max(0, (int)p.GetValue(so));

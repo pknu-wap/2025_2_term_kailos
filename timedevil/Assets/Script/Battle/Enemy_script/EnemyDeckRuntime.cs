@@ -15,10 +15,13 @@ public class EnemyDeckRuntime : MonoBehaviour
 
     [Header("Rules")]
     [SerializeField] private int initialHandSize = 3;
-    [SerializeField] private int maxHandSize = 5;
+    [SerializeField] private int maxHandSize = 3;
 
     public event Action OnHandChanged;
     public int MaxHandSize => maxHandSize;
+
+    // ✅ 추가: 현재 초과량
+    public int OverCapCount => Mathf.Max(0, hand.Count - maxHandSize);
 
     void Awake()
     {
@@ -108,6 +111,8 @@ public class EnemyDeckRuntime : MonoBehaviour
         return drawn;
     }
 
+
+
     // ✅ 기존 시그니처는 유지하되, 기본적으로 cap을 지킴
     public void Draw(int n)
     {
@@ -123,6 +128,24 @@ public class EnemyDeckRuntime : MonoBehaviour
         OnHandChanged?.Invoke();
         return true;
     }
+
+    public bool DiscardToBottom(int handIndex) => UseCardToBottom(handIndex);
+
+    public int DiscardExcessToBottom(bool fromRight = true)
+    {
+        int moved = 0;
+        while (hand.Count > maxHandSize)
+        {
+            int idx = fromRight ? hand.Count - 1 : 0;
+            string id = hand[idx];
+            hand.RemoveAt(idx);
+            deck.Add(id);
+            moved++;
+        }
+        if (moved > 0) OnHandChanged?.Invoke();
+        return moved;
+    }
+
 
     public IReadOnlyList<string> GetHandIds() => hand;
 
