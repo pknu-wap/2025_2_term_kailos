@@ -4785,6 +4785,8 @@ MonoBehaviour:
   menu: {fileID: 1069897049}
   hand: {fileID: 860620052}
   database: {fileID: 11400000, guid: c0cc44962aa33464ca629e77b4d09b2b, type: 2}
+  enemyHand: {fileID: 133108826}
+  enemyHandCanvasGroup: {fileID: 133108823}
   msgCard: "Card\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgItem: "Item\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4."
   msgEnd: "\uD134\uC5D4\uB4DC\uD569\uB2C8\uB2E4."
