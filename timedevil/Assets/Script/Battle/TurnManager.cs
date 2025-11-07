@@ -22,7 +22,10 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private EnemyDeckRuntime enemyDeck;
     [SerializeField] private ItemHandUI itemHand;
     [SerializeField] private float enemyDiscardRevealDelay = 3f;   // ✅ 추가: 적 버림 후 보여줄 시간(초)
+    [SerializeField] private CardAnimeController cardAnime;
 
+    private bool playerInitialRevealDone = false;
+    private bool enemyInitialRevealDone = false;
 
     public bool IsPlayerDiscardPhase { get; private set; } = false;
     public TurnState currentTurn { get; private set; } = TurnState.PlayerTurn;
@@ -92,6 +95,13 @@ public class TurnManager : MonoBehaviour
         if (enemyHandUI) enemyHandUI.HideAll();
         if (itemHand) itemHand.SetEnemyTurn(false);
 
+        // ✅ 플레이어 초기 손패 연출 (한 번만, 프레임 끝에)
+        if (!playerInitialRevealDone && cardAnime != null)
+        {
+            playerInitialRevealDone = true;
+            StartCoroutine(Co_RevealPlayerInitialAfterFrame());
+        }
+
         Debug.Log("🔷 플레이어 턴 시작");
     }
 
@@ -110,6 +120,13 @@ public class TurnManager : MonoBehaviour
         if (desc) desc.SetEnemyTurn(true);
 
         if (enemyHandUI) { enemyHandUI.gameObject.SetActive(true); enemyHandUI.RebuildFromHand(); }
+
+        // ✅ 적 초기 손패 연출 (한 번만, 프레임 끝에)
+        if (!enemyInitialRevealDone && cardAnime != null)
+        {
+            enemyInitialRevealDone = true;
+            StartCoroutine(Co_RevealEnemyInitialAfterFrame());
+        }
 
         Debug.Log("🔶 적 턴 시작");
         StartCoroutine(Co_RunEnemyTurnThenBack());
@@ -198,5 +215,22 @@ public class TurnManager : MonoBehaviour
         if (currentTurn != TurnState.PlayerTurn) return;
         Debug.Log("[TurnManager] Player action committed → EnemyTurn");
         BeginEnemyTurn();
+    }
+
+    // ---- 새로 추가한 코루틴 2개 ----
+    private System.Collections.IEnumerator Co_RevealPlayerInitialAfterFrame()
+    {
+        // HandUI가 카드 프리팹들을 배치할 시간을 준다
+        yield return new WaitForEndOfFrame();
+        yield return null; // 여유 프레임 하나 더 (UI 레이아웃 안정)
+        if (cardAnime != null) cardAnime.RevealInitialPlayerHand();
+    }
+
+    private System.Collections.IEnumerator Co_RevealEnemyInitialAfterFrame()
+    {
+        // EnemyHandUI가 카드들을 만든 뒤에 연출 시작
+        yield return new WaitForEndOfFrame();
+        yield return null;
+        if (cardAnime != null) cardAnime.RevealInitialEnemyHand();
     }
 }

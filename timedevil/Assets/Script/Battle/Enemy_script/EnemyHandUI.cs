@@ -104,4 +104,12 @@ public class EnemyHandUI : MonoBehaviour
             if (spawned[i]) spawned[i].SetActive(false);
         gameObject.SetActive(false);
     }
+
+    public List<RectTransform> GetAllCardRects()
+    {
+        var list = new List<RectTransform>();
+        for (int i = 0; i < spawned.Count; i++)
+            if (spawned[i]) list.Add((RectTransform)spawned[i].transform);
+        return list;
+    }
 }

@@ -4823,6 +4823,7 @@ GameObject:
   - component: {fileID: 1201525411}
   - component: {fileID: 1201525410}
   - component: {fileID: 1201525409}
+  - component: {fileID: 1201525414}
   m_Layer: 0
   m_Name: CardManager
   m_TagString: Untagged
@@ -4870,6 +4871,7 @@ MonoBehaviour:
   vfxLifetime: 1.2
   playerHandAnchor: {fileID: 0}
   enemyHandAnchor: {fileID: 0}
+  cardAnime: {fileID: 1201525414}
 --- !u!114 &1201525412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4897,6 +4899,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1201525414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1201525408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8689b8654d6f0554a9c212cbc38cfd8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHandUI: {fileID: 860620052}
+  enemyHandUI: {fileID: 133108826}
+  startYOffset: 361
+  perCardDuration: 0.25
+  perCardStagger: 0.15
+  fadeAlpha: 1
 --- !u!1 &1234915015
 GameObject:
   m_ObjectHideFlags: 0
@@ -9327,6 +9347,7 @@ MonoBehaviour:
   enemyDeck: {fileID: 1424331453}
   itemHand: {fileID: 334961076}
   enemyDiscardRevealDelay: 3
+  cardAnime: {fileID: 1201525414}
 --- !u!4 &2043066780
 Transform:
   m_ObjectHideFlags: 0
