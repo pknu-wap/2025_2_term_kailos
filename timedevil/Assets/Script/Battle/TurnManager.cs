@@ -85,12 +85,13 @@ public class TurnManager : MonoBehaviour
         currentTurn = TurnState.PlayerTurn;
         IsPlayerDiscardPhase = false;
 
+
         if (cost) cost.ResetTurn();
         if (deck) deck.DrawOneIfNeeded();
 
         if (handUI) handUI.ShowCards();
         if (menu) menu.EnableInput(true);
-        if (desc) desc.SetEnemyTurn(false);
+        if (desc) { desc.SetEnemyTurn(false); desc.SetPlayerDiscardMode(false); } // 🔸
 
         if (enemyHandUI) enemyHandUI.HideAll();
         if (itemHand) itemHand.SetEnemyTurn(false);
@@ -117,7 +118,7 @@ public class TurnManager : MonoBehaviour
 
         if (menu) menu.EnableInput(false);
         if (handUI) handUI.HideCards();
-        if (desc) desc.SetEnemyTurn(true);
+        if (desc) { desc.SetEnemyTurn(true); desc.SetPlayerDiscardMode(false); } // 🔸
 
         if (enemyHandUI) { enemyHandUI.gameObject.SetActive(true); enemyHandUI.RebuildFromHand(); }
 
@@ -137,20 +138,34 @@ public class TurnManager : MonoBehaviour
         if (enemyTurnController)
             yield return enemyTurnController.RunTurn();
 
-        // ✅ 적 손패 초과 자동 버림(덱 밑으로)
-        int dumped = 0;
-        if (enemyDeck != null)
+        // ✅ 적 손패 초과 자동 버림(연출 → 데이터 이동 → 리빌드)
+        if (enemyDeck != null && cardAnime != null)
         {
-            dumped = enemyDeck.DiscardExcessToBottom(fromRight: true); // 오른쪽(마지막 카드)부터 버림
-            if (dumped > 0)
+            int over = enemyDeck.OverCapCount;
+            if (over > 0)
             {
-                Debug.Log($"[TurnManager] Enemy discard {dumped} card(s) to meet cap {enemyDeck.MaxHandSize}");
-                if (enemyHandUI) enemyHandUI.RebuildFromHand(); // 적 손패 UI 갱신
-                                                                // (선호하면 약간의 연출 지연)
-                                                                // yield return new WaitForSeconds(0.2f);
+                // 1) 역연출
+                yield return cardAnime.DiscardLastNCards(
+                    Faction.Enemy,
+                    n: over,
+                    fromRight: true,
+                    afterAnimDataOp: () => enemyDeck.DiscardExcessToBottom(fromRight: true) // 2) 실제 이동
+                );
 
-                // ✅ 3초(설정값) 동안 보여주기
+                // 3) 보여주는 시간
                 if (enemyDiscardRevealDelay > 0f)
+                    yield return new WaitForSeconds(enemyDiscardRevealDelay);
+            }
+        }
+        else
+        {
+            // 연출 컨트롤러 없을 때는 기존 로직 유지
+            int dumped = 0;
+            if (enemyDeck != null)
+            {
+                dumped = enemyDeck.DiscardExcessToBottom(fromRight: true);
+                if (dumped > 0 && enemyHandUI) enemyHandUI.RebuildFromHand();
+                if (dumped > 0 && enemyDiscardRevealDelay > 0f)
                     yield return new WaitForSeconds(enemyDiscardRevealDelay);
             }
         }
@@ -182,9 +197,12 @@ public class TurnManager : MonoBehaviour
         }
 
         // 안내 문구 고정
-        if (desc)
-            desc.ShowTemporaryExplanation($"손패가 {deck.MaxHandSize}장을 초과했습니다. 버릴 카드를 선택하세요. (남은 초과: {deck.OverCapCount})");
 
+        if (desc)
+        {
+            desc.SetPlayerDiscardMode(true); // 🔸 여기 추가
+            desc.ShowTemporaryExplanation($"손패가 {deck.MaxHandSize}장을 초과했습니다. 버릴 카드를 선택하세요. (남은 초과: {deck.OverCapCount})");
+        }
         Debug.Log($"[TurnManager] DiscardPhase 시작 — 초과 {deck.OverCapCount}장");
     }
 
@@ -202,7 +220,11 @@ public class TurnManager : MonoBehaviour
 
         // 버림 완료
         IsPlayerDiscardPhase = false;
-        if (desc) desc.ClearTemporaryMessage();
+        if (desc)
+        {
+            desc.ClearTemporaryMessage();
+            desc.SetPlayerDiscardMode(false); // 🔸 여기 추가
+        }
 
         // 선택모드 종료하고 실제 턴 종료로 진행
         if (handUI) handUI.ExitSelectMode();

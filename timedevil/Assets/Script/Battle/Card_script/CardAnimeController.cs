@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class CardAnimeController : MonoBehaviour
 {
@@ -30,27 +31,20 @@ public class CardAnimeController : MonoBehaviour
         if (!enemyHandUI) enemyHandUI = FindObjectOfType<EnemyHandUI>(true);
     }
 
-    // 외부 API -------------------------------------------------------------
-
-    /// <summary>플레이어 손패 초기 공개(1회) 애니메이션</summary>
+    // ====== 기존 드로우(내려오기) 연출 ======
     public Coroutine RevealInitialPlayerHand() => StartCoroutine(Co_RevealHand(playerHandUI));
-
-    /// <summary>적 손패 초기 공개(1회) 애니메이션</summary>
     public Coroutine RevealInitialEnemyHand() => StartCoroutine(Co_RevealHand(enemyHandUI));
-
-    // 내부 ---------------------------------------------------------------
 
     private IEnumerator Co_RevealHand(object handUI)
     {
         if (busy || handUI == null) yield break;
         busy = true;
 
-        // 현재 스폰된 카드들의 RectTransform 스냅샷
         List<RectTransform> rects = null;
         if (handUI is HandUI p)
         {
-            p.ShowCards();                         // 반드시 보이게
-            rects = p.GetAllCardRects();           // (확장 메서드 아래 참고)
+            p.ShowCards();
+            rects = p.GetAllCardRects();
         }
         else if (handUI is EnemyHandUI e)
         {
@@ -60,7 +54,6 @@ public class CardAnimeController : MonoBehaviour
 
         if (rects == null || rects.Count == 0) { busy = false; yield break; }
 
-        // 초기 상태 세팅: 각 카드 Y를 +startYOffset만큼 아래에 두고, 알파 0
         var baselines = new List<Vector2>(rects.Count);
         for (int i = 0; i < rects.Count; i++)
         {
@@ -73,19 +66,15 @@ public class CardAnimeController : MonoBehaviour
                 var cg = rt.GetComponent<CanvasGroup>();
                 if (!cg) cg = rt.gameObject.AddComponent<CanvasGroup>();
                 cg.alpha = 0f;
-                // 입력은 어차피 카드가 아니라 전체 HandUI에서 처리하므로 막을 필요 없음
             }
         }
 
-        // 스태거를 두고 한 장씩 애니메이션 시작
         var running = new List<Coroutine>(rects.Count);
         for (int i = 0; i < rects.Count; i++)
         {
-            running.Add(StartCoroutine(Co_TweenCard(rects[i], baselines[i])));
+            running.Add(StartCoroutine(Co_TweenCard(rt: rects[i], targetPos: baselines[i])));
             if (perCardStagger > 0f) yield return new WaitForSeconds(perCardStagger);
         }
-
-        // 모든 트윈 종료 대기(안전)
         foreach (var c in running) if (c != null) yield return c;
 
         busy = false;
@@ -99,18 +88,14 @@ public class CardAnimeController : MonoBehaviour
 
         while (t < perCardDuration)
         {
-            t += Time.unscaledDeltaTime;  // UI 연출은 보통 unscaled
+            t += Time.unscaledDeltaTime;
             float u = Mathf.Clamp01(t / perCardDuration);
-
-            // easeOutCubic
             float e = 1f - Mathf.Pow(1f - u, 3f);
 
             rt.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, e);
             if (cg) cg.alpha = Mathf.LerpUnclamped(0f, 1f, e);
-
             yield return null;
         }
-
         rt.anchoredPosition = targetPos;
         if (cg) cg.alpha = 1f;
     }
@@ -129,8 +114,6 @@ public class CardAnimeController : MonoBehaviour
     private IEnumerator Co_RevealLastN_FromHandUI(HandUI ui, int n)
     {
         if (ui == null) yield break;
-
-        // HandUI가 RebuildFromHand로 프리팹을 만든 뒤여야 하므로 한 프레임 안전 대기
         yield return new WaitForEndOfFrame();
 
         var rectsAll = ui.GetAllCardRects();
@@ -145,7 +128,6 @@ public class CardAnimeController : MonoBehaviour
     private IEnumerator Co_RevealLastN_FromEnemyUI(EnemyHandUI ui, int n)
     {
         if (ui == null) yield break;
-
         yield return new WaitForEndOfFrame();
 
         var rectsAll = ui.GetAllCardRects();
@@ -161,7 +143,6 @@ public class CardAnimeController : MonoBehaviour
     {
         if (subset == null || subset.Count == 0) yield break;
 
-        // 초기 상태: 아래에서 시작 + (옵션) 알파 0
         for (int i = 0; i < subset.Count; i++)
         {
             var rt = subset[i];
@@ -175,7 +156,6 @@ public class CardAnimeController : MonoBehaviour
             }
         }
 
-        // 한 장씩 스태거로 트윈
         var coros = new List<Coroutine>(subset.Count);
         for (int i = 0; i < subset.Count; i++)
         {
@@ -184,5 +164,141 @@ public class CardAnimeController : MonoBehaviour
             if (perCardStagger > 0f) yield return new WaitForSeconds(perCardStagger);
         }
         foreach (var c in coros) if (c != null) yield return c;
+    }
+
+    // ====== 새로 추가: 버림(역연출: 위로 + 페이드아웃) ======
+
+    /// <summary>
+    /// 마지막 N장을 역연출로 숨긴 뒤(afterAnim) 콜백 실행(데이터 변경), 이후 리빌드까지 수행.
+    /// fromRight=true면 오른쪽(마지막)부터 N장.
+    /// </summary>
+    public Coroutine DiscardLastNCards(Faction side, int n, bool fromRight, Action afterAnimDataOp = null)
+    {
+        if (n <= 0) return null;
+
+        if (side == Faction.Player)
+            return StartCoroutine(Co_DiscardLastN_FromUI_Player(playerHandUI, n, fromRight, afterAnimDataOp));
+        else
+            return StartCoroutine(Co_DiscardLastN_FromUI_Enemy(enemyHandUI, n, fromRight, afterAnimDataOp));
+    }
+
+    /// <summary>플레이어 손패의 특정 인덱스 한 장을 역연출로 숨기고 콜백→리빌드.</summary>
+    public Coroutine DiscardOneAtIndex(Faction side, int index, Action afterAnimDataOp = null)
+    {
+        if (side == Faction.Player)
+            return StartCoroutine(Co_DiscardOne_ByIndex(playerHandUI, index, afterAnimDataOp));
+        else
+            return StartCoroutine(Co_DiscardOne_ByIndex(enemyHandUI, index, afterAnimDataOp));
+    }
+
+    // ---- 내부: 역연출 공통부 ----
+    private IEnumerator Co_DiscardOne_ByIndex(object ui, int index, Action afterAnimDataOp)
+    {
+        yield return new WaitForEndOfFrame();
+
+        List<RectTransform> rects = null;
+        if (ui is HandUI p)
+        {
+            rects = p.GetAllCardRects();
+        }
+        else if (ui is EnemyHandUI e)
+        {
+            rects = e.GetAllCardRects();
+        }
+        if (rects == null || rects.Count == 0) yield break;
+        index = Mathf.Clamp(index, 0, rects.Count - 1);
+
+        yield return StartCoroutine(Co_DiscardSubset(new List<RectTransform> { rects[index] }));
+
+        afterAnimDataOp?.Invoke();            // 실제 데이터 이동(덱 아래 등)
+        yield return null;                    // 데이터 반영 프레임
+        if (ui is HandUI p2) p2.RebuildFromHand();
+        else if (ui is EnemyHandUI e2) e2.RebuildFromHand();
+    }
+
+    private IEnumerator Co_DiscardLastN_FromUI_Player(HandUI ui, int n, bool fromRight, Action afterAnimDataOp)
+    {
+        if (ui == null) yield break;
+        yield return new WaitForEndOfFrame();
+
+        var rects = ui.GetAllCardRects();
+        if (rects == null || rects.Count == 0) yield break;
+
+        var subset = GetTailSubset(rects, n, fromRight);
+        yield return StartCoroutine(Co_DiscardSubset(subset));
+
+        afterAnimDataOp?.Invoke();
+        yield return null;
+        ui.RebuildFromHand();
+    }
+
+    private IEnumerator Co_DiscardLastN_FromUI_Enemy(EnemyHandUI ui, int n, bool fromRight, Action afterAnimDataOp)
+    {
+        if (ui == null) yield break;
+        yield return new WaitForEndOfFrame();
+
+        var rects = ui.GetAllCardRects();
+        if (rects == null || rects.Count == 0) yield break;
+
+        var subset = GetTailSubset(rects, n, fromRight);
+        yield return StartCoroutine(Co_DiscardSubset(subset));
+
+        afterAnimDataOp?.Invoke();
+        yield return null;
+        ui.RebuildFromHand();
+    }
+
+    private List<RectTransform> GetTailSubset(List<RectTransform> rects, int n, bool fromRight)
+    {
+        n = Mathf.Clamp(n, 0, rects.Count);
+        var subset = new List<RectTransform>(n);
+        if (fromRight)
+        {
+            for (int i = rects.Count - n; i < rects.Count; i++) subset.Add(rects[i]);
+        }
+        else
+        {
+            for (int i = 0; i < n; i++) subset.Add(rects[i]);
+        }
+        return subset;
+    }
+
+    // 위로 이동 + 페이드아웃
+    private IEnumerator Co_DiscardSubset(List<RectTransform> subset)
+    {
+        if (subset == null || subset.Count == 0) yield break;
+
+        // 초기 상태: 알파 1 유지(기존 상태), 목표는 위로 이동하며 알파 0
+        var coros = new List<Coroutine>(subset.Count);
+        for (int i = 0; i < subset.Count; i++)
+        {
+            var rt = subset[i];
+            var cg = fadeAlpha ? (rt.GetComponent<CanvasGroup>() ?? rt.gameObject.AddComponent<CanvasGroup>()) : null;
+            if (cg) cg.alpha = 1f;
+
+            var start = rt.anchoredPosition;
+            var target = start + new Vector2(0f, startYOffset);
+            coros.Add(StartCoroutine(Co_TweenCardReverse(rt, start, target, cg)));
+            if (perCardStagger > 0f) yield return new WaitForSeconds(perCardStagger);
+        }
+
+        foreach (var c in coros) if (c != null) yield return c;
+    }
+
+    private IEnumerator Co_TweenCardReverse(RectTransform rt, Vector2 startPos, Vector2 targetPos, CanvasGroup cg)
+    {
+        float t = 0f;
+        while (t < perCardDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float u = Mathf.Clamp01(t / perCardDuration);
+            float e = 1f - Mathf.Pow(1f - u, 3f); // 동일 ease
+
+            rt.anchoredPosition = Vector2.LerpUnclamped(startPos, targetPos, e);
+            if (cg) cg.alpha = Mathf.LerpUnclamped(1f, 0f, e);
+            yield return null;
+        }
+        rt.anchoredPosition = targetPos;
+        if (cg) cg.alpha = 0f;
     }
 }

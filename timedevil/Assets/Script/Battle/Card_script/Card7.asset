@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: Card7
   displayName: Card7
-  type: 0
+  type: 2
   display: "\uB2E4\uC12F\uC7A5\uB4DC\uB85C"
   explanation: "\uB2E4\uC12F\uC7A5\uB4DC\uB85C\uB2E4\uC12F\uC7A5\uB4DC\uB85C\uB2E4\uC12F\uC7A5\uB4DC\uB85C\uB2E4\uC12F\uC7A5\uB4DC\uB85C"
   cost: 5

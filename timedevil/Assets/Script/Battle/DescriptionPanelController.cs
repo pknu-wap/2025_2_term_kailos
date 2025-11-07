@@ -30,6 +30,12 @@ public class DescriptionPanelController : MonoBehaviour
     private int _lastIndex = -1;
     private bool _forceEnemyTurn = false;   // TurnManager에서 on/off
     private string _forcedMessage = null;   // 👈 발동 중(explanation) 임시 고정 문구
+    private bool _forcePlayerDiscard = false; // 🔸 강제 버림 모드
+
+    // ⬇️ 클래스 필드에 추가
+    private bool _spectate = false;                    // 관전 플래그
+    private Faction _spectateSide = Faction.Enemy;     // 관전 시 보여줄 손패 쪽
+
 
     void Reset()
     {
@@ -83,6 +89,21 @@ public class DescriptionPanelController : MonoBehaviour
             _lastIndex = menu.Index;
             RefreshNow();
         }
+    }
+    // ⬇️ 공개 API 추가
+    public void EnterSpectate(Faction showSide, string message = null)
+    {
+        _spectate = true;
+        _spectateSide = showSide;
+        _forcedMessage = message;
+        RefreshNow();
+    }
+
+    public void ExitSpectate()
+    {
+        _spectate = false;
+        _forcedMessage = null;
+        RefreshNow();
     }
 
     private void OnMenuFocusChanged(int idx)
@@ -142,90 +163,117 @@ public class DescriptionPanelController : MonoBehaviour
     {
         if (!descriptionText) return;
 
-        // ✅ 손패 표시/입력은 적턴이면 항상 끈다 (시각/입력 통일)
-        if (_forceEnemyTurn && handCanvasGroup)
-        {
-            handCanvasGroup.alpha = 0f;
-            handCanvasGroup.interactable = false;
-            handCanvasGroup.blocksRaycasts = false;
-        }
-        if (_forceEnemyTurn && hand != null)
-            hand.HideCards();
+        int index = menu ? menu.Index : 0;
 
-        // ✅ "발동 중 임시 문구"가 있으면 적턴이라도 이것을 최우선으로 보여준다
-        if (!string.IsNullOrEmpty(_forcedMessage))
+
+        // ✅ 0) 관전 모드가 최우선
+        if (_spectate)
         {
-            descriptionText.text = _forcedMessage;
+            // 보여줄 쪽만 ON, 나머지는 OFF (클릭/레이캐스트 모두 차단)
+            if (_spectateSide == Faction.Player)
+            {
+                if (handCanvasGroup) { handCanvasGroup.alpha = 1f; handCanvasGroup.interactable = false; handCanvasGroup.blocksRaycasts = false; }
+                if (hand) hand.ShowCards();
+
+                if (enemyHandCanvasGroup) { enemyHandCanvasGroup.alpha = 0f; enemyHandCanvasGroup.interactable = false; enemyHandCanvasGroup.blocksRaycasts = false; }
+                if (enemyHand) enemyHand.HideAll();
+            }
+            else // Enemy
+            {
+                if (enemyHandCanvasGroup) { enemyHandCanvasGroup.alpha = 1f; enemyHandCanvasGroup.interactable = false; enemyHandCanvasGroup.blocksRaycasts = false; }
+                if (enemyHand) enemyHand.ShowAll();
+
+                if (handCanvasGroup) { handCanvasGroup.alpha = 0f; handCanvasGroup.interactable = false; handCanvasGroup.blocksRaycasts = false; }
+                if (hand) hand.HideCards();
+            }
+
+            descriptionText.text = !string.IsNullOrEmpty(_forcedMessage) ? _forcedMessage : "";
             return;
         }
 
-        // ✅ 적 턴: EnemyHand는 항상 보이고, PlayerHand는 숨김
+        // 1) 적 턴: EnemyHand 항상 ON, PlayerHand OFF
         if (_forceEnemyTurn)
         {
-            descriptionText.text = msgEnemyTurn;
-
             if (handCanvasGroup) { handCanvasGroup.alpha = 0f; handCanvasGroup.interactable = false; handCanvasGroup.blocksRaycasts = false; }
             if (hand) hand.HideCards();
 
             if (enemyHand) enemyHand.ShowAll();
-            if (enemyHandCanvasGroup)
-            {
-                enemyHandCanvasGroup.alpha = 1f;
-                enemyHandCanvasGroup.interactable = false;
-                enemyHandCanvasGroup.blocksRaycasts = false;
-            }
+            if (enemyHandCanvasGroup) { enemyHandCanvasGroup.alpha = 1f; enemyHandCanvasGroup.interactable = false; enemyHandCanvasGroup.blocksRaycasts = false; }
+
+            descriptionText.text = !string.IsNullOrEmpty(_forcedMessage) ? _forcedMessage : msgEnemyTurn;
             return;
         }
 
-        // ↓↓↓ 이하 기존 로직 그대로
-        int index = menu ? menu.Index : 0;
+        // 2) 강제 버림 페이즈: PlayerHand 항상 ON, EnemyHand OFF
+        if (_forcePlayerDiscard)
+        {
+            // EnemyHand 강제 OFF
+            if (enemyHand) enemyHand.HideAll();
+            if (enemyHandCanvasGroup) { enemyHandCanvasGroup.alpha = 0f; enemyHandCanvasGroup.interactable = false; enemyHandCanvasGroup.blocksRaycasts = false; }
 
+            // PlayerHand 강제 ON
+            if (handCanvasGroup) { handCanvasGroup.alpha = 1f; handCanvasGroup.interactable = true; handCanvasGroup.blocksRaycasts = true; }
+            if (hand) hand.ShowCards();
+
+            // 문구 고정(있으면 임시문구, 없으면 기본 안내)
+            descriptionText.text = !string.IsNullOrEmpty(_forcedMessage)
+                ? _forcedMessage
+                : $"손패가 초과되었습니다. 버릴 카드를 선택하세요.";
+            return;
+        }
+
+        // 3) 평상시(플레이어 턴, 버림 페이즈 아님): 메뉴 인덱스 기반
+        // PlayerHand: Card(0)에서만 표시
         if (handCanvasGroup)
         {
             bool showHand = (index == 0);
-
             handCanvasGroup.alpha = showHand ? 1f : 0f;
             handCanvasGroup.interactable = showHand;
             handCanvasGroup.blocksRaycasts = showHand;
         }
-
         if (hand != null)
         {
             if (index == 0) hand.ShowCards();
             else hand.HideCards();
         }
 
-        if (index == 0 && hand != null && hand.IsInSelectMode)
-        {
-            string msg = GetCurrentCardDisplay() ?? msgCard;
-            descriptionText.text = msg;
-            return;
-        }
-
-        // 3) Enemy Hand 표시/숨김 (새로 추가)
+        // EnemyHand: End(2)에서만 표시
         if (enemyHand != null)
         {
-            if (index == 2) enemyHand.ShowAll();                  // 👈 End 포커스면 적 손패 표시
-            else enemyHand.HideAll();
-            // (CanvasGroup을 쓴다면)
+            bool showEnemy = (index == 2);
+            if (showEnemy) enemyHand.ShowAll(); else enemyHand.HideAll();
             if (enemyHandCanvasGroup)
             {
-                bool showEnemy = (index == 2);
                 enemyHandCanvasGroup.alpha = showEnemy ? 1f : 0f;
-                enemyHandCanvasGroup.interactable = false;        // 관전 전용
+                enemyHandCanvasGroup.interactable = false;
                 enemyHandCanvasGroup.blocksRaycasts = false;
             }
         }
 
-        descriptionText.text = index switch
+        // ★★★ 텍스트 결정부: 강제 문구가 있으면 항상 최우선으로 사용 ★★★
+        string text;
+        if (!string.IsNullOrEmpty(_forcedMessage))
         {
-            0 => msgCard,
-            1 => msgItem,
-            2 => msgEnd,
-            3 => msgRun,
-            _ => string.Empty
-        };
+            text = _forcedMessage;                         // 관전모드/연출 중 설명 고정
+        }
+        else if (index == 0 && hand != null && hand.IsInSelectMode)
+        {
+            text = GetCurrentCardDisplay() ?? msgCard;     // 선택 모드 설명
+        }
+        else
+        {
+            text = index switch
+            {
+                0 => msgCard,
+                1 => msgItem,
+                2 => msgEnd,
+                3 => msgRun,
+                _ => string.Empty
+            };
+        }
+        descriptionText.text = text;
     }
+
 
     private string GetCurrentCardDisplay()
     {
@@ -245,6 +293,12 @@ public class DescriptionPanelController : MonoBehaviour
         }
         // 선택 모드에서는 display(설명문) 사용
         return string.IsNullOrEmpty(so.display) ? "(설명이 없습니다)" : so.display;
+    }
+
+    public void SetPlayerDiscardMode(bool on)
+    {
+        _forcePlayerDiscard = on;
+        RefreshNow();
     }
 
 

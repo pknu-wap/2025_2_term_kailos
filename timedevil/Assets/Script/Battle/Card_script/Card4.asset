@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: Card4
   displayName: Card4
-  type: 0
-  display: "\uCE74\uB4DC \uB450\uC7A5\uC744 \uB4DC\uB85C\uC6B0\uD569\uB2C8"
+  type: 2
+  display: "\uCE74\uB4DC \uB450\uC7A5 \uBC84\uB9AC\uAC8C\uD558\uB294\uAC70"
   explanation: "\uB4DC\uB85C\uC6B0!!!!"
   cost: 2
   positive: 0
   negative: 0
-  drawMode: 0
+  drawMode: 1
   amount: 2

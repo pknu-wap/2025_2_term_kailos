@@ -91,16 +91,19 @@ public class EnemyTurnController : MonoBehaviour
             // ▶ 효과 실행: Draw 카드면 적 진영으로 실행 (cap 무시)
             if (so is DrawCardSO dso && drawController != null)
             {
-                // 플레이어 쪽과 동일하게 프리뷰와 병렬 실행
-                StartCoroutine(drawController.Execute(dso, Faction.Enemy));
-            }
-            // (Support/Move/Attack는 다음 단계에서 각각의 컨트롤러를 붙여 동일 패턴으로 처리)
+                // (권장 UX) 먼저 프리뷰를 보여주고 …
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
 
-            // ▶ ShowCard 프리뷰
-            if (showCard != null)
-                yield return showCard.PreviewById(playableId, previewSeconds);
+                // … 그 다음 Draw 효과를 '완료될 때까지' 실행
+                yield return drawController.Execute(dso, Faction.Enemy);
+            }
             else
-                yield return null;
+            {
+                // Draw가 아닌 카드면 기존 프리뷰 로직
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+            }
 
             // ▶ 설명 해제
             if (desc) desc.ClearTemporaryMessage();

@@ -232,6 +232,7 @@ MonoBehaviour:
   cardPrefab: {fileID: 1448559822}
   resourcesFolder: my_asset
   leftPadding: 8
+  rightPadding: 8
   cardWidth: 240
   revealFaces: 1
   cardBackSprite: {fileID: 0}
@@ -1348,7 +1349,7 @@ MonoBehaviour:
   cardDatabase: {fileID: 11400000, guid: c0cc44962aa33464ca629e77b4d09b2b, type: 2}
   cost: {fileID: 1352731693}
   showCard: {fileID: 643248677}
-  desc: {fileID: 0}
+  desc: {fileID: 1069897052}
   drawController: {fileID: 1201525411}
   previewSeconds: 1.5
   playInterval: 0.3
@@ -1571,6 +1572,7 @@ MonoBehaviour:
   cardPrefab: {fileID: 77755690}
   resourcesFolder: my_asset
   leftPadding: 8
+  rightPadding: 8
   cardWidth: 240
   select: {fileID: 2047237471}
   selectPadding: {x: 8, y: 8}
@@ -4874,6 +4876,10 @@ MonoBehaviour:
   playerHandAnchor: {fileID: 0}
   enemyHandAnchor: {fileID: 0}
   cardAnime: {fileID: 1201525414}
+  menu: {fileID: 1069897049}
+  desc: {fileID: 1069897052}
+  playerHandUI: {fileID: 860620052}
+  enemyHandUI: {fileID: 133108826}
 --- !u!114 &1201525412
 MonoBehaviour:
   m_ObjectHideFlags: 0
