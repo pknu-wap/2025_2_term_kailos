@@ -11,6 +11,8 @@ public class HandUI : MonoBehaviour
 
     [Header("Layout (single row, left aligned)")]
     [SerializeField] private float leftPadding = 8f;
+    [SerializeField] private float rightPadding = 8f; // 👈 추가: 오른쪽 여백
+
     [SerializeField] private float cardWidth = 120f;
 
     [Header("Select Overlay")]
@@ -66,8 +68,35 @@ public class HandUI : MonoBehaviour
         if (live != null) handIdsSnapshot.AddRange(live);
 
         ClearSpawned();
-        float x = leftPadding;
-        for (int i = 0; i < handIdsSnapshot.Count; i++)
+        // --- 배치 계산: 패널 너비 안에서 첫/끝 카드가 항상 들어오도록 step 계산 ---
+        float rowW = row.rect.width;
+        // 사용할 수 있는 가로폭
+        float usable = Mathf.Max(0f, rowW - leftPadding - rightPadding);
+
+        int n = handIdsSnapshot.Count;
+
+        // n==0이면 아래 루프 자체가 돌지 않지만 안전하게 초기화
+        float step = 0f;
+        if (n <= 1)
+        {
+            step = 0f; // 한 장이면 패널 안 왼쪽에 그대로
+        }
+        else
+        {
+            // 마지막 카드의 오른쪽 끝이 패널을 넘지 않도록:
+            // 첫 카드 x=leftPadding, 마지막 카드 x=leftPadding + step*(n-1)
+            // 마지막 카드의 "오른쪽 끝" = 그 x + cardWidth <= leftPadding + usable
+            // => step*(n-1) <= usable - cardWidth
+            float maxSpan = Mathf.Max(0f, usable - cardWidth);
+            float needed = maxSpan / (n - 1);
+
+            // 카드 크기는 유지, 간격만 줄이기(겹치기 허용). 간격의 상한은 cardWidth.
+            step = Mathf.Min(cardWidth, Mathf.Max(0f, needed));
+        }
+
+        // --- 스폰 & 배치 ---
+        ClearSpawned();
+        for (int i = 0; i < n; i++)
         {
             string id = handIdsSnapshot[i];
             var go = Instantiate(cardPrefab, row);
@@ -82,10 +111,13 @@ public class HandUI : MonoBehaviour
             var rtItem = (RectTransform)go.transform;
             rtItem.anchorMin = rtItem.anchorMax = new Vector2(0f, 0.5f);
             rtItem.pivot = new Vector2(0f, 0.5f);
-            rtItem.anchoredPosition = new Vector2(x, 0f);
-            rtItem.sizeDelta = new Vector2(cardWidth, rtItem.sizeDelta.y);
 
-            x += cardWidth;
+            // 계산된 step으로 겹치기/간격 적용
+            float x = leftPadding + step * i;
+            rtItem.anchoredPosition = new Vector2(x, 0f);
+
+            // 카드 자체 크기는 그대로 유지
+            rtItem.sizeDelta = new Vector2(cardWidth, rtItem.sizeDelta.y);
         }
 
         // 손패 변경 시 선택 해제되더라도, 다음 진입에서 회색 방지
