@@ -1351,6 +1351,7 @@ MonoBehaviour:
   showCard: {fileID: 643248677}
   desc: {fileID: 1069897052}
   drawController: {fileID: 1201525411}
+  moveController: {fileID: 1201525410}
   previewSeconds: 1.5
   playInterval: 0.3
 --- !u!1 &643248676

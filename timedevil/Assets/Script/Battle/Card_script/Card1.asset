@@ -15,11 +15,11 @@ MonoBehaviour:
   id: Card1
   displayName: Card1
   type: 3
-  display: "\uC67C\uCABD\uC73C\uB85C \uC774\uB3D9"
+  display: "\uC67C\uCABD \uB108 \uAC15\uC81C\uC774\uB3D9"
   explanation: "\uC774\uB3D9\uC774\uB3D9\uC774\uB3D9"
   cost: 1
   positive: 0
   negative: 0
-  moveMode: 0
+  moveMode: 1
   where: 2
   amount: 2

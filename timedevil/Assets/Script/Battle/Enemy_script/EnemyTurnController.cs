@@ -14,6 +14,8 @@ public class EnemyTurnController : MonoBehaviour
     // 👇 추가: 적도 Draw 효과를 실행하기 위해 DrawController 참조
     [Header("Effect Controllers")]
     [SerializeField] private DrawController drawController;
+    [SerializeField] private MoveController moveController;   // ⭐ 추가: Move 실행
+
 
     [Header("Timings")]
     [SerializeField] private float previewSeconds = 1.2f;
@@ -27,6 +29,8 @@ public class EnemyTurnController : MonoBehaviour
         if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
         if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
         if (!drawController) drawController = FindObjectOfType<DrawController>(true); // ⭐ 자동 결선
+        if (!moveController) moveController = FindObjectOfType<MoveController>(true);   // ⭐ 자동 결선
+
 
         Debug.Log($"[EnemyTurn] Controller bound on: {gameObject.scene.name}/{gameObject.name}");
     }
@@ -98,8 +102,16 @@ public class EnemyTurnController : MonoBehaviour
                 // … 그 다음 Draw 효과를 '완료될 때까지' 실행
                 yield return drawController.Execute(dso, Faction.Enemy);
             }
-            else
+            else if (so is MoveCardSO mso && moveController != null)   // ⭐⭐ 추가된 분기
             {
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+
+                // 🔶 적이 자신을 움직임: self=Enemy, foe=Player
+                yield return moveController.Execute(mso, Faction.Enemy, Faction.Player);
+            }
+            else
+                    {
                 // Draw가 아닌 카드면 기존 프리뷰 로직
                 if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
                 else yield return null;
