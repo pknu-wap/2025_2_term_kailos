@@ -9,37 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ab7059ed9806584bab32746afc3b7b5, type: 3}
+  m_Script: {fileID: 11500000, guid: 12fb9ea00e2eff64fa777bc8f86ce364, type: 3}
   m_Name: Card1
   m_EditorClassIdentifier: 
   id: Card1
-  displayName: "\uCE74\uB4DC1"
-  type: 0
-  display: "\uD478\uB978\uB208\uC758\uBC31\uB8E1\n\uCE74\uC774\uBC14\uC0AC\uC7A5\uC774
-    \uC4F0\uB358 \uCE74\uB4DC\uB2E4. \uC5C4\uCCAD\uB098\uAC8C \uAC15\uD574\uBCF4\uC778\uB2E4."
-  explanation: "\uBA78\uB9DD\uC758 \uBC84\uC2A4\uD2B8 \uC2A4\uD2B8\uB9BC!!!!"
+  displayName: Card1
+  type: 3
+  display: "\uC67C\uCABD\uC73C\uB85C \uC774\uB3D9"
+  explanation: "\uC774\uB3D9\uC774\uB3D9\uC774\uB3D9"
   cost: 1
   positive: 0
   negative: 0
-  power: 1
-  pattern16: 0000000000000000
-  timeline:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  cameraShake: 0
-  animationKey: 
-  sfx: {fileID: 0}
+  moveMode: 0
+  where: 2
+  amount: 2

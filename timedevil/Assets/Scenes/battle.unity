@@ -4859,6 +4859,49 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc316df438361e34bbc42c75e80491f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rows: 4
+  cols: 4
+  cell: 1.3
+  originRow_Player: 4
+  originCol_Player: 1
+  originRow_Enemy: 4
+  originCol_Enemy: 1
+  playerGridOrigin: {fileID: 1330316358}
+  enemyGridOrigin: {fileID: 1767689043}
+  playerPawn: {fileID: 1345401700}
+  enemyPawn: {fileID: 1064948988}
+  playerRC: {x: 4, y: 1}
+  enemyRC: {x: 2, y: 2}
+  perCellSeconds: 0.15
+  ease:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  playerAnimator: {fileID: 2084521563}
+  enemyAnimator: {fileID: 0}
+  moveTriggerName: Move
+  menu: {fileID: 1069897049}
+  desc: {fileID: 1069897052}
 --- !u!114 &1201525411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5302,7 +5345,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1330316358}
   m_Layer: 0
-  m_Name: gridOrigin
+  m_Name: GridOrigin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5348,7 +5391,7 @@ Transform:
   m_GameObject: {fileID: 1345401698}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 4, z: 0}
+  m_LocalPosition: {x: -3.43, y: 2.46, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9486,8 +9529,8 @@ Transform:
   m_GameObject: {fileID: 2084521560}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.88, y: -0.83, z: -2}
-  m_LocalScale: {x: 4.4979444, y: 4.4979444, z: 4.4979444}
+  m_LocalPosition: {x: 0.02, y: 0.37, z: -2}
+  m_LocalScale: {x: 3.0693972, y: 3.0693972, z: 3.0693972}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1345401700}
@@ -9554,7 +9597,7 @@ Animator:
   m_GameObject: {fileID: 2084521560}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 842c86087bc23444e98aa2cd314d1a33, type: 2}
+  m_Controller: {fileID: 9100000, guid: 66b2d0b0bf6bda748b8d6f0cef92c9ef, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

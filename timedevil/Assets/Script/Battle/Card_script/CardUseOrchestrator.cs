@@ -118,6 +118,11 @@ public class CardUseOrchestrator : MonoBehaviour
             // 내 턴이므로 self = Player (적 턴은 나중에 Enemy로 호출 예정)
             StartCoroutine(drawController.Execute(dso, Faction.Player));
         }
+        else if (moveController != null && so is MoveCardSO mso)
+        {
+            // 플레이어가 낸 Move → self=Player, foe=Enemy
+            StartCoroutine(moveController.Execute(mso, Faction.Player, Faction.Enemy));
+        }
 
         // E. ShowCard 프리뷰 (다른 UI엔 손대지 않음)
         if (showCard) yield return showCard.PreviewById(so.id, totalSeconds);
