@@ -9,16 +9,50 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae67f8acdd35dd84fb814605a4b67711, type: 3}
+  m_Script: {fileID: 11500000, guid: 7ab7059ed9806584bab32746afc3b7b5, type: 3}
   m_Name: Card4
   m_EditorClassIdentifier: 
   id: Card4
   displayName: Card4
-  type: 2
-  display: "\uCE74\uB4DC \uB450\uC7A5 \uBC84\uB9AC\uAC8C\uD558\uB294\uAC70"
-  explanation: "\uB4DC\uB85C\uC6B0!!!!"
-  cost: 2
+  type: 0
+  display: "\uACF5\uACA9 \uC608\uBE44\uCE74\uB4DC"
+  explanation: "\uACF5\uACA9\uD328\uD134\uBCF4\uC5EC\uC57C\uD574 \uC81C\uBC1C"
+  cost: 1
   positive: 0
   negative: 0
-  drawMode: 1
-  amount: 2
+  power: 1
+  pattern16: 1111000011110000
+  timeline:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 0
+  - 0
+  - 0
+  - 0
+  cameraShake: 0
+  animationKey: 
+  sfx: {fileID: 0}
+  useWaves: 0
+  waves:
+  - pattern16: 
+    timeline: []
+    combine: 0
+    preDelay: 0
+    postDelay: 0
+    repeat: 1
+  - pattern16: 
+    timeline: []
+    combine: 0
+    preDelay: 0
+    postDelay: 0
+    repeat: 1

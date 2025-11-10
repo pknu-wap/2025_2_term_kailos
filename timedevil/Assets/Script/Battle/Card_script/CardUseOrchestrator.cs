@@ -59,93 +59,90 @@ public class CardUseOrchestrator : MonoBehaviour
     /// 4) ShowCard 프리뷰(페이드 인/유지/아웃)
     /// 5) 설명판 임시문구 해제 → 카드 선택 모드 복귀
     /// </summary>
+    // CardUseOrchestrator.cs 내부
     private IEnumerator Co_UseWithExactTiming(int handIndex)
     {
         busy = true;
 
         // A. 카드 SO 확보
         string id = hand.GetVisibleIdAt(handIndex);
-        if (string.IsNullOrEmpty(id))
-        {
-            Debug.LogWarning("[Orchestrator] empty id");
-            busy = false; yield break;
-        }
+        if (string.IsNullOrEmpty(id)) { busy = false; yield break; }
         var so = database ? database.GetById(id) : null;
-        if (!so)
-        {
-            Debug.LogWarning($"[Orchestrator] SO not found: id={id}");
-            busy = false; yield break;
-        }
+        if (!so) { busy = false; yield break; }
 
-        // B. 코스트 즉시 지불(선확인 + 차감)
+        // B. 코스트 즉시 지불
         int need = Mathf.Max(0, so.cost);
-        if (costController && costController.Current < need)
-        {
-            Debug.Log($"[Orchestrator] Not enough cost. need={need}, cur={costController.Current}");
-            busy = false; yield break;
-        }
-        if (costController && !costController.TryPay(need))
-        {
-            Debug.LogWarning($"[Orchestrator] TryPay failed unexpectedly. need={need}, cur={costController.Current}");
-            busy = false; yield break;
-        }
+        if (costController && (costController.Current < need || !costController.TryPay(need)))
+        { busy = false; yield break; }
 
-        // C. 카드 즉시 제거(덱 아래) → 화면에서 바로 사라짐
+        // C. 카드 즉시 제거(덱 아래)
         var bdr = BattleDeckRuntime.Instance;
         if (bdr != null) bdr.UseCardToBottom(handIndex);
-        yield return null;               // 데이터 반영 프레임 양보
-        hand.RebuildFromHand();          // 안전하게 스냅샷/오브젝트 재구성
+        yield return null;               // 데이터 반영
+        hand.RebuildFromHand();
 
-        // D. 관전 모드: 선택 해제 + 메뉴 입력 OFF (손패는 계속 보임)
+        // D. 관전 모드: 선택 해제 + 입력 OFF + 설명 고정
         hand.ExitSelectMode();
         if (menu) menu.EnableInput(false);
-
-        // 👉 설명판에 explanation 고정(비어있으면 display, 그마저 없으면 기본 폴백)
         if (desc)
         {
             string line =
                 !string.IsNullOrEmpty(so.explanation) ? so.explanation :
                 (!string.IsNullOrEmpty(so.display) ? so.display :
                 (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
-
             desc.ShowTemporaryExplanation(line);
-
-            if (logDebug)
-                Debug.Log($"[Orchestrator] Explanation shown: {line}");
         }
-        if (drawController != null && so is DrawCardSO dso)
+
+        // ==== ★ 여기부터 효과 실행 분기(프리뷰/효과 타이밍) ====
+        if (attackController != null && so is AttackCardSO aso)
         {
-            // 내 턴이므로 self = Player (적 턴은 나중에 Enemy로 호출 예정)
+            // 1) (선택) 먼저 프리뷰를 전부 보여준다
+            if (showCard != null) yield return showCard.PreviewById(aso.id, totalSeconds);
+            else yield return null;
+
+            // 2) 공격 패턴이 "끝날 때까지" 대기
+            yield return attackController.Execute(aso, Faction.Player, Faction.Enemy);
+        }
+        else if (drawController != null && so is DrawCardSO dso)
+        {
+            // Draw는 실행 코루틴을 흘려보내고, 프리뷰만 기다림
             StartCoroutine(drawController.Execute(dso, Faction.Player));
+            if (showCard != null) yield return showCard.PreviewById(so.id, totalSeconds);
+            else yield return null;
         }
         else if (moveController != null && so is MoveCardSO mso)
         {
-            // 플레이어가 낸 Move → self=Player, foe=Enemy
+            // Move도 실행 코루틴을 흘려보내고, 프리뷰만 기다림
             StartCoroutine(moveController.Execute(mso, Faction.Player, Faction.Enemy));
+            if (showCard != null) yield return showCard.PreviewById(so.id, totalSeconds);
+            else yield return null;
         }
+        else
+        {
+            // 기타 카드: 프리뷰만
+            if (showCard != null) yield return showCard.PreviewById(so.id, totalSeconds);
+            else yield return null;
+        }
+        // ==== ★ 분기 끝 ====
 
-        // E. ShowCard 프리뷰 (다른 UI엔 손대지 않음)
-        if (showCard) yield return showCard.PreviewById(so.id, totalSeconds);
-        else yield return null;
-
-        // 👉 설명판 임시문구 해제
+        // E. 설명 해제 및 선택 모드 복귀
         if (desc) desc.ClearTemporaryMessage();
 
-        // F. 카드 선택 모드 복귀(오른쪽 끝 유지 대신, 방금 위치로 보정)
         if (hand.CardCount > 0)
         {
             hand.EnterSelectMode();
             int nextIdx = Mathf.Clamp(handIndex, 0, hand.CardCount - 1);
             hand.SetSelectIndexPublic(nextIdx);
-            if (menu) menu.EnableInput(false); // 선택 모드 유지 규칙
+            if (menu) menu.EnableInput(false); // 규칙 유지
         }
         else
         {
-            if (menu) menu.EnableInput(true); // 손패 비었으면 메뉴만 ON
+            if (menu) menu.EnableInput(true);
         }
 
         busy = false;
     }
+
 
 
 }
