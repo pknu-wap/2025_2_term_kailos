@@ -1,5 +1,4 @@
-// Assets/Script/Battle/EndController.cs
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class EndController : MonoBehaviour
 {
@@ -14,14 +13,12 @@ public class EndController : MonoBehaviour
     {
         if (!menu) return;
 
-        // ¸Ş´º°¡ End(2)ÀÏ ¶§ EÅ°·Î ÅÏ Á¾·á
         if (menu.Index == 2 && Input.GetKeyDown(KeyCode.E))
         {
-            // ÇÃ·¹ÀÌ¾î°¡ End¸¦ È®Á¤ ¡æ ÅÏ ¸Å´ÏÀú¿¡ ¾Ë¸²
             if (TurnManager.Instance != null)
             {
-                Debug.Log("[EndController] End ¼±ÅÃ ¡æ Àû ÅÏÀ¸·Î ³Ñ±è");
-                TurnManager.Instance.OnPlayerActionCommitted();
+                // âœ… ë¨¼ì € ê°•ì œ ë²„ë¦¼ ë‹¨ê³„ ì§„ì… ì‹œë„
+                TurnManager.Instance.OnPlayerPressedEnd();
             }
         }
     }

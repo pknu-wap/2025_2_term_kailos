@@ -1,4 +1,4 @@
-// Assets/Script/Battle/EnemyHandUI.cs
+Ôªø// Assets/Script/Battle/EnemyHandUI.cs
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,11 +13,13 @@ public class EnemyHandUI : MonoBehaviour
 
     [Header("Layout")]
     [SerializeField] private float leftPadding = 8f;
+    [SerializeField] private float rightPadding = 8f; // üëà Ï∂îÍ∞Ä
+
     [SerializeField] private float cardWidth = 120f;
 
     [Header("Reveal")]
-    [SerializeField] private bool revealFaces = true;      // false∏È µﬁ∏È∏∏
-    [SerializeField] private Sprite cardBackSprite;        // µﬁ∏È Ω∫«¡∂Û¿Ã∆Æ
+    [SerializeField] private bool revealFaces = true;      // falseÎ©¥ Îí∑Î©¥Îßå
+    [SerializeField] private Sprite cardBackSprite;        // Îí∑Î©¥ Ïä§ÌîÑÎùºÏù¥Ìä∏
 
     private readonly List<GameObject> spawned = new();
 
@@ -52,8 +54,24 @@ public class EnemyHandUI : MonoBehaviour
         var ids = rt.GetHandIds();
         ClearSpawned();
 
-        float x = leftPadding;
-        for (int i = 0; i < ids.Count; i++)
+        int n = ids.Count;
+        float rowW = row.rect.width;
+        float usable = Mathf.Max(0f, rowW - leftPadding - rightPadding);
+
+        float step = 0f;
+        if (n <= 1)
+        {
+            step = 0f;
+        }
+        else
+        {
+            float maxSpan = Mathf.Max(0f, usable - cardWidth);
+            float needed = maxSpan / (n - 1);
+            step = Mathf.Min(cardWidth, Mathf.Max(0f, needed));
+        }
+
+        ClearSpawned();
+        for (int i = 0; i < n; i++)
         {
             string id = ids[i];
             var go = Instantiate(cardPrefab, row);
@@ -61,24 +79,19 @@ public class EnemyHandUI : MonoBehaviour
             spawned.Add(go);
 
             var img = go.GetComponentInChildren<Image>() ?? go.AddComponent<Image>();
-            if (revealFaces)
-            {
-                img.sprite = !string.IsNullOrEmpty(id) ? Resources.Load<Sprite>($"{resourcesFolder}/{id}") : null;
-            }
-            else
-            {
-                img.sprite = cardBackSprite;
-            }
+            img.sprite = revealFaces && !string.IsNullOrEmpty(id)
+                ? Resources.Load<Sprite>($"{resourcesFolder}/{id}")
+                : cardBackSprite;
             img.preserveAspect = true;
-            img.raycastTarget = false; // ¿˚ º’∆–¥¬ ªÛ»£¿€øÎ æ¯¿Ω
+            img.raycastTarget = false;
 
             var rtItem = (RectTransform)go.transform;
             rtItem.anchorMin = rtItem.anchorMax = new Vector2(0f, 0.5f);
             rtItem.pivot = new Vector2(0f, 0.5f);
+
+            float x = leftPadding + step * i;
             rtItem.anchoredPosition = new Vector2(x, 0f);
             rtItem.sizeDelta = new Vector2(cardWidth, rtItem.sizeDelta.y);
-
-            x += cardWidth;
         }
 
         ShowAll();
@@ -103,5 +116,13 @@ public class EnemyHandUI : MonoBehaviour
         for (int i = 0; i < spawned.Count; i++)
             if (spawned[i]) spawned[i].SetActive(false);
         gameObject.SetActive(false);
+    }
+
+    public List<RectTransform> GetAllCardRects()
+    {
+        var list = new List<RectTransform>();
+        for (int i = 0; i < spawned.Count; i++)
+            if (spawned[i]) list.Add((RectTransform)spawned[i].transform);
+        return list;
     }
 }

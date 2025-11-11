@@ -13,6 +13,10 @@ public class BattleDeckRuntime : MonoBehaviour
     [SerializeField] private int initialHandSize = 5;
     [SerializeField] private int maxHandSize = 5;
 
+    public int MaxHandSize => maxHandSize;
+    public int HandCount => hand.Count;
+    public int OverCapCount => Mathf.Max(0, hand.Count - maxHandSize);
+
     public event Action OnHandChanged;
 
     void Awake()
@@ -23,13 +27,8 @@ public class BattleDeckRuntime : MonoBehaviour
 
     void Start()
     {
-        // 1) 즉시 시도
         bool okNow = TryInitOnce();
-        if (!okNow)
-        {
-            // 2) 준비가 안 돼 있으면 몇 프레임 기다렸다가 한 번 더
-            StartCoroutine(CoRetryInit());
-        }
+        if (!okNow) StartCoroutine(CoRetryInit());
     }
 
     bool TryInitOnce()
@@ -39,12 +38,7 @@ public class BattleDeckRuntime : MonoBehaviour
 
         var rt = CardStateRuntime.Instance;
         var src = rt != null ? rt.Data?.deck : null;
-
-        if (src == null || src.Count == 0)
-        {
-            // 아직 저장이 안 올라왔거나 덱이 비어있음
-            return false;
-        }
+        if (src == null || src.Count == 0) return false;
 
         foreach (var id in src)
             if (!string.IsNullOrEmpty(id)) deck.Add(id);
@@ -53,23 +47,20 @@ public class BattleDeckRuntime : MonoBehaviour
         Debug.Log($"[BattleDeckRuntime] 덱 로드 완료: {deck.Count}장");
 #endif
         Shuffle(deck);
-        DrawInitial();                    // 내부에서 OnHandChanged 발생 가능
-        if (hand.Count == 0) OnHandChanged?.Invoke(); // 그래도 한 번 보장
+        DrawInitial();
+        if (hand.Count == 0) OnHandChanged?.Invoke();
         return true;
     }
 
     System.Collections.IEnumerator CoRetryInit()
     {
-        // 최대 8프레임 정도만 기다렸다가 한 번 더 시도
         for (int i = 0; i < 8; i++)
         {
             yield return null;
             if (TryInitOnce()) yield break;
         }
-
-        // 그래도 안 되면 최소 한 번은 UI를 갱신시켜 빈 상태를 반영
         OnHandChanged?.Invoke();
-        Debug.LogWarning("[BattleDeckRuntime] 초기화 재시도 실패(덱 비어 있음). 저장/씬 세팅 확인 필요");
+        Debug.LogWarning("[BattleDeckRuntime] 초기화 재시도 실패(덱 비어 있음)");
     }
 
     public static void Shuffle(List<string> list)
@@ -94,22 +85,28 @@ public class BattleDeckRuntime : MonoBehaviour
         if (hand.Count < maxHandSize) Draw(1);
     }
 
-    public void Draw(int n)
+    // 기본 드로우(최대치 적용)
+    public void Draw(int n) => Draw(n, ignoreHandCap: false);
+
+    // ✅ 카드 효과용: 최대치 무시 드로우
+    public int Draw(int n, bool ignoreHandCap)
     {
-        bool moved = false;
+        int drawn = 0;
         for (int k = 0; k < n; k++)
         {
-            if (hand.Count >= maxHandSize) break;
+            if (!ignoreHandCap && hand.Count >= maxHandSize) break;
             if (deck.Count == 0) break;
 
             string top = deck[0];
             deck.RemoveAt(0);
             hand.Add(top);
-            moved = true;
+            drawn++;
         }
-        if (moved) OnHandChanged?.Invoke();
+        if (drawn > 0) OnHandChanged?.Invoke();
+        return drawn;
     }
 
+    // 사용 → 덱 맨 밑
     public bool UseCardToBottom(int handIndex)
     {
         if (handIndex < 0 || handIndex >= hand.Count) return false;
@@ -118,6 +115,12 @@ public class BattleDeckRuntime : MonoBehaviour
         deck.Add(id);
         OnHandChanged?.Invoke();
         return true;
+    }
+
+    // ✅ 버리기(엔드 초과 처리): 선택 카드 덱 맨 밑으로
+    public bool DiscardToBottom(int handIndex)
+    {
+        return UseCardToBottom(handIndex);
     }
 
     public IReadOnlyList<string> GetHandIds() => hand;

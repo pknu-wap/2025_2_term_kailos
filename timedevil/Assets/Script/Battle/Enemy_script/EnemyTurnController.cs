@@ -1,6 +1,5 @@
 ﻿// Assets/Script/Battle/Enemy_script/EnemyTurnController.cs
 using System.Collections;
-using System.Reflection;
 using UnityEngine;
 
 public class EnemyTurnController : MonoBehaviour
@@ -10,6 +9,13 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private CardDatabaseSO cardDatabase;
     [SerializeField] private CostController cost;
     [SerializeField] private ShowCardController showCard;
+    [SerializeField] private DescriptionPanelController desc;
+
+    // 👇 추가: 적도 Draw 효과를 실행하기 위해 DrawController 참조
+    [Header("Effect Controllers")]
+    [SerializeField] private DrawController drawController;
+    [SerializeField] private MoveController moveController;   // ⭐ 추가: Move 실행
+
 
     [Header("Timings")]
     [SerializeField] private float previewSeconds = 1.2f;
@@ -18,21 +24,21 @@ public class EnemyTurnController : MonoBehaviour
     void Awake()
     {
         if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
-        if (!cardDatabase)
-            cardDatabase = Resources.Load<CardDatabaseSO>("CardDatabase");
+        if (!cardDatabase) cardDatabase = Resources.Load<CardDatabaseSO>("CardDatabase");
         if (!cost) cost = FindObjectOfType<CostController>(true);
         if (!showCard) showCard = FindObjectOfType<ShowCardController>(true);
+        if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
+        if (!drawController) drawController = FindObjectOfType<DrawController>(true); // ⭐ 자동 결선
+        if (!moveController) moveController = FindObjectOfType<MoveController>(true);   // ⭐ 자동 결선
 
 
         Debug.Log($"[EnemyTurn] Controller bound on: {gameObject.scene.name}/{gameObject.name}");
-
     }
 
     public IEnumerator RunTurn()
     {
         if (enemyDeck == null || cost == null) yield break;
 
-        // 손패 모자라면 1장 드로우
         if (enemyDeck.GetHandIds().Count < enemyDeck.MaxHandSize)
             enemyDeck.DrawOneIfNeeded();
 
@@ -45,7 +51,6 @@ public class EnemyTurnController : MonoBehaviour
                 yield break;
             }
 
-            // 진단 로그: 현재 손패 + 남은 코스트
             Debug.Log($"[EnemyTurn] Hand= [{string.Join(", ", hand)}], Cost={cost.Current}");
 
             int playableIndex = -1;
@@ -57,13 +62,7 @@ public class EnemyTurnController : MonoBehaviour
                 string id = hand[i];
                 int c = GetCardCost(id);
                 Debug.Log($"[EnemyTurn] probe id={id}, cost={c}");
-                if (c <= cost.Current)
-                {
-                    playableIndex = i;
-                    playableCost = c;
-                    playableId = id;
-                    break;
-                }
+                if (c <= cost.Current) { playableIndex = i; playableCost = c; playableId = id; break; }
             }
 
             if (playableIndex < 0)
@@ -80,17 +79,59 @@ public class EnemyTurnController : MonoBehaviour
 
             Debug.Log($"[EnemyTurn] Play '{playableId}' (cost={playableCost})");
 
-            if (showCard != null)
-                yield return showCard.PreviewById(playableId, previewSeconds);
+            // SO 가져오기 (타입 분기용)
+            BaseCardSO so = cardDatabase ? cardDatabase.GetById(playableId) : null;
 
+            // ▶ 설명(explanation) 고정: (explanation > display > displayName > id)
+            if (desc && so)
+            {
+                string line =
+                    !string.IsNullOrEmpty(so.explanation) ? so.explanation :
+                    (!string.IsNullOrEmpty(so.display) ? so.display :
+                    (!string.IsNullOrEmpty(so.displayName) ? so.displayName : so.id));
+                desc.ShowTemporaryExplanation(line);
+            }
+
+            // ▶ 효과 실행: Draw 카드면 적 진영으로 실행 (cap 무시)
+            if (so is DrawCardSO dso && drawController != null)
+            {
+                // (권장 UX) 먼저 프리뷰를 보여주고 …
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+
+                // … 그 다음 Draw 효과를 '완료될 때까지' 실행
+                yield return drawController.Execute(dso, Faction.Enemy);
+            }
+            else if (so is MoveCardSO mso && moveController != null)   // ⭐⭐ 추가된 분기
+            {
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+
+                // 🔶 적이 자신을 움직임: self=Enemy, foe=Player
+                yield return moveController.Execute(mso, Faction.Enemy, Faction.Player);
+            }
+            else
+                    {
+                // Draw가 아닌 카드면 기존 프리뷰 로직
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+            }
+
+            // ▶ 설명 해제
+            if (desc) desc.ClearTemporaryMessage();
+
+            // ▶ 사용한 카드는 덱 맨 아래로
             enemyDeck.UseCardToBottom(playableIndex);
+
+            // (선택) 적 손패 UI 새로고침이 필요하면 여기서 호출
+            // var ui = FindObjectOfType<EnemyHandUI>(true);
+            // if (ui) ui.RebuildFromHand();
 
             if (playInterval > 0f)
                 yield return new WaitForSeconds(playInterval);
         }
     }
 
-    // ---- 코스트 추출을 견고하게 (필드명이 달라도 최대한 잡아줌) ----
     private int GetCardCost(string id)
     {
         if (string.IsNullOrEmpty(id) || cardDatabase == null)
@@ -106,25 +147,21 @@ public class EnemyTurnController : MonoBehaviour
             return 9999;
         }
 
-        // ✅ 자식 타입 먼저, 부모는 마지막
         if (so is AttackCardSO a) return Mathf.Max(0, a.cost);
         if (so is MoveCardSO m) return Mathf.Max(0, m.cost);
         if (so is SupportCardSO s) return Mathf.Max(0, s.cost);
         if (so is BaseCardSO b) return Mathf.Max(0, b.cost);
 
-        // ✅ 폴백: public/private field/property 모두 탐색
         var t = so.GetType();
         const System.Reflection.BindingFlags BF =
             System.Reflection.BindingFlags.Instance |
             System.Reflection.BindingFlags.Public |
             System.Reflection.BindingFlags.NonPublic;
 
-        // field: "cost"/"Cost"
         var f = t.GetField("cost", BF) ?? t.GetField("Cost", BF);
         if (f != null && f.FieldType == typeof(int))
             return Mathf.Max(0, (int)f.GetValue(so));
 
-        // property: "cost"/"Cost"
         var p = t.GetProperty("cost", BF) ?? t.GetProperty("Cost", BF);
         if (p != null && p.PropertyType == typeof(int) && p.CanRead)
             return Mathf.Max(0, (int)p.GetValue(so));
