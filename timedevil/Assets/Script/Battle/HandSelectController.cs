@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 
 public class HandSelectController : MonoBehaviour
@@ -6,11 +6,11 @@ public class HandSelectController : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private BattleMenuController menu;
     [SerializeField] private HandUI hand;
-    [SerializeField] private Image externalSelector; // ¿É¼Ç
+    [SerializeField] private Image externalSelector; // ì˜µì…˜
     [SerializeField] private CardUseOrchestrator orchestrator;
 
     [Header("Behavior")]
-    [SerializeField] private bool wrap = true; // (ÇöÀç HandUI°¡ ·¡ÇÎ Ã³¸®)
+    [SerializeField] private bool wrap = true;
 
     void Reset()
     {
@@ -46,8 +46,11 @@ public class HandSelectController : MonoBehaviour
     {
         if (!menu || !hand) return;
 
-        // ¸Ş´º°¡ CardÀÏ ¶§ E·Î ¼±ÅÃ¸ğµå ÁøÀÔ
-        if (!hand.IsInSelectMode && menu.Index == 0 && Input.GetKeyDown(KeyCode.E))
+        // â— ê°•ì œ ë²„ë¦¼ ë‹¨ê³„ ì¤‘ì—ëŠ” ë©”ë‰´ ì¸ë±ìŠ¤ì™€ ë¬´ê´€í•˜ê²Œ ì†íŒ¨ ì„ íƒ ìœ ì§€
+        bool inDiscard = TurnManager.Instance && TurnManager.Instance.IsPlayerDiscardPhase;
+
+        // ì¼ë°˜ ì§„ì…(ì¹´ë“œ íƒ­) â€” ë‹¨, ë²„ë¦¼ ë‹¨ê³„ê°€ ì•„ë‹ ë•Œë§Œ
+        if (!inDiscard && !hand.IsInSelectMode && menu.Index == 0 && Input.GetKeyDown(KeyCode.E))
         {
             hand.EnterSelectMode();
             menu.EnableInput(false);
@@ -56,20 +59,38 @@ public class HandSelectController : MonoBehaviour
 
         if (!hand.IsInSelectMode) return;
 
-        // ÀÌµ¿Àº HandUI API
         if (Input.GetKeyDown(KeyCode.RightArrow)) hand.MoveSelect(+1);
         if (Input.GetKeyDown(KeyCode.LeftArrow)) hand.MoveSelect(-1);
 
-        // Ãë¼Ò(Q): ¼±ÅÃ¸ğµå Á¾·á
-        if (Input.GetKeyDown(KeyCode.Q))
+        // Q: ë²„ë¦¼ ë‹¨ê³„ì—ì„œëŠ” ì·¨ì†Œ ë¶ˆê°€, í‰ìƒì‹œì—” ì·¨ì†Œ ê°€ëŠ¥
+        if (!inDiscard && Input.GetKeyDown(KeyCode.Q))
         {
             hand.ExitSelectMode();
             menu.EnableInput(true);
         }
 
-        // È®Á¤(E): ¿ÀÄÉ½ºÆ®·¹ÀÌÅÍ¿¡ À§ÀÓ
         if (Input.GetKeyDown(KeyCode.E))
-            orchestrator?.UseCurrentSelected();
+        {
+            if (inDiscard)
+            {
+                // âœ… ë²„ë¦¼ ìˆ˜í–‰
+                var bdr = BattleDeckRuntime.Instance;
+                if (bdr != null && hand.CurrentSelectIndex >= 0)
+                {
+                    int idx = hand.CurrentSelectIndex;
+                    bdr.DiscardToBottom(idx);       // ë± ë°‘ìœ¼ë¡œ ë³´ëƒ„
+                    hand.RebuildFromHand();         // UI ê°±ì‹ (ì¸ë±ìŠ¤ ë³´ì • í¬í•¨)
+
+                    int over = bdr.OverCapCount;
+                    if (TurnManager.Instance) TurnManager.Instance.OnPlayerDiscardOne(over);
+                }
+            }
+            else
+            {
+                // í‰ìƒì‹œì—” ì¹´ë“œ ì‚¬ìš©
+                orchestrator?.UseCurrentSelected();
+            }
+        }
     }
 
     private void OnHandSelectModeChanged(bool on)

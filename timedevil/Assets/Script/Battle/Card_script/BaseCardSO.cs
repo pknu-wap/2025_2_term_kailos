@@ -1,13 +1,15 @@
-// BaseCardSO.cs
+ï»¿// BaseCardSO.cs
 using UnityEngine;
 
 public abstract class BaseCardSO : ScriptableObject
 {
     [Header("ID & Meta")]
-    public string id;           // Hand¿¡ µé¾îÀÖ´Â ¹®ÀÚ¿­ id¿Í µ¿ÀÏÇØ¾ß ÇÔ
-    public string displayName;  // Ç¥½Ã¿ë ÀÌ¸§
+    public string id;           // Handì— ë“¤ì–´ìˆëŠ” ë¬¸ìì—´ idì™€ ë™ì¼í•´ì•¼ í•¨
+    public string displayName;  // í‘œì‹œìš© ì´ë¦„
     public CardType type;
-    [TextArea] public string display; // ¼³¸í¹®
+    [TextArea] public string display; // ì„¤ëª…ë¬¸
+    [TextArea] public string explanation;  // âœ… ë°œë™ ëŒ€ì‚¬(ìš°ì„  ë…¸ì¶œ)
+
 
     [Header("Cost & Rating")]
     public int cost = 1;
