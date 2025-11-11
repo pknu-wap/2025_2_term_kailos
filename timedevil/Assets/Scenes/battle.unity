@@ -4953,6 +4953,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba00dde70749c9448ac917d73b1c544, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  visualScale: 0.8
   playerCentersPos:
   - {x: -5.98, y: 3.71, z: -2}
   - {x: -4.69, y: 3.71, z: -2}
@@ -4995,7 +4996,7 @@ MonoBehaviour:
   sortingLayer: Default
   sortingOrder: 50
   tileZ: 0
-  hp: {fileID: 0}
+  hp: {fileID: 439503623}
   oneHitPerCard: 1
 --- !u!4 &1201525413
 Transform:

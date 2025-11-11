@@ -5,17 +5,15 @@ using UnityEngine;
 public class AttackController : MonoBehaviour
 {
     [Header("Visual Only Scale")]
-    [SerializeField, Range(0.2f, 1.5f)] private float visualScale = 0.8f; // 그림만 축소/확대
+    [SerializeField, Range(0.2f, 1.5f)] private float visualScale = 0.8f;
 
     [Header("Manual Centers (World Positions)")]
-    [Tooltip("플레이어 보드 4x4 각 칸 중심의 월드 좌표 (index=r*4+c, r:0..3 상→하, c:0..3 좌→우)")]
     [SerializeField] private Vector3[] playerCentersPos = new Vector3[16];
-    [Tooltip("적 보드 4x4 각 칸 중심의 월드 좌표 (index=r*4+c, r:0..3 상→하, c:0..3 좌→우)")]
     [SerializeField] private Vector3[] enemyCentersPos = new Vector3[16];
 
     [Header("Tile Visual")]
     [SerializeField] private string resourcesFolder = "my_asset";
-    [SerializeField] private string spriteName = "attack";     // Resources/my_asset/attack.png
+    [SerializeField] private string spriteName = "attack"; // Resources/my_asset/attack.png
     [SerializeField, Range(0f, 1f)] private float alpha = 0.6f;
     [SerializeField] private float tileWidth = 1.3f;
     [SerializeField] private float tileHeight = 1.3f;
@@ -35,16 +33,18 @@ public class AttackController : MonoBehaviour
     {
         if (hp == null) hp = FindObjectOfType<HPController>(true);
         _sprite = Resources.Load<Sprite>($"{resourcesFolder}/{spriteName}");
-        if (_sprite == null) Debug.LogWarning($"[AttackController] Sprite not found at Resources/{resourcesFolder}/{spriteName}.png");
+        if (_sprite == null)
+            Debug.LogWarning($"[AttackController] Sprite not found at Resources/{resourcesFolder}/{spriteName}.png");
     }
 
     public IEnumerator Execute(AttackCardSO so, Faction self, Faction foe)
     {
-        if (so == null) yield break;
+        if (!so) yield break;
 
-        // 히트 판정 타겟 설정(HPController 쪽 public 메서드 사용)
-        if (hp != null) hp.BeginCardHitTest(foe);
+        // 타겟 팩션 지정(피격 위치 조회용)
+        hp?.BeginCardHitTest(foe);
 
+        // 표시 보드(공격자는 상대 보드에 뿌림)
         var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
         if (centers == null || centers.Length < 16)
         {
@@ -53,100 +53,101 @@ public class AttackController : MonoBehaviour
         }
 
         EnsurePoolSize(16);
-        bool damageApplied = false;
 
-        if (so.useWaves && so.waves != null && so.waves.Length > 0)
+        // waves가 없으면 레거시 단일 패턴을 웨이브처럼 1회 실행
+        if (so.waves == null || so.waves.Length == 0)
         {
-            var accumMask = new bool[16];
-
-            for (int wi = 0; wi < so.waves.Length; wi++)
-            {
-                var w = so.waves[wi];
-                if (w == null) continue;
-
-                var mask = new bool[16];
-                var times = new float[16];
-                AttackCardSO.ParsePattern16(w.pattern16, mask);
-                AttackCardSO.FillTimeline16(w.timeline, times);
-
-                for (int rep = 0; rep < Mathf.Max(1, w.repeat); rep++)
-                {
-                    if (w.preDelay > 0f) yield return new WaitForSeconds(w.preDelay);
-
-                    bool[] renderMask;
-                    if (w.combine == AttackCardSO.WaveCombineMode.Additive)
-                    {
-                        for (int i = 0; i < 16; i++) accumMask[i] = accumMask[i] || mask[i];
-                        renderMask = accumMask;
-                    }
-                    else
-                    {
-                        renderMask = mask; // Replace
-                        HideAllTiles();
-                    }
-
-                    ShowTiles(renderMask, centers);
-
-                    var schedule = BuildSchedule(renderMask, times);
-                    float lastT = 0f;
-                    foreach (var (idx, tPoint) in schedule)
-                    {
-                        float wait = Mathf.Max(0f, tPoint - lastT);
-                        if (wait > 0f) yield return new WaitForSeconds(wait);
-                        lastT = tPoint;
-
-                        if (!damageApplied || !oneHitPerCard)
-                        {
-                            if (idx < 0 || idx >= centers.Length) continue;
-                            Vector3 center = centers[idx]; center.z = tileZ;
-
-                            if (CheckHitNow(center))
-                            {
-                                ApplyDamageOnce(so, self, foe, ref damageApplied);
-                                PlayOnHitFX(so, center);
-                            }
-                        }
-                    }
-
-                    if (w.postDelay > 0f) yield return new WaitForSeconds(w.postDelay);
-                }
-            }
-        }
-        else
-        {
-            var mask = new bool[16];
-            var times = new float[16];
+            bool[] mask = new bool[16];
+            float[] times = new float[16];
             AttackCardSO.ParsePattern16(so.pattern16, mask);
             AttackCardSO.FillTimeline16(so.timeline, times);
 
+            if (IsAllZero(mask)) yield break;
+
+            ShowTiles(mask, centers);
+            yield return RunTimeline(mask, times, centers, so,
+                waveSfx: null, sfxEveryHit: false,
+                vfxPrefab: null, vfxEveryHit: false, vfxLife: 0f,
+                self, foe);
+            HideAllTiles();
+            yield break;
+        }
+
+        // 웨이브 순차 실행
+        for (int wi = 0; wi < so.waves.Length; wi++)
+        {
+            var w = so.waves[wi];
+            if (w == null) continue;
+
+            if (w.delayBefore > 0f) yield return new WaitForSeconds(w.delayBefore);
+
+            bool[] mask = new bool[16];
+            float[] times = new float[16];
+            AttackCardSO.ParsePattern16(w.pattern16, mask);
+            AttackCardSO.FillTimeline16(w.timeline, times);
+
+            if (IsAllZero(mask))
+            {
+                if (w.delayAfter > 0f) yield return new WaitForSeconds(w.delayAfter);
+                continue;
+            }
+
             ShowTiles(mask, centers);
 
-            var schedule = BuildSchedule(mask, times);
-            float lastT = 0f;
-            foreach (var (idx, tPoint) in schedule)
+            // 웨이브 시작 한 번만 SFX/VFX를 원하면 여기서 처리
+            if (!w.sfxEveryHit && w.sfx)
+                AudioSource.PlayClipAtPoint(w.sfx, AveragePosition(mask, centers));
+            if (!w.vfxEveryHit && w.vfxPrefab)
+                SpawnVfx(w.vfxPrefab, AveragePosition(mask, centers), w.vfxLifetime);
+
+            // 타임라인 진행(각 타점에서 히트/FX)
+            yield return RunTimeline(mask, times, centers, so,
+                w.sfx, w.sfxEveryHit,
+                w.vfxPrefab, w.vfxEveryHit, w.vfxLifetime,
+                self, foe);
+
+            HideAllTiles();
+
+            if (w.delayAfter > 0f) yield return new WaitForSeconds(w.delayAfter);
+        }
+    }
+
+    // =============== 내부 유틸 ===============
+
+    private IEnumerator RunTimeline(
+        bool[] mask, float[] times, Vector3[] centers,
+        AttackCardSO so,
+        AudioClip waveSfx, bool sfxEveryHit,
+        GameObject vfxPrefab, bool vfxEveryHit, float vfxLife,
+        Faction self, Faction foe)
+    {
+        var schedule = BuildSchedule(mask, times);
+        bool damageApplied = false;
+        float lastT = 0f;
+
+        foreach (var (idx, tPoint) in schedule)
+        {
+            float wait = Mathf.Max(0f, tPoint - lastT);
+            if (wait > 0f) yield return new WaitForSeconds(wait);
+            lastT = tPoint;
+
+            if (idx < 0 || idx >= centers.Length) continue;
+
+            // 타점 SFX/VFX (매 히트 모드일 때)
+            Vector3 hitPos = centers[idx]; hitPos.z = tileZ;
+            if (sfxEveryHit && waveSfx) AudioSource.PlayClipAtPoint(waveSfx, hitPos);
+            if (vfxEveryHit && vfxPrefab) SpawnVfx(vfxPrefab, hitPos, vfxLife);
+
+            // 히트 판정 + 데미지
+            if (!damageApplied || !oneHitPerCard)
             {
-                float wait = Mathf.Max(0f, tPoint - lastT);
-                if (wait > 0f) yield return new WaitForSeconds(wait);
-                lastT = tPoint;
-
-                if (!damageApplied || !oneHitPerCard)
+                if (CheckHitNow(hitPos))
                 {
-                    if (idx < 0 || idx >= centers.Length) continue;
-                    Vector3 center = centers[idx]; center.z = tileZ;
-
-                    if (CheckHitNow(center))
-                    {
-                        ApplyDamageOnce(so, self, foe, ref damageApplied);
-                        PlayOnHitFX(so, center);
-                    }
+                    ApplyDamageOnce(so, self, foe, ref damageApplied);
                 }
             }
         }
-
-        HideAllTiles();
     }
-
-    // ---------- 내부 유틸 ----------
 
     private List<(int idx, float time)> BuildSchedule(bool[] mask, float[] times)
     {
@@ -156,7 +157,7 @@ public class AttackController : MonoBehaviour
             if (mask[i])
             {
                 float t = (times != null && times.Length > i) ? Mathf.Max(0f, times[i]) : 0f;
-                list.Add((idx: i, time: t));
+                list.Add((i, t));
             }
         }
         list.Sort((a, b) => a.time.CompareTo(b.time));
@@ -245,9 +246,33 @@ public class AttackController : MonoBehaviour
         damageAppliedFlag = true;
     }
 
-    private void PlayOnHitFX(AttackCardSO so, Vector3 at)
+    private static bool IsAllZero(bool[] mask)
     {
-        if (so.sfx) AudioSource.PlayClipAtPoint(so.sfx, at);
-        // if (so.cameraShake) ...
+        if (mask == null || mask.Length == 0) return true;
+        for (int i = 0; i < mask.Length; i++) if (mask[i]) return false;
+        return true;
+    }
+
+    private static Vector3 AveragePosition(bool[] mask, Vector3[] centers)
+    {
+        Vector3 sum = Vector3.zero; int cnt = 0;
+        for (int i = 0; i < 16 && i < centers.Length; i++)
+        {
+            if (mask != null && i < mask.Length && mask[i])
+            {
+                var p = centers[i]; p.z = 0f;
+                sum += p; cnt++;
+            }
+        }
+        if (cnt == 0) return Vector3.zero;
+        var avg = sum / cnt; avg.z = 0f;
+        return avg;
+    }
+
+    private static void SpawnVfx(GameObject prefab, Vector3 pos, float life)
+    {
+        if (!prefab) return;
+        var go = GameObject.Instantiate(prefab, pos, Quaternion.identity);
+        if (life > 0f) GameObject.Destroy(go, life);
     }
 }
