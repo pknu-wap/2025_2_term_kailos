@@ -4953,10 +4953,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba00dde70749c9448ac917d73b1c544, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alphaPeak: 0.7
-  fadeInDur: 0.8
-  holdDur: 0
-  fadeOutDur: 0.18
   playerCentersPos:
   - {x: -5.98, y: 3.71, z: -2}
   - {x: -4.69, y: 3.71, z: -2}
@@ -4999,7 +4995,6 @@ MonoBehaviour:
   sortingLayer: Default
   sortingOrder: 50
   tileZ: 0
-  visualScale: 0.75
   hp: {fileID: 0}
   oneHitPerCard: 1
 --- !u!4 &1201525413
