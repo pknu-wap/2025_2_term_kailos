@@ -1,121 +1,130 @@
 using UnityEngine;
-using System.Collections; // 코루틴을 사용하기 위해 필요
+using System.Collections;
+using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(Collider2D))]
 public class UndeadMover : MonoBehaviour
 {
+    // (순찰, 이동, 동작 설정 변수들은 그대로)
     [Header("순찰 경로 설정")]
-    [Tooltip("몹이 순서대로 방문할 지점(빈 오브젝트)들의 배열입니다.")]
-    public Transform[] waypoints; // 여러 개의 포인트를 담을 배열
-
+    public Transform[] waypoints;
     [Header("이동 설정")]
     public float moveSpeed = 3f;
-
     [Header("동작 설정")]
-    [Tooltip("체크하면 게임 시작 시 바로 순찰을 시작합니다.")]
     public bool startOnPlay = true;
-
-    [Tooltip("체크하면 마지막 지점 도착 후 첫 지점으로 돌아가 순찰을 반복합니다.")]
     public bool loopPatrol = true;
+    public float waitAtPoint = 0.5f;
+    [Header("배틀 설정")]
+    public string battleSceneName = "BattleScene";
 
-    [Tooltip("각 지점에 도착한 후 다음 지점으로 출발하기 전 대기하는 시간(초)입니다.")]
-    public float waitAtPoint = 0.5f; // 지점 도착 후 대기 시간
-
-    // --- private 변수 ---
-    private int currentWaypointIndex = 0; // 현재 이동 중인 목표 지점의 인덱스
+    // (private 변수들도 그대로)
+    private int currentWaypointIndex = 0;
     private bool isMoving = false;
     private Animator animator;
+    private bool isTransitioning = false;
 
+    // (Awake, Start, StartPatrol, PatrolCoroutine 함수는 그대로)
     void Awake()
     {
-        // 애니메이터가 있다면 가져옵니다. (선택 사항)
         animator = GetComponent<Animator>();
     }
-
     void Start()
     {
-        // 게임이 시작될 때 'startOnPlay'가 체크되어 있으면 순찰을 바로 시작합니다.
         if (startOnPlay)
         {
             StartPatrol();
         }
     }
-
-    // ▼▼▼ 다른 컷씬 스크립트에서 이 함수를 호출하여 순찰을 시작시킬 수 있습니다. ▼▼▼
     public void StartPatrol()
     {
-        // 포인트가 설정되지 않았거나 이미 움직이는 중이면 무시
         if (waypoints == null || waypoints.Length == 0)
         {
             Debug.LogWarning("MobWaypointMover: 설정된 waypoints가 없습니다.");
             return;
         }
         if (isMoving) return;
-
-        // 순찰 코루틴 시작
         StartCoroutine(PatrolCoroutine());
     }
-
-    // ▼▼▼ 실제 순찰 로직을 처리하는 코루틴 ▼▼▼
     IEnumerator PatrolCoroutine()
     {
         isMoving = true;
-
-        while (true) // 이 루프는 '순찰' 자체를 반복합니다. (loopPatrol이 false면 break로 탈출)
+        while (true)
         {
-            // 1. 현재 목표 지점(Transform)을 배열에서 가져옵니다.
             Transform targetPoint = waypoints[currentWaypointIndex];
             Vector3 targetPosition = targetPoint.position;
-
-            // ▼▼▼ (수정) isWalking이 필요 없으므로 주석 처리 ▼▼▼
-            // (선택 사항) 걷기 애니메이션 시작
-            // if (animator != null) animator.SetBool("isWalking", true);
-            // ▲▲▲
-
-            // 2. 목표 지점에 도착할 때까지 '이동' 루프
+            // if (animator != null) animator.SetBool("isWalking", true); 
             while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
             {
                 transform.position = Vector3.MoveTowards(
-                    transform.position,     // 현재 위치
-                    targetPosition,         // 목표 위치
-                    moveSpeed * Time.deltaTime // 이동 속도
+                    transform.position,
+                    targetPosition,
+                    moveSpeed * Time.deltaTime
                 );
-                yield return null; // 다음 프레임까지 대기
+                if (GetComponent<SpriteRenderer>() != null)
+                {
+                    if (targetPosition.x > transform.position.x)
+                        GetComponent<SpriteRenderer>().flipX = false;
+                    else if (targetPosition.x < transform.position.x)
+                        GetComponent<SpriteRenderer>().flipX = true;
+                }
+                yield return null;
             }
-
-            // 3. 도착 완료 (정확한 위치로 보정)
             transform.position = targetPosition;
-
-            // ▼▼▼ (수정) isWalking이 필요 없으므로 주석 처리 ▼▼▼
-            // (선택 사항) 멈춤 애니메이션
-            // if (animator != null) animator.SetBool("isWalking", false);
-            // ▲▲▲
-
-            // 4. 지점에서 잠시 대기
+            // if (animator != null) animator.SetBool("isWalking", false); 
             if (waitAtPoint > 0)
             {
                 yield return new WaitForSeconds(waitAtPoint);
             }
-
-            // 5. 다음 지점을 향하도록 인덱스 증가
             currentWaypointIndex++;
-
-            // 6. 인덱스가 배열의 끝에 도달했는지 확인
             if (currentWaypointIndex >= waypoints.Length)
             {
                 if (loopPatrol)
                 {
-                    // 루프가 켜져 있으면 인덱스를 0으로 리셋 (처음 지점으로)
                     currentWaypointIndex = 0;
                 }
                 else
                 {
-                    // 루프가 꺼져 있으면 순찰을 종료 (while 루프 탈출)
                     break;
                 }
             }
-        } // while(true) 순찰 루프의 끝
-
-        // 루프가 중단되면 (loopPatrol == false)
+        }
         isMoving = false;
+    }
+
+
+    // (OnTriggerEnter2D는 그대로)
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (isTransitioning) return;
+        if (other.GetComponent<PlayerAction>() != null)
+        {
+            Debug.Log("플레이어와 충돌! 페이드와 함께 배틀 씬을 로드합니다.");
+            StartCoroutine(StartBattleSequence(other.transform));
+        }
+    }
+
+    // ▼▼▼ (핵심 수정) SceneFader 호출 방식 변경 ▼▼▼
+    IEnumerator StartBattleSequence(Transform playerTransform)
+    {
+        isTransitioning = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.isAction = true;
+        }
+        StopAllCoroutines();
+        isMoving = false;
+
+        // --- 3. '돌아올 정보'를 정적 클래스에 저장 ---
+        PlayerReturnContext.ReturnSceneName = SceneManager.GetActiveScene().name;
+        PlayerReturnContext.ReturnPosition = playerTransform.position;
+        PlayerReturnContext.HasReturnPosition = true;
+
+        // --- 4. (수정) SceneFader에게 "알아서 페이드아웃하고 씬 로드해"라고 맡김 ---
+        // (UndeadMover가 직접 Fade(1f)를 호출하는 코드를 삭제합니다)
+        SceneFader.instance.LoadSceneWithFade(battleSceneName);
+
+        // (코루틴이므로 yield return은 필요 없습니다)
+        yield return null;
     }
 }
