@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class AttackController : MonoBehaviour
 {
+    [Header("Visual Only Scale")]
+    [SerializeField, Range(0.2f, 1.5f)] private float visualScale = 0.8f; // 그림만 축소/확대
+
     [Header("Manual Centers (World Positions)")]
     [Tooltip("플레이어 보드 4x4 각 칸 중심의 월드 좌표 (index=r*4+c, r:0..3 상→하, c:0..3 좌→우)")]
     [SerializeField] private Vector3[] playerCentersPos = new Vector3[16];
@@ -42,7 +45,7 @@ public class AttackController : MonoBehaviour
         // 히트 판정 타겟 설정(HPController 쪽 public 메서드 사용)
         if (hp != null) hp.BeginCardHitTest(foe);
 
-        var centers = (self == Faction.Player) ? playerCentersPos : enemyCentersPos;
+        var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
         if (centers == null || centers.Length < 16)
         {
             Debug.LogWarning("[AttackController] centers pos array must have 16 elements.");
@@ -214,9 +217,9 @@ public class AttackController : MonoBehaviour
     {
         if (sr == null || sr.sprite == null) return Vector3.one;
         var s = sr.sprite.bounds.size;
-        float sx = (s.x > 0f) ? tileWidth / s.x : 1f;
-        float sy = (s.y > 0f) ? tileHeight / s.y : 1f;
-        return new Vector3(sx, sy, 1f);
+        float sx = (s.x > 0f) ? (tileWidth / s.x) : 1f;
+        float sy = (s.y > 0f) ? (tileHeight / s.y) : 1f;
+        return new Vector3(sx * visualScale, sy * visualScale, 1f);
     }
 
     private bool CheckHitNow(Vector3 center)

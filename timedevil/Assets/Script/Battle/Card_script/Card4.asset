@@ -42,17 +42,26 @@ MonoBehaviour:
   cameraShake: 0
   animationKey: 
   sfx: {fileID: 0}
-  useWaves: 0
+  useWaves: 1
   waves:
-  - pattern16: 
-    timeline: []
+  - pattern16: 0000111100001111
+    timeline:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 1
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    - 0
+    - 1
+    - 1
+    - 1
+    - 1
     combine: 0
-    preDelay: 0
-    postDelay: 0
-    repeat: 1
-  - pattern16: 
-    timeline: []
-    combine: 0
-    preDelay: 0
+    preDelay: 1
     postDelay: 0
     repeat: 1
