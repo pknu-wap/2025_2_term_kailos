@@ -2536,7 +2536,7 @@ MonoBehaviour:
     descText: {fileID: 973842841}
   jsonFileName: items
   pageIndex: 0
-  pageSize: 6
+  pageSize: 8
 --- !u!1 &448766502
 GameObject:
   m_ObjectHideFlags: 0
@@ -6085,7 +6085,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   page1: {fileID: 440849737}
-  page2: {fileID: 0}
+  page2: {fileID: 1840179413}
   pageText: {fileID: 0}
   cursor: {fileID: 1528615507}
 --- !u!4 &1190718238
@@ -8034,8 +8034,8 @@ MonoBehaviour:
     quantityText: {fileID: 1610234421}
     descText: {fileID: 541082218}
   jsonFileName: items
-  pageIndex: 0
-  pageSize: 6
+  pageIndex: 1
+  pageSize: 8
 --- !u!1 &1866063416
 GameObject:
   m_ObjectHideFlags: 0
