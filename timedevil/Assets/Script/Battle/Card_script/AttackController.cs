@@ -20,9 +20,6 @@ public class AttackController : MonoBehaviour
     [SerializeField] private int sortingOrder = 50;
     [SerializeField] private float tileZ = 0f;
 
-    [Header("Visual Only Scale")]
-    [SerializeField, Range(0.2f, 1.5f)] private float visualScale = 0.8f; // 그림만 축소/확대
-
     [Header("Hit/VFX")]
     [SerializeField] private HPController hp;
     [SerializeField, Tooltip("같은 카드 수행 중에는 한 번만 맞게 함")]
@@ -45,8 +42,7 @@ public class AttackController : MonoBehaviour
         // 히트 판정 타겟 설정(HPController 쪽 public 메서드 사용)
         if (hp != null) hp.BeginCardHitTest(foe);
 
-        var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
-
+        var centers = (self == Faction.Player) ? playerCentersPos : enemyCentersPos;
         if (centers == null || centers.Length < 16)
         {
             Debug.LogWarning("[AttackController] centers pos array must have 16 elements.");
@@ -218,9 +214,9 @@ public class AttackController : MonoBehaviour
     {
         if (sr == null || sr.sprite == null) return Vector3.one;
         var s = sr.sprite.bounds.size;
-        float sx = (s.x > 0f) ? (tileWidth / s.x) : 1f;
-        float sy = (s.y > 0f) ? (tileHeight / s.y) : 1f;
-        return new Vector3(sx * visualScale, sy * visualScale, 1f);
+        float sx = (s.x > 0f) ? tileWidth / s.x : 1f;
+        float sy = (s.y > 0f) ? tileHeight / s.y : 1f;
+        return new Vector3(sx, sy, 1f);
     }
 
     private bool CheckHitNow(Vector3 center)
