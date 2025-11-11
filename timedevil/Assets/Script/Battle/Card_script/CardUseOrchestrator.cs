@@ -96,13 +96,19 @@ public class CardUseOrchestrator : MonoBehaviour
         // ==== ★ 여기부터 효과 실행 분기(프리뷰/효과 타이밍) ====
         if (attackController != null && so is AttackCardSO aso)
         {
-            // 1) (선택) 먼저 프리뷰를 전부 보여준다
-            if (showCard != null) yield return showCard.PreviewById(aso.id, totalSeconds);
-            else yield return null;
+            // --- 동시에 실행하고, 둘 다 끝날 때까지 대기 ---
+            bool previewDone = false;
+            bool attackDone = false;
 
-            // 2) 공격 패턴이 "끝날 때까지" 대기
-            yield return attackController.Execute(aso, Faction.Player, Faction.Enemy);
+            // 동시에 시작
+            StartCoroutine(CoRunPreview(aso.id, totalSeconds, () => previewDone = true));
+            StartCoroutine(CoRunAttack(aso, () => attackDone = true));
+
+            // 둘 중 누가 먼저 끝나든, 둘 다 true 될 때까지 대기
+            while (!(previewDone && attackDone))
+                yield return null;
         }
+
         else if (drawController != null && so is DrawCardSO dso)
         {
             // Draw는 실행 코루틴을 흘려보내고, 프리뷰만 기다림
@@ -143,6 +149,19 @@ public class CardUseOrchestrator : MonoBehaviour
         busy = false;
     }
 
+    private IEnumerator CoRunPreview(string id, float seconds, System.Action onDone)
+    {
+        if (showCard != null)
+            yield return showCard.PreviewById(id, seconds);
+        // showCard가 없으면 즉시 완료 처리
+        onDone?.Invoke();
+    }
+
+    private IEnumerator CoRunAttack(AttackCardSO aso, System.Action onDone)
+    {
+        yield return attackController.Execute(aso, Faction.Player, Faction.Enemy);
+        onDone?.Invoke();
+    }
 
 
 }

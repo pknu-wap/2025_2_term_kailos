@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class AttackController : MonoBehaviour
 {
+    [Header("Pulse / Fade")]
+    [SerializeField, Range(0f, 1f)] private float alphaPeak = 0.7f;   // 목표 알파(0.6~0.7 권장)
+    [SerializeField] private float fadeInDur = 0.08f;                 // 페이드 인 시간(초)
+    [SerializeField] private float holdDur = 0.00f;                   // 홀드 시간(초, 필요 없으면 0)
+    [SerializeField] private float fadeOutDur = 0.18f;                // 페이드 아웃 시간(초)
+
     [Header("Manual Centers (World Positions)")]
     [Tooltip("플레이어 보드 4x4 각 칸 중심의 월드 좌표 (index=r*4+c, r:0..3 상→하, c:0..3 좌→우)")]
     [SerializeField] private Vector3[] playerCentersPos = new Vector3[16];
@@ -13,7 +19,7 @@ public class AttackController : MonoBehaviour
     [Header("Tile Visual")]
     [SerializeField] private string resourcesFolder = "my_asset";
     [SerializeField] private string spriteName = "attack";     // Resources/my_asset/attack.png
-    [SerializeField, Range(0f, 1f)] private float alpha = 0.6f;
+    [SerializeField, Range(0f, 1f)] private float alpha = 0.6f; // (초기표시용, 펄스는 alphaPeak 사용)
     [SerializeField] private float tileWidth = 1.3f;
     [SerializeField] private float tileHeight = 1.3f;
     [SerializeField] private string sortingLayer = "Default";
@@ -42,11 +48,11 @@ public class AttackController : MonoBehaviour
     {
         if (so == null) yield break;
 
-        // 히트 판정 타겟 설정(HPController 쪽 public 메서드 사용)
+        // 히트 판정 타겟
         if (hp != null) hp.BeginCardHitTest(foe);
 
+        // ★ self가 Player면 적 보드에, self가 Enemy면 플레이어 보드에
         var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
-
         if (centers == null || centers.Length < 16)
         {
             Debug.LogWarning("[AttackController] centers pos array must have 16 elements.");
@@ -96,6 +102,9 @@ public class AttackController : MonoBehaviour
                         if (wait > 0f) yield return new WaitForSeconds(wait);
                         lastT = tPoint;
 
+                        // ★ 타임라인 발화 시점에 펄스 시작
+                        StartCoroutine(PulseTileOnce(idx));
+
                         if (!damageApplied || !oneHitPerCard)
                         {
                             if (idx < 0 || idx >= centers.Length) continue;
@@ -129,6 +138,9 @@ public class AttackController : MonoBehaviour
                 float wait = Mathf.Max(0f, tPoint - lastT);
                 if (wait > 0f) yield return new WaitForSeconds(wait);
                 lastT = tPoint;
+
+                // ★ 단일 패턴에서도 동일하게 펄스 시작
+                StartCoroutine(PulseTileOnce(idx));
 
                 if (!damageApplied || !oneHitPerCard)
                 {
@@ -164,6 +176,7 @@ public class AttackController : MonoBehaviour
         return list;
     }
 
+    // ★ 초기 알파를 0으로 세팅 (펄스 때만 보이게)
     private void ShowTiles(bool[] mask, Vector3[] centers)
     {
         EnsurePoolSize(16);
@@ -181,7 +194,9 @@ public class AttackController : MonoBehaviour
                 var sr = go.GetComponent<SpriteRenderer>();
                 if (sr)
                 {
-                    sr.color = new Color(1f, 0f, 0f, alpha);
+                    // 시작은 항상 투명
+                    sr.color = new Color(1f, 0f, 0f, 0f);
+
                     go.transform.localScale = ComputeSpriteScale(sr);
                     sr.sortingLayerName = sortingLayer;
                     sr.sortingOrder = sortingOrder;
@@ -207,7 +222,10 @@ public class AttackController : MonoBehaviour
             sr.sprite = _sprite;
             sr.sortingLayerName = sortingLayer;
             sr.sortingOrder = sortingOrder;
-            sr.color = new Color(1f, 0f, 0f, alpha);
+
+            // 풀 생성시도 투명(펄스 때만 보이게)
+            sr.color = new Color(1f, 0f, 0f, 0f);
+
             go.transform.localScale = ComputeSpriteScale(sr);
             go.SetActive(false);
             _pool.Add(go);
@@ -250,5 +268,60 @@ public class AttackController : MonoBehaviour
     {
         if (so.sfx) AudioSource.PlayClipAtPoint(so.sfx, at);
         // if (so.cameraShake) ...
+    }
+
+    // ★★ 타일 1회 펄스 코루틴 (timeline 트리거 시 호출)
+    private IEnumerator PulseTileOnce(int idx)
+    {
+        if (idx < 0 || idx >= _pool.Count) yield break;
+        var go = _pool[idx];
+        if (!go) yield break;
+
+        var sr = go.GetComponent<SpriteRenderer>();
+        if (!sr) yield break;
+
+        float ain = Mathf.Max(0f, fadeInDur);
+        float ahold = Mathf.Max(0f, holdDur);
+        float aout = Mathf.Max(0f, fadeOutDur);
+        float peak = Mathf.Clamp01(alphaPeak);
+
+        Color c = sr.color; c.a = 0f; sr.color = c;
+
+        // fade in: 0 -> peak
+        if (ain > 0f)
+        {
+            float t = 0f;
+            while (t < ain)
+            {
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(0f, peak, t / ain);
+                sr.color = c;
+                yield return null;
+            }
+        }
+        else { c.a = peak; sr.color = c; }
+
+        // hold
+        if (ahold > 0f)
+        {
+            float t = 0f;
+            while (t < ahold) { t += Time.deltaTime; yield return null; }
+        }
+
+        // fade out: peak -> 0
+        if (aout > 0f)
+        {
+            float t = 0f;
+            while (t < aout)
+            {
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(peak, 0f, t / aout);
+                sr.color = c;
+                yield return null;
+            }
+        }
+
+        // cleanup: 완전 투명
+        c.a = 0f; sr.color = c;
     }
 }
