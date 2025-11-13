@@ -8,6 +8,7 @@ public class ItemSlotUI
     public Text nameText;      // 아이템 이름
     public Text quantityText;  // 수량
     public Text descText;      // 설명
+    public Image iconImage;    // 아이콘 이미지 (없으면 비워둬도 됨)
 }
 #endregion
 
@@ -17,14 +18,17 @@ public class InventoryDisplay : MonoBehaviour
     public ItemSlotUI[] slots;
 
     [Header("아이템 데이터 JSON 파일 이름 (Resources/ 파일명만)")]
-    public string jsonFileName = "items";   // 예: Resources/items.json
+    public string jsonFileName = "items";   // Resources/items.json
+
+    [Header("아이템 데이터베이스(SO)")]
+    public ItemDatabaseSO itemDatabase;     // 🔥 여기에 ItemDatabase SO 드래그
 
     [Header("페이지 설정")]
     [Tooltip("0=첫 페이지, 1=두 번째 페이지...")]
     [SerializeField] private int pageIndex = 0;
     [SerializeField] private int pageSize = 6;       // 한 페이지에 표시할 개수(슬롯 수와 동일 권장)
 
-    private InventoryData inventoryData;
+    private InventorySaveData inventoryData;
 
     private void Start()
     {
@@ -32,7 +36,7 @@ public class InventoryDisplay : MonoBehaviour
         DisplayCurrentPage();
     }
 
-    /// <summary>Resources/{jsonFileName}.json을 읽어 InventoryData로 역직렬화</summary>
+    /// <summary>Resources/{jsonFileName}.json을 읽어 InventorySaveData로 역직렬화</summary>
     private void LoadItemsFromJson()
     {
         TextAsset json = Resources.Load<TextAsset>(jsonFileName);
@@ -42,14 +46,14 @@ public class InventoryDisplay : MonoBehaviour
             return;
         }
 
-        inventoryData = JsonUtility.FromJson<InventoryData>(json.text);
+        inventoryData = JsonUtility.FromJson<InventorySaveData>(json.text);
         if (inventoryData == null || inventoryData.items == null)
         {
             Debug.LogError("⚠️ JSON 파싱 실패 또는 'items' 배열이 비었습니다.");
             return;
         }
 
-        Debug.Log($"✅ {inventoryData.items.Length}개의 아이템 데이터를 성공적으로 불러왔습니다!");
+        Debug.Log($"✅ {inventoryData.items.Length}개의 인벤토리 데이터를 성공적으로 불러왔습니다!");
     }
 
     /// <summary>현재 pageIndex 기준으로 페이지 내용을 슬롯에 표시</summary>
@@ -57,7 +61,7 @@ public class InventoryDisplay : MonoBehaviour
     {
         if (inventoryData == null || inventoryData.items == null)
         {
-            Debug.LogWarning("⚠️ InventoryData가 비어 있습니다. 표시할 아이템이 없습니다.");
+            Debug.LogWarning("⚠️ InventorySaveData가 비어 있습니다. 표시할 아이템이 없습니다.");
             ClearAllSlots();
             return;
         }
@@ -71,21 +75,33 @@ public class InventoryDisplay : MonoBehaviour
 
             if (dataIdx >= start && dataIdx < end)
             {
-                var item = inventoryData.items[dataIdx];
+                var entry = inventoryData.items[dataIdx];
 
-                if (slots[i].nameText) slots[i].nameText.text = item.name;
-                if (slots[i].quantityText) slots[i].quantityText.text = $"x{item.quantity}";
-                if (slots[i].descText) slots[i].descText.text = item.description;
+                // 🔥 ItemDatabase에서 정의 가져오기
+                ItemSO def = itemDatabase != null
+                    ? itemDatabase.GetById(entry.id)
+                    : null;
 
-                // 디버그 로그(페이지 구분)
-                Debug.Log($"[InventoryDisplay p{pageIndex}] {item.name} x{item.quantity} | {item.description}");
+                string displayName = def != null ? def.displayName : entry.id;
+                string description = def != null ? def.description : "";
+                Sprite icon = def != null ? def.icon : null;
+
+                if (slots[i].nameText) slots[i].nameText.text = displayName;
+                if (slots[i].quantityText) slots[i].quantityText.text = $"x{entry.quantity}";
+                if (slots[i].descText) slots[i].descText.text = description;
+
+                if (slots[i].iconImage)
+                {
+                    slots[i].iconImage.sprite = icon;
+                    slots[i].iconImage.enabled = icon != null;
+                }
+
+                Debug.Log($"[InventoryDisplay p{pageIndex}] {entry.id} x{entry.quantity} | {description}");
             }
             else
             {
                 // 남는 칸 클리어
-                if (slots[i].nameText) slots[i].nameText.text = "";
-                if (slots[i].quantityText) slots[i].quantityText.text = "";
-                if (slots[i].descText) slots[i].descText.text = "";
+                ClearSlot(slots[i]);
             }
         }
     }
@@ -103,15 +119,21 @@ public class InventoryDisplay : MonoBehaviour
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i].nameText) slots[i].nameText.text = "";
-            if (slots[i].quantityText) slots[i].quantityText.text = "";
-            if (slots[i].descText) slots[i].descText.text = "";
+            ClearSlot(slots[i]);
         }
     }
 
-    // (선택) 현재 페이지/사이즈를 Inspector에서 바꿨을 때 즉시 반영하고 싶으면 주석 해제
-    // private void OnValidate()
-    // {
-    //     if (Application.isPlaying) DisplayCurrentPage();
-    // }
+    private void ClearSlot(ItemSlotUI slot)
+    {
+        if (slot == null) return;
+
+        if (slot.nameText) slot.nameText.text = "";
+        if (slot.quantityText) slot.quantityText.text = "";
+        if (slot.descText) slot.descText.text = "";
+        if (slot.iconImage)
+        {
+            slot.iconImage.sprite = null;
+            slot.iconImage.enabled = false;
+        }
+    }
 }

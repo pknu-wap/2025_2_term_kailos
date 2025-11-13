@@ -1,16 +1,14 @@
 using UnityEngine;
 
 [System.Serializable]
-public class ItemData
+public class InventoryItemEntry
 {
-    public string name;
-    public int quantity;
-    public string description;
-    public string spritePath;
+    public string id;      // ItemSO.id (예: "potion")
+    public int quantity;   // 현재 가지고 있는 개수
 }
 
 [System.Serializable]
-public class InventoryData
+public class InventorySaveData
 {
-    public ItemData[] items;
+    public InventoryItemEntry[] items;
 }
