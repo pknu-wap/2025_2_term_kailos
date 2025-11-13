@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;    // 🔥 TextMeshPro 사용
 
 #region UI 슬롯 구조
 [System.Serializable]
@@ -9,6 +10,9 @@ public class ItemSlotUI
     public Text nameText;      // NAME 열
     public Text quantityText;  // QTY 열
     public Image iconImage;    // ITEM 칸의 아이콘 이미지 (ItemDesc 오브젝트의 Image)
+
+    // 🔥 이 슬롯에 어떤 아이템이 들어있는지 기억
+    [HideInInspector] public ItemSO currentItemSO;
 }
 #endregion
 
@@ -30,7 +34,7 @@ public class InventoryDisplay : MonoBehaviour
 
     [Header("설명 패널")]
     public GameObject descriptionPanel;   // 설명 창 전체 (처음엔 비활성화)
-    public Text descriptionText;          // 설명 창 안의 Text
+    public TMP_Text descriptionText;      // 🔥 TMP용 설명 텍스트
 
     [Header("커서 참조")]
     public InventoryCursor cursor;        // 인벤토리 커서
@@ -40,7 +44,7 @@ public class InventoryDisplay : MonoBehaviour
 
     // 현재 페이지에서 사용 중인 (수량>0) 아이템 리스트
     private List<InventoryItemEntry> currentFiltered = new List<InventoryItemEntry>();
-    private int currentStartIndex = 0;    // 이 페이지의 시작 인덱스
+    private int currentStartIndex = 0;    // 이 페이지의 시작 인덱스 (디버그용 느낌)
 
     private void Start()
     {
@@ -110,7 +114,7 @@ public class InventoryDisplay : MonoBehaviour
         int start = Mathf.Max(0, pageIndex * pageSize);
         int end = Mathf.Min(start + pageSize, totalCount);
 
-        currentStartIndex = start; // 현재 페이지 시작 인덱스 저장
+        currentStartIndex = start; // 현재 페이지 시작 인덱스 저장 (필요하면 디버그용으로 사용)
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -136,6 +140,9 @@ public class InventoryDisplay : MonoBehaviour
                 Sprite icon = def.icon;
                 int quantity = entry.quantity; // 실제 수량은 JSON 기준
 
+                // 🔥 이 슬롯이 어떤 아이템을 들고 있는지 기록
+                slots[i].currentItemSO = def;
+
                 if (slots[i].nameText) slots[i].nameText.text = displayName;
                 if (slots[i].quantityText) slots[i].quantityText.text = $"x{quantity}";
 
@@ -159,7 +166,7 @@ public class InventoryDisplay : MonoBehaviour
     private void ToggleDescriptionPanel()
     {
         if (descriptionPanel == null || descriptionText == null) return;
-        if (currentFiltered == null || currentFiltered.Count == 0) return;
+        if (slots == null || slots.Length == 0) return;
 
         // 이미 열려 있으면 닫기
         if (descriptionPanel.activeSelf)
@@ -170,22 +177,24 @@ public class InventoryDisplay : MonoBehaviour
 
         // 현재 커서가 가리키는 슬롯 인덱스 (0~5)
         int localIndex = (cursor != null) ? cursor.CurrentIndex : 0;
-        int idx = currentStartIndex + localIndex;
 
-        if (idx < 0 || idx >= currentFiltered.Count)
+        if (localIndex < 0 || localIndex >= slots.Length)
         {
             descriptionPanel.SetActive(false);
             return;
         }
 
-        var entry = currentFiltered[idx];
-        ItemSO def = itemDatabase != null ? itemDatabase.GetById(entry.id) : null;
+        var slot = slots[localIndex];
+        var def = slot.currentItemSO;
+
+        // 슬롯에 실제 아이템이 없으면 설명 안 뜨게
         if (def == null)
         {
             descriptionPanel.SetActive(false);
             return;
         }
 
+        // 🔥 SO에 적힌 설명 사용
         descriptionText.text = def.description;
         descriptionPanel.SetActive(true);
     }
@@ -215,6 +224,9 @@ public class InventoryDisplay : MonoBehaviour
     private void ClearSlot(ItemSlotUI slot)
     {
         if (slot == null) return;
+
+        // 🔥 SO 정보도 같이 비우기
+        slot.currentItemSO = null;
 
         if (slot.nameText) slot.nameText.text = "";
         if (slot.quantityText) slot.quantityText.text = "";

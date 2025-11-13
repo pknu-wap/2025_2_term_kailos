@@ -34,11 +34,6 @@ public class InventoryPageManagerKeys : MonoBehaviour
                 ApplyPage(currentPage, resetCursor: true);
                 Debug.Log($"{currentPage} 페이지로 이동");
             }
-            else
-            {
-                // 마지막 페이지에서는 무시
-                // Debug.Log("오른쪽 이동 불가 (마지막 페이지)");
-            }
         }
 
         // ← 이전 페이지
@@ -50,11 +45,6 @@ public class InventoryPageManagerKeys : MonoBehaviour
                 ApplyPage(currentPage, resetCursor: true);
                 Debug.Log($"{currentPage} 페이지로 이동");
             }
-            else
-            {
-                // 첫 페이지에서는 무시
-                // Debug.Log("왼쪽 이동 불가 (첫 페이지)");
-            }
         }
     }
 
@@ -65,7 +55,7 @@ public class InventoryPageManagerKeys : MonoBehaviour
 
         if (pageText) pageText.text = $"{page} / {totalPages}";
 
-        if (resetCursor && cursor != null) 
+        if (resetCursor && cursor != null)
             cursor.ResetToTop();
     }
 }
