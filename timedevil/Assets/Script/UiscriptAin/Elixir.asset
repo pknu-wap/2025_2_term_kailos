@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1abd44402ecbf5148b3b83ac1b008ac9, type: 3}
   m_Name: Elixir
   m_EditorClassIdentifier: 
-  id: '"elixir"'
+  id: elixir
   displayName: elixir
   type: 0
-  description: 
+  description: "\uC544\uB974\uB974\uB974\uB974\uB974\uB974"
   icon: {fileID: 0}
-  defaultQuantity: 0
+  defaultQuantity: 1

@@ -1,17 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class InventoryCursor : MonoBehaviour
 {
-    [Header("ÇÊ¼ö ÂüÁ¶")]
+    [Header("í•„ìˆ˜ ì°¸ì¡°")]
     [SerializeField] private RectTransform highlight;
 
-    [Header("Çà ¼³Á¤")]
+    [Header("í–‰ ì„¤ì •")]
     [SerializeField] private int rowCount = 6;
     [SerializeField] private float rowHeight = 60f;
     [SerializeField] private Vector2 topAnchoredPos = Vector2.zero;
 
-    [Header("»óÅÂ")]
+    [Header("ìƒíƒœ")]
     [SerializeField] private int currentIndex = 0;
+
+    // ğŸ”¥ InventoryDisplayì—ì„œ í˜„ì¬ ì„ íƒëœ ìŠ¬ë¡¯ ë²ˆí˜¸ë¥¼ ê°€ì ¸ê°€ê¸° ìœ„í•´ ì¶”ê°€í•œ í”„ë¡œí¼í‹°
+    public int CurrentIndex => currentIndex;
 
     private void Reset()
     {
@@ -43,7 +46,7 @@ public class InventoryCursor : MonoBehaviour
         highlight.anchoredPosition = pos;
     }
 
-    // ¡Ú ÆäÀÌÁö°¡ ¹Ù²ğ ¶§ È£Ãâ: ¸Ç À­Ä­À¸·Î ÀÌµ¿
+    // â˜… í˜ì´ì§€ê°€ ë°”ë€” ë•Œ í˜¸ì¶œ: ë§¨ ìœ—ì¹¸ìœ¼ë¡œ ì´ë™
     public void ResetToTop()
     {
         currentIndex = 0;

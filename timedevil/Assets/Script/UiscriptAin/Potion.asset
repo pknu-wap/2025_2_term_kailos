@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1abd44402ecbf5148b3b83ac1b008ac9, type: 3}
   m_Name: Potion
   m_EditorClassIdentifier: 
-  id: '"potion"'
+  id: potion
   displayName: potion
   type: 0
   description: 
   icon: {fileID: 0}
-  defaultQuantity: 0
+  defaultQuantity: 2

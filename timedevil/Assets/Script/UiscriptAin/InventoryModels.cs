@@ -4,7 +4,7 @@ using UnityEngine;
 public class InventoryItemEntry
 {
     public string id;      // ItemSO.id (예: "potion")
-    public int quantity;   // 현재 가지고 있는 개수
+    public int quantity;   // 현재 플레이어가 가진 개수
 }
 
 [System.Serializable]

@@ -1,14 +1,14 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 #region UI 슬롯 구조
 [System.Serializable]
 public class ItemSlotUI
 {
-    public Text nameText;      // 아이템 이름
-    public Text quantityText;  // 수량
-    public Text descText;      // 설명
-    public Image iconImage;    // 아이콘 이미지 (없으면 비워둬도 됨)
+    public Text nameText;      // NAME 열
+    public Text quantityText;  // QTY 열
+    public Image iconImage;    // ITEM 칸의 아이콘 이미지 (ItemDesc 오브젝트의 Image)
 }
 #endregion
 
@@ -21,19 +21,44 @@ public class InventoryDisplay : MonoBehaviour
     public string jsonFileName = "items";   // Resources/items.json
 
     [Header("아이템 데이터베이스(SO)")]
-    public ItemDatabaseSO itemDatabase;     // 🔥 여기에 ItemDatabase SO 드래그
+    public ItemDataBaseSO itemDatabase;     // ItemDatabase SO 드래그
 
     [Header("페이지 설정")]
     [Tooltip("0=첫 페이지, 1=두 번째 페이지...")]
     [SerializeField] private int pageIndex = 0;
-    [SerializeField] private int pageSize = 6;       // 한 페이지에 표시할 개수(슬롯 수와 동일 권장)
+    [SerializeField] private int pageSize = 6;
 
+    [Header("설명 패널")]
+    public GameObject descriptionPanel;   // 설명 창 전체 (처음엔 비활성화)
+    public Text descriptionText;          // 설명 창 안의 Text
+
+    [Header("커서 참조")]
+    public InventoryCursor cursor;        // 인벤토리 커서
+
+    // JSON에서 파싱한 전체 데이터
     private InventorySaveData inventoryData;
+
+    // 현재 페이지에서 사용 중인 (수량>0) 아이템 리스트
+    private List<InventoryItemEntry> currentFiltered = new List<InventoryItemEntry>();
+    private int currentStartIndex = 0;    // 이 페이지의 시작 인덱스
 
     private void Start()
     {
         LoadItemsFromJson();
         DisplayCurrentPage();
+
+        // 시작 시 설명 패널은 숨기기
+        if (descriptionPanel != null)
+            descriptionPanel.SetActive(false);
+    }
+
+    private void Update()
+    {
+        // D 키를 INFO 버튼처럼 사용
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            ToggleDescriptionPanel();
+        }
     }
 
     /// <summary>Resources/{jsonFileName}.json을 읽어 InventorySaveData로 역직렬화</summary>
@@ -66,8 +91,26 @@ public class InventoryDisplay : MonoBehaviour
             return;
         }
 
+        // 1) 수량이 0보다 큰 아이템만 필터링
+        currentFiltered.Clear();
+        foreach (var e in inventoryData.items)
+        {
+            if (e != null && e.quantity > 0)
+                currentFiltered.Add(e);
+        }
+
+        if (currentFiltered.Count == 0)
+        {
+            Debug.Log("ℹ️ 표시할 아이템이 없습니다. (모두 수량 0)");
+            ClearAllSlots();
+            return;
+        }
+
+        int totalCount = currentFiltered.Count;
         int start = Mathf.Max(0, pageIndex * pageSize);
-        int end = Mathf.Min(start + pageSize, inventoryData.items.Length);
+        int end = Mathf.Min(start + pageSize, totalCount);
+
+        currentStartIndex = start; // 현재 페이지 시작 인덱스 저장
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -75,20 +118,26 @@ public class InventoryDisplay : MonoBehaviour
 
             if (dataIdx >= start && dataIdx < end)
             {
-                var entry = inventoryData.items[dataIdx];
+                var entry = currentFiltered[dataIdx];
 
-                // 🔥 ItemDatabase에서 정의 가져오기
+                // 2) ItemDatabase에서 정의 가져오기
                 ItemSO def = itemDatabase != null
                     ? itemDatabase.GetById(entry.id)
                     : null;
 
-                string displayName = def != null ? def.displayName : entry.id;
-                string description = def != null ? def.description : "";
-                Sprite icon = def != null ? def.icon : null;
+                if (def == null)
+                {
+                    Debug.LogWarning($"⚠️ ItemDatabase에서 id '{entry.id}'에 해당하는 ItemSO를 찾지 못했습니다.");
+                    ClearSlot(slots[i]);
+                    continue;
+                }
+
+                string displayName = def.displayName;
+                Sprite icon = def.icon;
+                int quantity = entry.quantity; // 실제 수량은 JSON 기준
 
                 if (slots[i].nameText) slots[i].nameText.text = displayName;
-                if (slots[i].quantityText) slots[i].quantityText.text = $"x{entry.quantity}";
-                if (slots[i].descText) slots[i].descText.text = description;
+                if (slots[i].quantityText) slots[i].quantityText.text = $"x{quantity}";
 
                 if (slots[i].iconImage)
                 {
@@ -96,7 +145,7 @@ public class InventoryDisplay : MonoBehaviour
                     slots[i].iconImage.enabled = icon != null;
                 }
 
-                Debug.Log($"[InventoryDisplay p{pageIndex}] {entry.id} x{entry.quantity} | {description}");
+                Debug.Log($"[InventoryDisplay p{pageIndex}] {entry.id} x{quantity}");
             }
             else
             {
@@ -106,11 +155,51 @@ public class InventoryDisplay : MonoBehaviour
         }
     }
 
+    /// <summary>D 키로 설명 패널 열고 닫기</summary>
+    private void ToggleDescriptionPanel()
+    {
+        if (descriptionPanel == null || descriptionText == null) return;
+        if (currentFiltered == null || currentFiltered.Count == 0) return;
+
+        // 이미 열려 있으면 닫기
+        if (descriptionPanel.activeSelf)
+        {
+            descriptionPanel.SetActive(false);
+            return;
+        }
+
+        // 현재 커서가 가리키는 슬롯 인덱스 (0~5)
+        int localIndex = (cursor != null) ? cursor.CurrentIndex : 0;
+        int idx = currentStartIndex + localIndex;
+
+        if (idx < 0 || idx >= currentFiltered.Count)
+        {
+            descriptionPanel.SetActive(false);
+            return;
+        }
+
+        var entry = currentFiltered[idx];
+        ItemSO def = itemDatabase != null ? itemDatabase.GetById(entry.id) : null;
+        if (def == null)
+        {
+            descriptionPanel.SetActive(false);
+            return;
+        }
+
+        descriptionText.text = def.description;
+        descriptionPanel.SetActive(true);
+    }
+
     /// <summary>외부(페이지 매니저)에서 페이지를 바꿀 때 호출</summary>
     public void SetPage(int newPageIndex)
     {
         if (newPageIndex < 0) newPageIndex = 0;
         pageIndex = newPageIndex;
+
+        // 페이지 바뀔 때는 설명 패널도 꺼두기
+        if (descriptionPanel != null)
+            descriptionPanel.SetActive(false);
+
         DisplayCurrentPage();
     }
 
@@ -129,7 +218,6 @@ public class InventoryDisplay : MonoBehaviour
 
         if (slot.nameText) slot.nameText.text = "";
         if (slot.quantityText) slot.quantityText.text = "";
-        if (slot.descText) slot.descText.text = "";
         if (slot.iconImage)
         {
             slot.iconImage.sprite = null;

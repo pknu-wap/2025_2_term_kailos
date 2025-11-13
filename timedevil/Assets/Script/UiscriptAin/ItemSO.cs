@@ -11,14 +11,14 @@ public enum ItemType
 public class ItemSO : ScriptableObject
 {
     [Header("ID & Meta")]
-    public string id;            // JSON에서 쓸 고유 이름 (예: "potion")
-    public string displayName;   // 인벤토리에 표시될 이름
+    public string id;            // JSON에서 참조할 고유 ID (예: "potion")
+    public string displayName;   // 인벤토리에서 보이는 이름
     public ItemType type;
 
     [Header("설명 & 비주얼")]
-    [TextArea] public string description; // 자세한 설명
-    public Sprite icon;         // 인벤토리 아이콘
+    [TextArea] public string description; // 설명
+    public Sprite icon;                   // 아이콘
 
-    [Header("기본 설정 (선택사항)")]
-    public int defaultQuantity = 0;
+    [Header("기본값 (선택 사항)")]
+    public int defaultQuantity = 0;       // 새 게임 시작 시 기본 수량 (안 써도 됨)
 }
