@@ -15,6 +15,6 @@ MonoBehaviour:
   id: potion
   displayName: potion
   type: 0
-  description: "\uC774\uAC83\uC740 \uC544\uC8FC \uBB34\uC790\uBE44\uD55C \uD3EC\uC158\uC774\uB2E4"
+  description: hihih
   icon: {fileID: -804351320, guid: c0d523de60d2a4d4a98591b76207bc1c, type: 3}
   defaultQuantity: 2

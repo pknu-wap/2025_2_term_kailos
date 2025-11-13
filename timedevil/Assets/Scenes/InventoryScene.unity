@@ -2489,34 +2489,42 @@ MonoBehaviour:
   - nameText: {fileID: 886297870}
     quantityText: {fileID: 1023920170}
     iconImage: {fileID: 1895720069}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 329473989}
     quantityText: {fileID: 1694828082}
     iconImage: {fileID: 448766506}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 67020232}
     quantityText: {fileID: 1486154293}
     iconImage: {fileID: 1091892320}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 815625604}
     quantityText: {fileID: 31661892}
     iconImage: {fileID: 1397950543}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 983662027}
     quantityText: {fileID: 110796574}
     iconImage: {fileID: 835956379}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 2078866917}
     quantityText: {fileID: 993102330}
     iconImage: {fileID: 94382385}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 1436787210}
     quantityText: {fileID: 1243802166}
     iconImage: {fileID: 409445252}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 102971330}
     quantityText: {fileID: 351854069}
     iconImage: {fileID: 973842844}
+    currentItemSO: {fileID: 0}
   jsonFileName: items
   itemDatabase: {fileID: 11400000, guid: e13b2b2f1c3ccab48851303d3588f4d9, type: 2}
   pageIndex: 0
   pageSize: 8
   descriptionPanel: {fileID: 1930234997}
   descriptionText: {fileID: 1376166222}
-  cursor: {fileID: 0}
+  cursor: {fileID: 1528615507}
 --- !u!1 &448766502
 GameObject:
   m_ObjectHideFlags: 0
@@ -6394,7 +6402,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: hihihihi
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -8060,27 +8068,35 @@ MonoBehaviour:
   - nameText: {fileID: 1663499778}
     quantityText: {fileID: 331247831}
     iconImage: {fileID: 520578468}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 114214104}
     quantityText: {fileID: 1219007416}
     iconImage: {fileID: 892525851}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 761036437}
     quantityText: {fileID: 773488570}
     iconImage: {fileID: 1328060456}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 1661737275}
     quantityText: {fileID: 691608902}
     iconImage: {fileID: 1502864345}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 470474406}
     quantityText: {fileID: 1118195598}
     iconImage: {fileID: 172909492}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 753816473}
     quantityText: {fileID: 315317610}
     iconImage: {fileID: 646219228}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 241569699}
     quantityText: {fileID: 470093785}
     iconImage: {fileID: 312513558}
+    currentItemSO: {fileID: 0}
   - nameText: {fileID: 954552966}
     quantityText: {fileID: 1610234421}
     iconImage: {fileID: 541082220}
+    currentItemSO: {fileID: 0}
   jsonFileName: items
   itemDatabase: {fileID: 11400000, guid: e13b2b2f1c3ccab48851303d3588f4d9, type: 2}
   pageIndex: 1
@@ -8433,7 +8449,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1930234998
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8804,9 +8820,9 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1930235000}
   - {fileID: 368318820}
   - {fileID: 1700132144}
+  - {fileID: 1930235000}
   - {fileID: 419629218}
   - {fileID: 1393003957}
   m_Father: {fileID: 0}
