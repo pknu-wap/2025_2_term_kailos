@@ -1369,6 +1369,7 @@ MonoBehaviour:
   desc: {fileID: 1069897052}
   drawController: {fileID: 1201525411}
   moveController: {fileID: 1201525410}
+  attackController: {fileID: 0}
   previewSeconds: 1.5
   playInterval: 0.3
 --- !u!1 &643248676
@@ -4953,7 +4954,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ba00dde70749c9448ac917d73b1c544, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visualScale: 0.8
+  anim: {fileID: 1575189429}
   playerCentersPos:
   - {x: -5.98, y: 3.71, z: -2}
   - {x: -4.69, y: 3.71, z: -2}
@@ -4988,16 +4989,12 @@ MonoBehaviour:
   - {x: 3.32, y: -0.05, z: -2}
   - {x: 4.58, y: -0.05, z: -2}
   - {x: 5.84, y: -0.05, z: -2}
-  resourcesFolder: my_asset
-  spriteName: attack
   tileWidth: 1.3
   tileHeight: 1.3
-  sortingLayer: Default
-  sortingOrder: 50
   tileZ: 0
-  peakAlpha: 0.75
-  minWindow: 0.06
+  timelineMode: 1
   defaultTailWindow: 0.2
+  minWindow: 0.06
   hp: {fileID: 439503623}
   oneHitPerCard: 1
 --- !u!4 &1201525413
@@ -9174,6 +9171,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1575189428}
+  - component: {fileID: 1575189429}
   m_Layer: 0
   m_Name: AttackTile_set
   m_TagString: Untagged
@@ -9196,6 +9194,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1575189429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1575189427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14c115d387a44b94096742945cefa32a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resourcesFolder: my_asset
+  spriteName: attack
+  visualScale: 0.8
+  tileWidth: 1.3
+  tileHeight: 1.3
+  sortingLayer: Default
+  sortingOrder: 50
+  tileZ: 0
+  peakAlpha: 0.75
+  minWindow: 0.06
+  useUnscaledTime: 0
 --- !u!1 &1613126917
 GameObject:
   m_ObjectHideFlags: 0

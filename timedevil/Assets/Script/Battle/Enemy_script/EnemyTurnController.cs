@@ -15,6 +15,8 @@ public class EnemyTurnController : MonoBehaviour
     [Header("Effect Controllers")]
     [SerializeField] private DrawController drawController;
     [SerializeField] private MoveController moveController;   // ⭐ 추가: Move 실행
+    [SerializeField] private AttackController attackController;
+
 
 
     [Header("Timings")]
@@ -30,6 +32,8 @@ public class EnemyTurnController : MonoBehaviour
         if (!desc) desc = FindObjectOfType<DescriptionPanelController>(true);
         if (!drawController) drawController = FindObjectOfType<DrawController>(true); // ⭐ 자동 결선
         if (!moveController) moveController = FindObjectOfType<MoveController>(true);   // ⭐ 자동 결선
+        if (!attackController) attackController = FindObjectOfType<AttackController>(true); // ✅ 자동 결선
+
 
 
         Debug.Log($"[EnemyTurn] Controller bound on: {gameObject.scene.name}/{gameObject.name}");
@@ -109,6 +113,14 @@ public class EnemyTurnController : MonoBehaviour
 
                 // 🔶 적이 자신을 움직임: self=Enemy, foe=Player
                 yield return moveController.Execute(mso, Faction.Enemy, Faction.Player);
+            }
+            else if (so is AttackCardSO aso && attackController != null)   // ✅ 추가된 부분
+            {
+                if (showCard != null) yield return showCard.PreviewById(playableId, previewSeconds);
+                else yield return null;
+
+                // 🔥 핵심: 적이 공격 → self=Enemy, foe=Player
+                yield return attackController.Execute(aso, Faction.Enemy, Faction.Player);
             }
             else
                     {
