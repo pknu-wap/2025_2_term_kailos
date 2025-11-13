@@ -14,12 +14,16 @@ public class AttackController : MonoBehaviour
     [Header("Tile Visual")]
     [SerializeField] private string resourcesFolder = "my_asset";
     [SerializeField] private string spriteName = "attack"; // Resources/my_asset/attack.png
-    [SerializeField, Range(0f, 1f)] private float alpha = 0.6f;
     [SerializeField] private float tileWidth = 1.3f;
     [SerializeField] private float tileHeight = 1.3f;
     [SerializeField] private string sortingLayer = "Default";
     [SerializeField] private int sortingOrder = 50;
     [SerializeField] private float tileZ = 0f;
+
+    [Header("Fade Pulse")]
+    [SerializeField, Range(0f, 1f)] private float peakAlpha = 0.75f; // 최댓값
+    [SerializeField] private float minWindow = 0.06f;                // 너무 짧을 때 최소창
+    [SerializeField] private float defaultTailWindow = 0.20f;        // 마지막 타점 꼬리시간
 
     [Header("Hit/VFX")]
     [SerializeField] private HPController hp;
@@ -28,6 +32,7 @@ public class AttackController : MonoBehaviour
 
     private Sprite _sprite;
     private readonly List<GameObject> _pool = new List<GameObject>();
+    private Coroutine[] _pulses; // 타일별 펄스 코루틴
 
     void Awake()
     {
@@ -41,10 +46,8 @@ public class AttackController : MonoBehaviour
     {
         if (!so) yield break;
 
-        // 타겟 팩션 지정(피격 위치 조회용)
         hp?.BeginCardHitTest(foe);
 
-        // 표시 보드(공격자는 상대 보드에 뿌림)
         var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
         if (centers == null || centers.Length < 16)
         {
@@ -54,7 +57,7 @@ public class AttackController : MonoBehaviour
 
         EnsurePoolSize(16);
 
-        // waves가 없으면 레거시 단일 패턴을 웨이브처럼 1회 실행
+        // waves가 없으면 레거시 1회
         if (so.waves == null || so.waves.Length == 0)
         {
             bool[] mask = new bool[16];
@@ -65,15 +68,12 @@ public class AttackController : MonoBehaviour
             if (IsAllZero(mask)) yield break;
 
             ShowTiles(mask, centers);
-            yield return RunTimeline(mask, times, centers, so,
-                waveSfx: null, sfxEveryHit: false,
-                vfxPrefab: null, vfxEveryHit: false, vfxLife: 0f,
-                self, foe);
+            yield return RunTimeline(mask, times, centers, so, self, foe);
             HideAllTiles();
             yield break;
         }
 
-        // 웨이브 순차 실행
+        // 웨이브 순차
         for (int wi = 0; wi < so.waves.Length; wi++)
         {
             var w = so.waves[wi];
@@ -93,19 +93,7 @@ public class AttackController : MonoBehaviour
             }
 
             ShowTiles(mask, centers);
-
-            // 웨이브 시작 한 번만 SFX/VFX를 원하면 여기서 처리
-            if (!w.sfxEveryHit && w.sfx)
-                AudioSource.PlayClipAtPoint(w.sfx, AveragePosition(mask, centers));
-            if (!w.vfxEveryHit && w.vfxPrefab)
-                SpawnVfx(w.vfxPrefab, AveragePosition(mask, centers), w.vfxLifetime);
-
-            // 타임라인 진행(각 타점에서 히트/FX)
-            yield return RunTimeline(mask, times, centers, so,
-                w.sfx, w.sfxEveryHit,
-                w.vfxPrefab, w.vfxEveryHit, w.vfxLifetime,
-                self, foe);
-
+            yield return RunTimeline(mask, times, centers, so, self, foe);
             HideAllTiles();
 
             if (w.delayAfter > 0f) yield return new WaitForSeconds(w.delayAfter);
@@ -117,36 +105,42 @@ public class AttackController : MonoBehaviour
     private IEnumerator RunTimeline(
         bool[] mask, float[] times, Vector3[] centers,
         AttackCardSO so,
-        AudioClip waveSfx, bool sfxEveryHit,
-        GameObject vfxPrefab, bool vfxEveryHit, float vfxLife,
         Faction self, Faction foe)
     {
         var schedule = BuildSchedule(mask, times);
         bool damageApplied = false;
-        float lastT = 0f;
 
-        foreach (var (idx, tPoint) in schedule)
+        for (int k = 0; k < schedule.Count; k++)
         {
-            float wait = Mathf.Max(0f, tPoint - lastT);
+            var (idx, tPoint) = schedule[k];
+
+            // 현재 타점까지 대기
+            float prevT = (k == 0) ? 0f : schedule[k - 1].time;
+            float wait = Mathf.Max(0f, tPoint - prevT);
             if (wait > 0f) yield return new WaitForSeconds(wait);
-            lastT = tPoint;
 
             if (idx < 0 || idx >= centers.Length) continue;
 
-            // 타점 SFX/VFX (매 히트 모드일 때)
-            Vector3 hitPos = centers[idx]; hitPos.z = tileZ;
-            if (sfxEveryHit && waveSfx) AudioSource.PlayClipAtPoint(waveSfx, hitPos);
-            if (vfxEveryHit && vfxPrefab) SpawnVfx(vfxPrefab, hitPos, vfxLife);
+            // 다음 타점과의 간격 = 윈도우
+            float nextT = (k + 1 < schedule.Count) ? schedule[k + 1].time
+                                                   : tPoint + defaultTailWindow;
+            float window = Mathf.Max(minWindow, nextT - tPoint);
+
+            // 타일 펄스(창 절반씩 인/아웃)
+            StartPulse(idx, window);
 
             // 히트 판정 + 데미지
             if (!damageApplied || !oneHitPerCard)
             {
+                Vector3 hitPos = centers[idx]; hitPos.z = tileZ;
                 if (CheckHitNow(hitPos))
                 {
                     ApplyDamageOnce(so, self, foe, ref damageApplied);
                 }
             }
         }
+        // 이후 남은 펄스는 각자 코루틴에서 자연소멸
+        yield break;
     }
 
     private List<(int idx, float time)> BuildSchedule(bool[] mask, float[] times)
@@ -181,20 +175,33 @@ public class AttackController : MonoBehaviour
                 var sr = go.GetComponent<SpriteRenderer>();
                 if (sr)
                 {
-                    sr.color = new Color(1f, 0f, 0f, alpha);
+                    // 시작은 투명(펄스 때만 보임)
+                    var c = sr.color;
+                    c.r = 1f; c.g = 0f; c.b = 0f; c.a = 0f;
+                    sr.color = c;
+
                     go.transform.localScale = ComputeSpriteScale(sr);
                     sr.sortingLayerName = sortingLayer;
                     sr.sortingOrder = sortingOrder;
                 }
                 go.SetActive(true);
             }
-            else go.SetActive(false);
+            else
+            {
+                StopPulseIfAny(i);
+                if (go) go.SetActive(false);
+            }
         }
     }
 
     private void HideAllTiles()
     {
-        foreach (var go in _pool) if (go) go.SetActive(false);
+        for (int i = 0; i < _pool.Count; i++)
+        {
+            StopPulseIfAny(i);
+            var go = _pool[i];
+            if (go) go.SetActive(false);
+        }
     }
 
     private void EnsurePoolSize(int need)
@@ -207,11 +214,18 @@ public class AttackController : MonoBehaviour
             sr.sprite = _sprite;
             sr.sortingLayerName = sortingLayer;
             sr.sortingOrder = sortingOrder;
-            sr.color = new Color(1f, 0f, 0f, alpha);
+
+            // 풀 생성 시 기본 투명
+            var c = sr.color; c.r = 1f; c.g = 0f; c.b = 0f; c.a = 0f;
+            sr.color = c;
+
             go.transform.localScale = ComputeSpriteScale(sr);
             go.SetActive(false);
             _pool.Add(go);
         }
+
+        if (_pulses == null || _pulses.Length < _pool.Count)
+            _pulses = new Coroutine[_pool.Count];
     }
 
     private Vector3 ComputeSpriteScale(SpriteRenderer sr)
@@ -274,5 +288,74 @@ public class AttackController : MonoBehaviour
         if (!prefab) return;
         var go = GameObject.Instantiate(prefab, pos, Quaternion.identity);
         if (life > 0f) GameObject.Destroy(go, life);
+    }
+
+    // ---------- Pulse 구현 ----------
+
+    private void StartPulse(int idx, float windowSeconds)
+    {
+        if (idx < 0 || idx >= _pool.Count) return;
+
+        StopPulseIfAny(idx);
+        float fin = Mathf.Max(0f, windowSeconds * 0.5f);
+        float fout = Mathf.Max(0f, windowSeconds * 0.5f);
+        _pulses[idx] = StartCoroutine(PulseTileOnce(idx, fin, fout));
+    }
+
+    private void StopPulseIfAny(int idx)
+    {
+        if (_pulses == null) return;
+        if (idx < 0 || idx >= _pulses.Length) return;
+        if (_pulses[idx] != null)
+        {
+            StopCoroutine(_pulses[idx]);
+            _pulses[idx] = null;
+        }
+    }
+
+    private IEnumerator PulseTileOnce(int idx, float fadeInSec, float fadeOutSec)
+    {
+        if (idx < 0 || idx >= _pool.Count) yield break;
+        var go = _pool[idx];
+        if (!go || !go.activeInHierarchy) { _pulses[idx] = null; yield break; }
+
+        var sr = go.GetComponent<SpriteRenderer>();
+        if (!sr) { _pulses[idx] = null; yield break; }
+
+        var c = sr.color;
+        float peak = Mathf.Clamp01(peakAlpha);
+
+        // start 0 → peak
+        c.a = 0f; sr.color = c;
+        if (fadeInSec > 0f)
+        {
+            float t = 0f;
+            while (t < fadeInSec)
+            {
+                if (!go.activeInHierarchy) { _pulses[idx] = null; yield break; }
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(0f, peak, t / fadeInSec);
+                sr.color = c;
+                yield return null;
+            }
+        }
+        else { c.a = peak; sr.color = c; }
+
+        // peak → 0
+        if (fadeOutSec > 0f)
+        {
+            float t = 0f;
+            while (t < fadeOutSec)
+            {
+                if (!go.activeInHierarchy) { _pulses[idx] = null; yield break; }
+                t += Time.deltaTime;
+                c.a = Mathf.Lerp(peak, 0f, t / fadeOutSec);
+                sr.color = c;
+                yield return null;
+            }
+        }
+
+        c.a = 0f; sr.color = c;
+        _pulses[idx] = null;
     }
 }
