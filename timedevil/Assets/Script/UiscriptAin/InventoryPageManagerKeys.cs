@@ -1,21 +1,21 @@
-using UnityEngine;
-using UnityEngine.UI; // Text »ç¿ë ½Ã
-// using TMPro; // ¸¸¾à TMP_Text¸¦ ¾´´Ù¸é ÁÖ¼® ÇØÁ¦
+ï»¿using UnityEngine;
+using UnityEngine.UI; // Text ì‚¬ìš© ì‹œ
+// using TMPro; // ë§Œì•½ TMP_Textë¥¼ ì“´ë‹¤ë©´ ì£¼ì„ í•´ì œ
 
 public class InventoryPageManagerKeys : MonoBehaviour
 {
-    [Header("ÆäÀÌÁö ¿ÀºêÁ§Æ® (ÇÏ³ª¸¸ È°¼ºÈ­)")]
+    [Header("í˜ì´ì§€ ì˜¤ë¸Œì íŠ¸ (í•˜ë‚˜ë§Œ í™œì„±í™”)")]
     [SerializeField] private GameObject page1;
     [SerializeField] private GameObject page2;
 
-    [Header("ÆäÀÌÁö ÅØ½ºÆ®(¼±ÅÃ)")]
-    [SerializeField] private Text pageText; // TMP¶ó¸é TMP_Text·Î ¹Ù²Ù¼¼¿ä
+    [Header("í˜ì´ì§€ í…ìŠ¤íŠ¸(ì„ íƒ)")]
+    [SerializeField] private Text pageText; // TMPë¼ë©´ TMP_Textë¡œ ë°”ê¾¸ì„¸ìš”
     // [SerializeField] private TMP_Text pageText;
 
-    [Header("Ä¿¼­ ÄÁÆ®·Ñ·¯")]
+    [Header("ì»¤ì„œ ì»¨íŠ¸ë¡¤ëŸ¬")]
     [SerializeField] private InventoryCursor cursor;
 
-    private int currentPage = 1;   // 1 ¶Ç´Â 2
+    private int currentPage = 1;   // 1 ë˜ëŠ” 2
     private const int totalPages = 2;
 
     private void Start()
@@ -25,25 +25,29 @@ public class InventoryPageManagerKeys : MonoBehaviour
 
     private void Update()
     {
-        // ¡æ ´ÙÀ½ ÆäÀÌÁö
+        // ğŸ”¥ ì„¤ëª…ì°½ ì—´ë ¤ ìˆìœ¼ë©´ í˜ì´ì§€ ì „í™˜ ì…ë ¥ ë¬´ì‹œ
+        if (InventoryDisplay.IsAnyDescriptionOpen)
+            return;
+
+        // â†’ ë‹¤ìŒ í˜ì´ì§€
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             if (currentPage < totalPages)
             {
                 currentPage++;
                 ApplyPage(currentPage, resetCursor: true);
-                Debug.Log($"{currentPage} ÆäÀÌÁö·Î ÀÌµ¿");
+                Debug.Log($"{currentPage} í˜ì´ì§€ë¡œ ì´ë™");
             }
         }
 
-        // ¡ç ÀÌÀü ÆäÀÌÁö
+        // â† ì´ì „ í˜ì´ì§€
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             if (currentPage > 1)
             {
                 currentPage--;
                 ApplyPage(currentPage, resetCursor: true);
-                Debug.Log($"{currentPage} ÆäÀÌÁö·Î ÀÌµ¿");
+                Debug.Log($"{currentPage} í˜ì´ì§€ë¡œ ì´ë™");
             }
         }
     }

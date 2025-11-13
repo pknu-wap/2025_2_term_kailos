@@ -28,6 +28,10 @@ public class InventoryCursor : MonoBehaviour
 
     private void Update()
     {
+        // 🔥 설명창 열려 있으면 커서 이동 입력 무시
+        if (InventoryDisplay.IsAnyDescriptionOpen)
+            return;
+
         if (Input.GetKeyDown(KeyCode.UpArrow)) Move(-1);
         else if (Input.GetKeyDown(KeyCode.DownArrow)) Move(+1);
     }

@@ -18,6 +18,9 @@ public class ItemSlotUI
 
 public class InventoryDisplay : MonoBehaviour
 {
+    // 🔥 어디서든 확인 가능한 "설명창 열려 있음" 상태 플래그
+    public static bool IsAnyDescriptionOpen { get; private set; } = false;
+
     [Header("슬롯 6개 연결 (Inspector에서 드래그)")]
     public ItemSlotUI[] slots;
 
@@ -54,6 +57,14 @@ public class InventoryDisplay : MonoBehaviour
         // 시작 시 설명 패널은 숨기기
         if (descriptionPanel != null)
             descriptionPanel.SetActive(false);
+
+        IsAnyDescriptionOpen = false;
+    }
+
+    private void OnDisable()
+    {
+        // 씬 전환/비활성화 시 잠금 풀어두기
+        IsAnyDescriptionOpen = false;
     }
 
     private void Update()
@@ -172,6 +183,7 @@ public class InventoryDisplay : MonoBehaviour
         if (descriptionPanel.activeSelf)
         {
             descriptionPanel.SetActive(false);
+            IsAnyDescriptionOpen = false;
             return;
         }
 
@@ -181,6 +193,7 @@ public class InventoryDisplay : MonoBehaviour
         if (localIndex < 0 || localIndex >= slots.Length)
         {
             descriptionPanel.SetActive(false);
+            IsAnyDescriptionOpen = false;
             return;
         }
 
@@ -191,12 +204,14 @@ public class InventoryDisplay : MonoBehaviour
         if (def == null)
         {
             descriptionPanel.SetActive(false);
+            IsAnyDescriptionOpen = false;
             return;
         }
 
         // 🔥 SO에 적힌 설명 사용
         descriptionText.text = def.description;
         descriptionPanel.SetActive(true);
+        IsAnyDescriptionOpen = true;
     }
 
     /// <summary>외부(페이지 매니저)에서 페이지를 바꿀 때 호출</summary>
@@ -208,6 +223,8 @@ public class InventoryDisplay : MonoBehaviour
         // 페이지 바뀔 때는 설명 패널도 꺼두기
         if (descriptionPanel != null)
             descriptionPanel.SetActive(false);
+
+        IsAnyDescriptionOpen = false;
 
         DisplayCurrentPage();
     }
