@@ -23,6 +23,9 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private float previewSeconds = 1.2f;
     [SerializeField] private float playInterval = 0.15f;
 
+    public static event System.Action<bool> OnEnemyAttackWindowChanged;
+
+
     void Awake()
     {
         if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
@@ -120,7 +123,9 @@ public class EnemyTurnController : MonoBehaviour
                 else yield return null;
 
                 // 🔥 핵심: 적이 공격 → self=Enemy, foe=Player
+                OnEnemyAttackWindowChanged?.Invoke(true);
                 yield return attackController.Execute(aso, Faction.Enemy, Faction.Player);
+                OnEnemyAttackWindowChanged?.Invoke(false);
             }
             else
                     {
