@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class HPController : MonoBehaviour
@@ -10,67 +11,106 @@ public class HPController : MonoBehaviour
     [SerializeField] private Transform playerPawn;
     [SerializeField] private Transform enemyPawn;
 
-    // 공격 중 타겟 팩션(판정 시 위치 참조용). AttackController가 설정/참조.
     public Faction CurrentDamageTarget { get; private set; } = Faction.Enemy;
 
+    private HPUIBinder _hpUI;
+    public void InjectRefs(PlayerDataRuntime pdr, EnemyRuntime er, HPUIBinder binder = null)
+    {
+        if (pdr != null) playerData = pdr;
+        if (er != null) enemyData = er;
+        if (binder != null) _hpUI = binder;
+
+    }
+    // 필요 시 개별 주입도 가능하도록
+    public void SetEnemyRuntime(EnemyRuntime er) => enemyData = er;
+    public void SetPlayerDataRuntime(PlayerDataRuntime pdr) => playerData = pdr;
     void Awake()
     {
         if (!playerData) playerData = FindObjectOfType<PlayerDataRuntime>(true);
         if (!enemyData) enemyData = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>(true);
-        // Pawn 레퍼런스는 MoveController 등에서 쓰던 걸 그대로 넣어주면 됨.
+        _hpUI = FindObjectOfType<HPUIBinder>(true);
+
         if (!playerPawn)
         {
             var mc = FindObjectOfType<MoveController>(true);
-            if (mc) playerPawn = mc.GetComponentInChildren<Transform>(); // 필요하면 직접 연결해줘
+            if (mc) playerPawn = mc.GetComponentInChildren<Transform>();
         }
         if (!enemyPawn)
         {
             var mc = FindObjectOfType<MoveController>(true);
-            if (mc) enemyPawn = mc.GetComponentInChildren<Transform>(); // 필요하면 직접 연결해줘
+            if (mc) enemyPawn = mc.GetComponentInChildren<Transform>();
         }
     }
 
-    // ---------- 공개 API ----------
-
+    // ---- ATK / DEF ----
     public int GetAttack(Faction who)
     {
-        if (who == Faction.Player) return ReadIntFieldOrProp(playerData?.Data, "atk", 0);
-        else return ReadIntFieldOrProp(enemyData, "atk", 0);
+        if (who == Faction.Player)
+        {
+            // 플레이어 쪽은 필드명이 프로젝트마다 다를 수 있으므로 폴백으로 탐색
+            return ReadIntFrom(playerData?.Data, "atk", "attack", "ATK");
+        }
+        return enemyData != null ? enemyData.attack : 0;
     }
 
     public int GetDefense(Faction who)
     {
-        if (who == Faction.Player) return ReadIntFieldOrProp(playerData?.Data, "def", 0);
-        else return ReadIntFieldOrProp(enemyData, "def", 0);
+        if (who == Faction.Player)
+        {
+            return ReadIntFrom(playerData?.Data, "def", "defense", "DEF");
+        }
+        return enemyData != null ? enemyData.defense : 0;
     }
 
+    // ---- HP ----
     public int GetHP(Faction who)
     {
-        if (who == Faction.Player) return ReadIntFieldOrProp(playerData?.Data, "hp", 0);
-        else return ReadIntFieldOrProp(enemyData, "hp", 0);
+        if (who == Faction.Player)
+            return ReadIntFrom(playerData?.Data, "currentHP");
+        return enemyData != null ? enemyData.currentHP : 0;
     }
 
     public void ApplyDamage(Faction target, int amount)
     {
         amount = Mathf.Max(0, amount);
-        CurrentDamageTarget = target; // 이후 판정에서 참조 가능
+        CurrentDamageTarget = target;
+
+        // ★ 혹시 주입이 아직 안됐으면 한 번 더 지연해결 시도
+        if (enemyData == null) enemyData = EnemyRuntime.Instance ?? FindObjectOfType<EnemyRuntime>(true);
+        if (playerData == null) playerData = PlayerDataRuntime.Instance ?? FindObjectOfType<PlayerDataRuntime>(true);
+        if (_hpUI == null) _hpUI = FindObjectOfType<HPUIBinder>(true);
 
         if (target == Faction.Player)
         {
-            int hp = GetHP(Faction.Player);
-            hp = Mathf.Max(0, hp - amount);
-            WriteIntFieldOrProp(playerData?.Data, "hp", hp);
-            Debug.Log($"[HP] Player -{amount} → {hp}");
+            var pd = playerData?.Data;
+            if (pd != null)
+            {
+                int cur = ReadIntFrom(pd, "currentHP");
+                int max = ReadIntFrom(pd, "maxHP");
+                cur = Mathf.Clamp(cur - amount, 0, Mathf.Max(1, max));
+                WriteIntFieldOrProp(pd, "currentHP", cur);
+                Debug.Log($"[HP] Player -{amount} → {cur}");
+                _hpUI?.Refresh();
+            }
+            else
+            {
+                Debug.LogWarning("[HPController] PlayerDataRuntime.Data is null");
+            }
         }
         else
         {
-            int hp = GetHP(Faction.Enemy);
-            hp = Mathf.Max(0, hp - amount);
-            WriteIntFieldOrProp(enemyData, "hp", hp);
-            Debug.Log($"[HP] Enemy -{amount} → {hp}");
+            if (enemyData != null)
+            {
+                // amount는 최종 데미지이므로 EnemyRuntime.TakeDamage()에 raw 보정
+                int raw = amount + Mathf.Max(0, enemyData.defense);
+                enemyData.TakeDamage(raw);   // 내부에서 OnChanged 호출 → HPUI 자동 갱신
+                Debug.Log($"[HP] Enemy -{amount} → {enemyData.currentHP}");
+            }
+            else
+            {
+                Debug.LogWarning("[HPController] EnemyRuntime is null");
+            }
         }
-
-        // TODO: HP UI 반영(게이지), 사망 처리 등은 여기에서 Hook
     }
 
     public Vector3 GetWorldPositionOfPawn(Faction who)
@@ -80,11 +120,15 @@ public class HPController : MonoBehaviour
         return Vector3.positiveInfinity;
     }
 
-    // ---------- 리플렉션 보조 ----------
-
-    private int ReadIntFieldOrProp(object obj, string name, int fallback)
+    public void BeginCardHitTest(Faction target)
     {
-        if (obj == null) return fallback;
+        CurrentDamageTarget = target;
+    }
+
+    // ---------- 리플렉션 보조 ----------
+    private int ReadIntFrom(object obj, params string[] names)
+    {
+        if (obj == null || names == null) return 0;
 
         var t = obj.GetType();
         const System.Reflection.BindingFlags BF =
@@ -92,13 +136,15 @@ public class HPController : MonoBehaviour
             System.Reflection.BindingFlags.Public |
             System.Reflection.BindingFlags.NonPublic;
 
-        var f = t.GetField(name, BF);
-        if (f != null && f.FieldType == typeof(int)) return (int)f.GetValue(obj);
+        foreach (var name in names)
+        {
+            var f = t.GetField(name, BF);
+            if (f != null && f.FieldType == typeof(int)) return (int)f.GetValue(obj);
 
-        var p = t.GetProperty(name, BF);
-        if (p != null && p.PropertyType == typeof(int) && p.CanRead) return (int)p.GetValue(obj);
-
-        return fallback;
+            var p = t.GetProperty(name, BF);
+            if (p != null && p.PropertyType == typeof(int) && p.CanRead) return (int)p.GetValue(obj);
+        }
+        return 0;
     }
 
     private void WriteIntFieldOrProp(object obj, string name, int value)
@@ -120,8 +166,4 @@ public class HPController : MonoBehaviour
         Debug.LogWarning($"[HPController] '{t.Name}'에 '{name}'(int) 쓰기 실패.");
     }
 
-    public void BeginCardHitTest(Faction target)
-    {
-        CurrentDamageTarget = target;
-    }
 }
