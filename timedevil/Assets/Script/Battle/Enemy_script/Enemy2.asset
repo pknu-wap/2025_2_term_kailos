@@ -9,9 +9,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 338b46c729be052458dc7e2c18b7286f, type: 3}
-  m_Name: EnemyDatabase
+  m_Script: {fileID: 11500000, guid: f22452449156fa44981c0c8e88237897, type: 3}
+  m_Name: Enemy2
   m_EditorClassIdentifier: 
-  enemies:
-  - {fileID: 11400000, guid: 8c8b6d2944d729b4391e39d4f7d50c90, type: 2}
-  - {fileID: 11400000, guid: 38bf5c1c0527c134385e481f1c571314, type: 2}
+  enemyId: Enemy2
+  displayName: Enemy2
+  maxHP: 20
+  baseATK: 8
+  baseDEF: 3
+  baseSPD: 100
+  deckIds:
+  - Card1
+  - Card2
+  - Card3
+  - Card4
+  - Card5
+  - Card6
+  - Card7
