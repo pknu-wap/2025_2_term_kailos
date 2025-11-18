@@ -21,7 +21,7 @@ MonoBehaviour:
   positive: 0
   negative: 0
   power: 1
-  pattern16: 1111000011110000
+  pattern16: 0000000000000000
   timeline:
   - 1
   - 1
@@ -42,26 +42,54 @@ MonoBehaviour:
   cameraShake: 0
   animationKey: 
   sfx: {fileID: 0}
-  useWaves: 1
   waves:
-  - pattern16: 0000111100001111
+  - pattern16: 1111111111111111
     timeline:
+    - 1
+    - 1.8
+    - 2.6
+    - 3.4
+    - 4.2
+    - 5
+    - 5.8
+    - 6.6
+    - 7.4
+    - 8.2
+    - 9
+    - 9.8
+    - 10.6
+    - 11.4
+    - 12.2
+    - 13
+    delayBefore: 1
+    delayAfter: 0
+    sfx: {fileID: 0}
+    sfxEveryHit: 0
+    vfxPrefab: {fileID: 0}
+    vfxEveryHit: 0
+    vfxLifetime: 0.6
+  - pattern16: 1111100110011111
+    timeline:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
     - 0
     - 0
-    - 0
-    - 0
-    - 1
-    - 1
     - 1
     - 1
     - 0
     - 0
-    - 0
     - 1
     - 1
     - 1
     - 1
-    combine: 0
-    preDelay: 1
-    postDelay: 0
-    repeat: 1
+    - 1
+    delayBefore: 1
+    delayAfter: 0
+    sfx: {fileID: 0}
+    sfxEveryHit: 1
+    vfxPrefab: {fileID: 0}
+    vfxEveryHit: 1
+    vfxLifetime: 0.6
