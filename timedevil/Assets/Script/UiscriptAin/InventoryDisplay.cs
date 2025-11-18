@@ -24,8 +24,8 @@ public class InventoryDisplay : MonoBehaviour
     [Header("슬롯 6개 연결 (Inspector에서 드래그)")]
     public ItemSlotUI[] slots;
 
-    [Header("아이템 데이터 JSON 파일 이름 (Resources/ 파일명만)")]
-    public string jsonFileName = "items";   // Resources/items.json
+    [Header("데이터 소스 (런타임 인벤토리)")]
+    public InventoryDataSource dataSource;   // 🔥 ItemRuntime.CurrentData 래핑
 
     [Header("아이템 데이터베이스(SO)")]
     public ItemDataBaseSO itemDatabase;     // ItemDatabase SO 드래그
@@ -42,16 +42,18 @@ public class InventoryDisplay : MonoBehaviour
     [Header("커서 참조")]
     public InventoryCursor cursor;        // 인벤토리 커서
 
-    // JSON에서 파싱한 전체 데이터
-    private InventorySaveData inventoryData;
-
     // 현재 페이지에서 사용 중인 (수량>0) 아이템 리스트
     private List<InventoryItemEntry> currentFiltered = new List<InventoryItemEntry>();
     private int currentStartIndex = 0;    // 이 페이지의 시작 인덱스 (디버그용 느낌)
 
     private void Start()
     {
-        LoadItemsFromJson();
+        // 🔥 데이터 소스가 제대로 연결되었는지 확인
+        if (dataSource == null)
+        {
+            Debug.LogError("❌ InventoryDisplay에 InventoryDataSource가 연결되어 있지 않습니다!");
+        }
+
         DisplayCurrentPage();
 
         // 시작 시 설명 패널은 숨기기
@@ -76,29 +78,12 @@ public class InventoryDisplay : MonoBehaviour
         }
     }
 
-    /// <summary>Resources/{jsonFileName}.json을 읽어 InventorySaveData로 역직렬화</summary>
-    private void LoadItemsFromJson()
-    {
-        TextAsset json = Resources.Load<TextAsset>(jsonFileName);
-        if (json == null)
-        {
-            Debug.LogError($"❌ {jsonFileName}.json 파일을 찾을 수 없습니다! (Resources 폴더 확인)");
-            return;
-        }
-
-        inventoryData = JsonUtility.FromJson<InventorySaveData>(json.text);
-        if (inventoryData == null || inventoryData.items == null)
-        {
-            Debug.LogError("⚠️ JSON 파싱 실패 또는 'items' 배열이 비었습니다.");
-            return;
-        }
-
-        Debug.Log($"✅ {inventoryData.items.Length}개의 인벤토리 데이터를 성공적으로 불러왔습니다!");
-    }
-
     /// <summary>현재 pageIndex 기준으로 페이지 내용을 슬롯에 표시</summary>
     public void DisplayCurrentPage()
     {
+        // 🔥 데이터 소스에서 데이터 가져오기
+        InventorySaveData inventoryData = (dataSource != null) ? dataSource.InventoryData : null;
+
         if (inventoryData == null || inventoryData.items == null)
         {
             Debug.LogWarning("⚠️ InventorySaveData가 비어 있습니다. 표시할 아이템이 없습니다.");
@@ -149,7 +134,7 @@ public class InventoryDisplay : MonoBehaviour
 
                 string displayName = def.displayName;
                 Sprite icon = def.icon;
-                int quantity = entry.quantity; // 실제 수량은 JSON 기준
+                int quantity = entry.quantity; // 실제 수량은 JSON/런타임 기준
 
                 // 🔥 이 슬롯이 어떤 아이템을 들고 있는지 기록
                 slots[i].currentItemSO = def;
