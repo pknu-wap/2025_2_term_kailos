@@ -1316,7 +1316,6 @@ GameObject:
   - component: {fileID: 630219713}
   - component: {fileID: 630219716}
   - component: {fileID: 630219717}
-  - component: {fileID: 630219718}
   m_Layer: 0
   m_Name: EnemyManager
   m_TagString: Untagged
@@ -1373,21 +1372,6 @@ MonoBehaviour:
   attackController: {fileID: 0}
   previewSeconds: 1.5
   playInterval: 0.3
---- !u!114 &630219718
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 630219712}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6476f95ebdeb0fc458adb23a102e54b7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  database: {fileID: 11400000, guid: 67c08aa19663b4c45937c317f2db9fe7, type: 2}
-  enemyIdOverride: 
-  runtimePrefab: {fileID: 0}
 --- !u!1 &643248676
 GameObject:
   m_ObjectHideFlags: 0
@@ -4728,7 +4712,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1069897051}
-  - component: {fileID: 1069897055}
   - component: {fileID: 1069897050}
   - component: {fileID: 1069897049}
   - component: {fileID: 1069897052}
@@ -4850,19 +4833,6 @@ MonoBehaviour:
   externalSelector: {fileID: 0}
   orchestrator: {fileID: 593885361}
   wrap: 1
---- !u!114 &1069897055
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1069897048}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed853065431c86147a54d14aad967601, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  alsoWriteToSelectedEnemy: 1
 --- !u!1 &1201525408
 GameObject:
   m_ObjectHideFlags: 0
@@ -9601,20 +9571,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddd3871dfa80b314db00cb8987246cac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveTutorialIntro: 1
-  introMsg1: "\uB10C \uC5EC\uAE30\uC11C \uC0AC\uB77C\uC838\uC57C\uD574..."
-  introMsg2: "\uC77C\uB2E8.... \uBB34\uC11C\uC6CC..... \uD53C\uD574\uC57C\uD574...!!"
-  introMsg1Seconds: 1.2
-  introMsg2Seconds: 1.2
-  introRequireKey: 0
-  introKey: 101
-  moveTutorialGate: 1
-  postEnemyWait: 3
-  continueKey: 101
-  gateMsg1: "\uC774 \uACF5\uACA9\uB4E4\uC744 \uD53C\uD55C\uB2E4\uACE0....?(E\uD0A4\uB20C\uB7EC\uC11C
-    \uACC4\uC18D)"
-  gateMsg2: "\uC5ED\uC2DC \uB108\uB294 \uC774 \uC138\uC0C1\uC5D0 \uC788\uC73C\uBA74
-    \uC548\uB3FC..."
   menu: {fileID: 1069897049}
   enemyTurnController: {fileID: 630219717}
   handUI: {fileID: 860620052}
