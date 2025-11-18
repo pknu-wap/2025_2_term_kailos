@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerAnimeController : MonoBehaviour
 {
     [Header("Target")]
-    [SerializeField] private Transform target;   // Player_Stone
+    [SerializeField] private Transform target;  
 
     [Header("Default Ease")]
     [SerializeField] private AnimationCurve ease = AnimationCurve.EaseInOut(0, 0, 1, 1);
