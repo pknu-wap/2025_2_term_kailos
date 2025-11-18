@@ -10,6 +10,8 @@ public class Sentence
     public string text; // 대사 내용
 
     public Sprite characterPortrait; // 캐릭터 초상화 (표정)
+
+    public AudioClip voiceClip; // 성우 목소리 오디오 클립
 }
 
 // 대화 이벤트 하나에 포함될 Sentence들의 배열을 담는 클래스
