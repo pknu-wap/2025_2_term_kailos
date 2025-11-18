@@ -50,7 +50,7 @@ public class AttackAnimationController : MonoBehaviour
             sr.sortingOrder = sortingOrder;
 
             // 초기 투명
-            var c = sr.color; c.r = 1f; c.g = 0f; c.b = 0f; c.a = 0f;
+            var c = sr.color; c.r = 0f; c.g = 0f; c.b = 0f; c.a = 0f;
             sr.color = c;
 
             go.transform.localScale = ComputeSpriteScale(sr);

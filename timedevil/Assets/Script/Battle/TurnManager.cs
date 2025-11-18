@@ -1,10 +1,35 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public enum TurnState { PlayerTurn, EnemyTurn }
 
+
 public class TurnManager : MonoBehaviour
 {
+
+    [Header("Move_Tutorial Intro")]
+    [SerializeField] private bool moveTutorialIntro = true;     // 튜토리얼 씬에서만 켜두기
+    [SerializeField, TextArea] private string introMsg1 = "넌 여기서 사라져야해...";
+    [SerializeField, TextArea] private string introMsg2 = "일단.... 무서워..... 피해야해...!!";
+    [SerializeField] private float introMsg1Seconds = 1.2f;     // 첫 대사 유지시간
+    [SerializeField] private float introMsg2Seconds = 1.2f;     // 두 번째 대사 유지시간
+    [SerializeField] private bool introRequireKey = false;       // true면 E키로 넘김
+    [SerializeField] private KeyCode introKey = KeyCode.E;
+
+    private bool tutorialIntroPlayed = false;
+    private static bool IsMoveTutorial()
+    => SceneManager.GetActiveScene().name == "Move_Tutorial";
     public static TurnManager Instance;
+
+    // --- Move_Tutorial 전용 게이트 ---
+    [Header("Move_Tutorial Gate")]
+    [SerializeField] private bool moveTutorialGate = true;   // 이 씬에서만 켜두기
+    [SerializeField] private float postEnemyWait = 3f;       // 적 턴 끝난 뒤 기본 대기
+    [SerializeField] private KeyCode continueKey = KeyCode.E;
+    [TextArea][SerializeField] private string gateMsg1 = "이 공격들을 피한다고....?(E키눌러서 계속)";
+    [TextArea][SerializeField] private string gateMsg2 = "역시 너는 이 세상에 있으면 안돼...";
+
 
     [Header("Optional UI Controller")]
     [SerializeField] private BattleMenuController menu;
@@ -58,6 +83,13 @@ public class TurnManager : MonoBehaviour
 
         ResolvePlayerData();
         ResolveEnemyData();
+        // ▶ Move_Tutorial일 때는 먼저 인트로를 처리한 뒤, 적 턴을 시작
+        if (IsMoveTutorial() && moveTutorialIntro && !tutorialIntroPlayed)
+        {
+            StartCoroutine(Co_MoveTutorialIntroBoot());  // ⬅ 새 코루틴
+            return;
+        }
+
         DecideFirstTurn();
     }
 
@@ -82,6 +114,7 @@ public class TurnManager : MonoBehaviour
 
     public void BeginPlayerTurn()
     {
+
         currentTurn = TurnState.PlayerTurn;
         IsPlayerDiscardPhase = false;
 
@@ -104,6 +137,7 @@ public class TurnManager : MonoBehaviour
         }
 
         Debug.Log("🔷 플레이어 턴 시작");
+
     }
 
     public void BeginEnemyTurn()
@@ -170,7 +204,16 @@ public class TurnManager : MonoBehaviour
             }
         }
 
-        Debug.Log("🔶 적 턴 종료 → 플레이어 턴");
+        Debug.Log("🔶 적 턴 종료");
+
+        if (moveTutorialGate && IsMoveTutorial())
+        {
+            // 관전 유지: 입력 잠금
+            if (menu) menu.EnableInput(false);
+            yield return StartCoroutine(Co_MoveTutorialGate());
+            yield break; // 게이트 코루틴 안에서 BeginPlayerTurn 호출
+        }
+
         BeginPlayerTurn();
     }
 
@@ -255,4 +298,73 @@ public class TurnManager : MonoBehaviour
         yield return null;
         if (cardAnime != null) cardAnime.RevealInitialEnemyHand();
     }
+    private System.Collections.IEnumerator Co_MoveTutorialGate()
+    {
+        // 3초 대기
+        if (postEnemyWait > 0f)
+            yield return new WaitForSeconds(postEnemyWait);
+
+        // 1차 프롬프트
+        if (desc) desc.ShowTemporaryExplanation(gateMsg1);
+
+        // [1] 첫 입력(E키 Down) 기다림
+        while (!Input.GetKeyDown(continueKey))
+            yield return null;
+
+        // 같은 입력을 연속 인식하지 않도록, 키가 올라갈 때까지 대기
+        yield return null;
+        while (Input.GetKey(continueKey))
+            yield return null;
+
+        // 2차 프롬프트
+        if (desc) desc.ShowTemporaryExplanation(gateMsg2);
+
+        // [2] 두 번째 입력(E키 Down) 기다림
+        while (!Input.GetKeyDown(continueKey))
+            yield return null;
+
+        // 마지막으로 키가 올라갈 때까지 잠깐 대기(선택)
+        yield return null;
+        while (Input.GetKey(continueKey))
+            yield return null;
+
+        // 클린업 후 내 턴
+        if (desc) desc.ClearTemporaryMessage();
+        BeginPlayerTurn();
+    }
+
+    private System.Collections.IEnumerator Co_MoveTutorialIntroBoot()
+    {
+        // 입력/포커스에 의한 패널 덮어쓰기 방지
+        if (menu) menu.EnableInput(false);
+        if (handUI) handUI.HideCards();
+        if (desc) { desc.SetEnemyTurn(true); desc.SetPlayerDiscardMode(false); }
+
+        tutorialIntroPlayed = true;
+
+        // 1) 첫 문장
+        if (desc) desc.ShowTemporaryExplanation(introMsg1);
+        if (introRequireKey)
+        {
+            while (!Input.GetKeyDown(introKey)) yield return null;
+            yield return null; while (Input.GetKey(introKey)) yield return null;
+        }
+        else if (introMsg1Seconds > 0f) yield return new WaitForSeconds(introMsg1Seconds);
+
+        // 2) 둘째 문장
+        if (desc) desc.ShowTemporaryExplanation(introMsg2);
+        if (introRequireKey)
+        {
+            while (!Input.GetKeyDown(introKey)) yield return null;
+            yield return null; while (Input.GetKey(introKey)) yield return null;
+        }
+        else if (introMsg2Seconds > 0f) yield return new WaitForSeconds(introMsg2Seconds);
+
+        if (desc) desc.ClearTemporaryMessage();
+
+        // 이제 실제 적 턴 시작
+        BeginEnemyTurn();
+    }
+
+
 }
