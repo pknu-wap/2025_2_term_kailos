@@ -18,6 +18,9 @@ public static class BattleSceneLoader
         // 2) 복귀 정보를 저장
         SceneLoader.SaveReturnPoint(playerT, enemyT);
 
+        if (enemyT && WorldNPCStateService.Instance != null)
+            WorldNPCStateService.Instance.SaveSnapshot(enemyT.gameObject);
+
         // 3) 배틀씬으로 이동
         SceneLoader.Load(battleSceneName, useFaderIfExists: true);
     }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public static class PlayerReturnContext
 {
@@ -9,5 +9,11 @@ public static class PlayerReturnContext
     public static Vector2 MonsterReturnPosition;
     public static string MonsterNameInScene;
 
-    public static bool IsInGracePeriod = false; // Ãæµ¹ ¹«Àû½Ã°£ µî »ç¿ë ½Ã
+    public static string MonsterInstanceId;
+
+
+    public static bool IsInGracePeriod = false; // ì¶©ëŒ ë¬´ì ì‹œê°„ ë“± ì‚¬ìš© ì‹œ
+
+    public static float GraceSecondsPending = 0f; // â¬…ï¸ ì¶”ê°€
+
 }

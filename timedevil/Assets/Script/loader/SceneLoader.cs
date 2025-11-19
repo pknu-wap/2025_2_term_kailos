@@ -1,11 +1,11 @@
-// Assets/Script/loader/SceneLoader.cs
+ï»¿// Assets/Script/loader/SceneLoader.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
 public static class SceneLoader
 {
-    // µ¹¾Æ¿Ã ÁÂÇ¥ ÀúÀå
+    // ëŒì•„ì˜¬ ì¢Œí‘œ ì €ì¥
     public static void SaveReturnPoint(Transform playerT, Transform enemyT)
     {
         PlayerReturnContext.ReturnSceneName = SceneManager.GetActiveScene().name;
@@ -14,9 +14,19 @@ public static class SceneLoader
 
         PlayerReturnContext.MonsterReturnPosition = enemyT ? (Vector2)enemyT.position : Vector2.zero;
         PlayerReturnContext.MonsterNameInScene = enemyT ? enemyT.gameObject.name : "";
+
+        if (enemyT)
+        {
+            var id = enemyT.GetComponent<EnemyInstanceId>();
+            PlayerReturnContext.MonsterInstanceId = id ? id.Id : enemyT.gameObject.name;
+        }
+        else
+        {
+            PlayerReturnContext.MonsterInstanceId = "";
+        }
     }
 
-    // ÀÏ¹İ ·Îµå(ÆäÀÌ´õ°¡ ÀÖÀ¸¸é »ç¿ë)
+    // ì¼ë°˜ ë¡œë“œ(í˜ì´ë”ê°€ ìˆìœ¼ë©´ ì‚¬ìš©)
     public static void Load(string sceneName, bool useFaderIfExists = true)
     {
         if (useFaderIfExists && SceneFader.instance != null)
@@ -25,24 +35,26 @@ public static class SceneLoader
             SceneManager.LoadScene(sceneName);
     }
 
-    // µ¹¾Æ°¡±â(¹«Àû½Ã°£ ¿É¼Ç)
+    // ëŒì•„ê°€ê¸°(ë¬´ì ì‹œê°„ ì˜µì…˜)
     public static void GoBackToReturnScene(float graceSeconds = 1.0f, bool useFaderIfExists = true)
     {
         if (string.IsNullOrWhiteSpace(PlayerReturnContext.ReturnSceneName))
         {
-            Debug.LogWarning("[SceneLoader] ReturnSceneNameÀÌ ºñ¾îÀÖ½À´Ï´Ù.");
+            Debug.LogWarning("[SceneLoader] ReturnSceneNameì´ ë¹„ì–´ìˆìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // Æ®¸®°Å ÀçÃæµ¹ ¹æÁö
+        // íŠ¸ë¦¬ê±° ì¬ì¶©ëŒ ë°©ì§€
         PlayerReturnContext.IsInGracePeriod = graceSeconds > 0f;
+        PlayerReturnContext.GraceSecondsPending = Mathf.Max(0f, graceSeconds); // â¬…ï¸ ì¶”ê°€
+
         SceneLoaderHost.Ensure().StartCoroutine(SceneLoaderHost.Instance.CoClearGrace(graceSeconds));
 
         Load(PlayerReturnContext.ReturnSceneName, useFaderIfExists);
     }
 }
 
-// ³»ºÎ ÄÚ·çÆ¾¿ë È£½ºÆ®
+// ë‚´ë¶€ ì½”ë£¨í‹´ìš© í˜¸ìŠ¤íŠ¸
 class SceneLoaderHost : MonoBehaviour
 {
     public static SceneLoaderHost Instance { get; private set; }
