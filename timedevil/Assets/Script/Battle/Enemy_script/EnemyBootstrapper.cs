@@ -1,14 +1,14 @@
-// EnemyBootstrapper.cs
 using UnityEngine;
 
+[DefaultExecutionOrder(-100)]  // Loader(-500)보다 "뒤"에, 하지만 다른 일반 스크립트보다 "앞"에
 public class EnemyBootstrapper : MonoBehaviour
 {
     [Header("Database & Selection")]
     [SerializeField] private EnemyDatabaseSO database;
-    [SerializeField] private string enemyIdOverride = ""; // 비워두면 SelectedEnemyRuntime 사용
+    [SerializeField] private string enemyIdOverride = ""; // 반드시 빈 문자열이어야 Selected 사용
 
     [Header("Runtime Target")]
-    [SerializeField] private EnemyRuntime runtimePrefab; // 씬에 없다면 생성용(선택)
+    [SerializeField] private EnemyRuntime runtimePrefab;
     private EnemyRuntime runtime;
 
     void Awake()
@@ -17,8 +17,7 @@ public class EnemyBootstrapper : MonoBehaviour
         if (!runtime)
         {
             runtime = FindObjectOfType<EnemyRuntime>();
-            if (!runtime && runtimePrefab)
-                runtime = Instantiate(runtimePrefab);
+            if (!runtime && runtimePrefab) runtime = Instantiate(runtimePrefab);
         }
         if (!runtime)
         {
@@ -35,15 +34,16 @@ public class EnemyBootstrapper : MonoBehaviour
             return;
         }
 
-        // 1) 어떤 적을 쓸지 결정
-        string chosenId = !string.IsNullOrWhiteSpace(enemyIdOverride)
-            ? enemyIdOverride
-            : (SelectedEnemyRuntime.Instance ? SelectedEnemyRuntime.Instance.enemyName : null);
+        var selected = SelectedEnemyRuntime.Instance ? SelectedEnemyRuntime.Instance.enemyName : null;
+        Debug.Log($"[EnemyBootstrapper] override='{enemyIdOverride}' | selected='{selected}'");
+
+        // 선택 규칙: override가 채워져 있으면 그것 우선
+        string chosenId = !string.IsNullOrWhiteSpace(enemyIdOverride) ? enemyIdOverride : selected;
 
         if (string.IsNullOrWhiteSpace(chosenId))
         {
-            Debug.LogWarning("[EnemyBootstrapper] No enemy id given. Fallback to first in DB.");
             if (database.enemies.Count > 0) chosenId = database.enemies[0].enemyId;
+            Debug.LogWarning($"[EnemyBootstrapper] No id available. Fallback='{chosenId}'");
         }
 
         var so = database.GetById(chosenId);
@@ -53,18 +53,14 @@ public class EnemyBootstrapper : MonoBehaviour
             return;
         }
 
-        // 2) 런타임 초기화
         runtime.InitializeFromSO(so);
+        Debug.Log($"[EnemyBootstrapper] Applied SO id='{so.enemyId}', display='{so.displayName}'");
 
-        // 3) HP UI와 연결(있으면)
         var hp = FindObjectOfType<HPUIBinder>();
         if (hp)
         {
-            // Player 바인딩(있으면)
             var pdr = FindObjectOfType<PlayerDataRuntime>();
             if (pdr) hp.BindPlayer(pdr.Data);
-
-            // EnemyRuntime 바인딩
             hp.BindEnemyRuntime(runtime);
             hp.Refresh();
         }
