@@ -1,22 +1,29 @@
+// 기존 파일 교체: Assets/Script/loader/ReturnSpawnApplier.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// 메인씬이 로드될 때 Player를 복귀 좌표에 스폰/이동
 public class ReturnSpawnApplier : MonoBehaviour
 {
     [SerializeField] private Transform playerTransform;
+    [Header("옵션")]
+    [SerializeField] private bool restoreMonster = true;
 
     private void Start()
     {
         if (!PlayerReturnContext.HasReturnPosition) return;
 
-        // 현재 씬이 복귀 대상이면 이동
-        if (PlayerReturnContext.ReturnSceneName == SceneManager.GetActiveScene().name && playerTransform)
+        // 같은 씬으로 돌아온 경우에만 적용
+        if (PlayerReturnContext.ReturnSceneName == SceneManager.GetActiveScene().name)
         {
-            playerTransform.position = PlayerReturnContext.ReturnPosition;
-        }
+            if (playerTransform) playerTransform.position = PlayerReturnContext.ReturnPosition;
 
-        // 한 번 적용 후 플래그를 초기화할지 여부는 기획에 맞춰 선택
+            if (restoreMonster && !string.IsNullOrEmpty(PlayerReturnContext.MonsterNameInScene))
+            {
+                var enemyObj = GameObject.Find(PlayerReturnContext.MonsterNameInScene);
+                if (enemyObj) enemyObj.transform.position = PlayerReturnContext.MonsterReturnPosition;
+            }
+        }
+        // 필요 시 한 번 적용 후 초기화
         // PlayerReturnContext.HasReturnPosition = false;
     }
 }
