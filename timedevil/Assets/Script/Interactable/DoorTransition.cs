@@ -1,43 +1,47 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
-using Cinemachine; // ½Ã³×¸Ó½Å Ä«¸Ş¶ó¸¦ Á¦¾îÇÏ±â À§ÇØ ÇÊ¼ö!
+using Cinemachine; // ì‹œë„¤ë¨¸ì‹  ì¹´ë©”ë¼ë¥¼ ì œì–´í•˜ê¸° ìœ„í•´ í•„ìˆ˜!
 
 public class DoorTransition : MonoBehaviour, IInteractable
 {
-    [Header("ÀÌµ¿ÇÒ ¸ñÇ¥ ÁöÁ¡")]
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ÆäÀÌµå ¾Æ¿ô ÈÄ ÀÌµ¿µÉ À§Ä¡ (¾À¿¡ ÀÖ´Â ºó ¿ÀºêÁ§Æ®)")]
+
+
+    [Header("ì´ë™í•  ëª©í‘œ ì§€ì ")]
+    [Tooltip("í”Œë ˆì´ì–´ê°€ í˜ì´ë“œ ì•„ì›ƒ í›„ ì´ë™ë  ìœ„ì¹˜ (ì”¬ì— ìˆëŠ” ë¹ˆ ì˜¤ë¸Œì íŠ¸)")]
     public Transform targetPoint;
 
-    [Header("Ä«¸Ş¶ó ¼³Á¤")]
-    [Tooltip("ÀÌµ¿ ÈÄ Á¦¾îÇÒ ½Ã³×¸Ó½Å °¡»ó Ä«¸Ş¶ó")]
+    [Header("ì¹´ë©”ë¼ ì„¤ì •")]
+    [Tooltip("ì´ë™ í›„ ì œì–´í•  ì‹œë„¤ë¨¸ì‹  ê°€ìƒ ì¹´ë©”ë¼")]
     public CinemachineVirtualCamera virtualCamera;
 
-    [Tooltip("ÀÌµ¿ ÈÄ ¼³Á¤ÇÒ Ä«¸Ş¶óÀÇ »õ Orthographic Size")]
-    public float newCameraSize = 8f; // ¿øÇÏ´Â ÁÜ ·¹º§
+    [Tooltip("ì´ë™ í›„ ì„¤ì •í•  ì¹´ë©”ë¼ì˜ ìƒˆ Orthographic Size")]
+    public float newCameraSize = 8f; // ì›í•˜ëŠ” ì¤Œ ë ˆë²¨
 
-    // --- private º¯¼ö ---
-    private PlayerAction player; // ÇÃ·¹ÀÌ¾î ÂüÁ¶
-    private bool isTransitioning = false; // ÄÆ¾À Áßº¹ ½ÇÇà ¹æÁö
+    // --- private ë³€ìˆ˜ ---
+    private PlayerAction player; // í”Œë ˆì´ì–´ ì°¸ì¡°
+    private bool isTransitioning = false; // ì»·ì”¬ ì¤‘ë³µ ì‹¤í–‰ ë°©ì§€
 
     void Start()
     {
-        // ¾À¿¡¼­ ÇÃ·¹ÀÌ¾î ¿ÀºêÁ§Æ®¸¦ Ã£¾Æ ÂüÁ¶¸¦ ÀúÀåÇØ µÓ´Ï´Ù.
+        // ì”¬ì—ì„œ í”Œë ˆì´ì–´ ì˜¤ë¸Œì íŠ¸ë¥¼ ì°¾ì•„ ì°¸ì¡°ë¥¼ ì €ì¥í•´ ë‘¡ë‹ˆë‹¤.
         player = FindObjectOfType<PlayerAction>();
         if (player == null)
         {
-            Debug.LogError("[DoorTransition] ¾À¿¡¼­ 'PlayerAction' ½ºÅ©¸³Æ®¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogError("[DoorTransition] ì”¬ì—ì„œ 'PlayerAction' ìŠ¤í¬ë¦½íŠ¸ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
         }
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ EÅ° µîÀ¸·Î È£ÃâÇÏ´Â ÁøÀÔÁ¡
+    /// í”Œë ˆì´ì–´ê°€ Eí‚¤ ë“±ìœ¼ë¡œ í˜¸ì¶œí•˜ëŠ” ì§„ì…ì 
     /// </summary>
     public void Interact()
     {
-        // (null Ã¼Å© ¹× Áßº¹ ½ÇÇà ¹æÁö ÄÚµå´Â ÀÌÀü°ú µ¿ÀÏ)
+
+
+        // (null ì²´í¬ ë° ì¤‘ë³µ ì‹¤í–‰ ë°©ì§€ ì½”ë“œëŠ” ì´ì „ê³¼ ë™ì¼)
         if (targetPoint == null)
         {
-            Debug.LogWarning("[DoorTransition] 'Target Point'°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("[DoorTransition] 'Target Point'ê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
         if (player == null) return;
@@ -49,65 +53,75 @@ public class DoorTransition : MonoBehaviour, IInteractable
     }
 
     /// <summary>
-    /// ÆäÀÌµå -> ÀÌµ¿/Ä«¸Ş¶ó¼³Á¤ -> ÆäÀÌµå ¼ø¼­¸¦ °ü¸®ÇÏ´Â ÄÚ·çÆ¾
+    /// í˜ì´ë“œ -> ì´ë™/ì¹´ë©”ë¼ì„¤ì • -> í˜ì´ë“œ ìˆœì„œë¥¼ ê´€ë¦¬í•˜ëŠ” ì½”ë£¨í‹´
     /// </summary>
     IEnumerator TransitionCoroutine()
     {
         isTransitioning = true;
 
-        // 1. ÇÃ·¹ÀÌ¾î Á¶ÀÛ ºñÈ°¼ºÈ­
+        // 1. í”Œë ˆì´ì–´ ì¡°ì‘ ë¹„í™œì„±í™”
         if (GameManager.Instance != null)
         {
             GameManager.Instance.isAction = true;
         }
 
-        // 2. ÆäÀÌµå ¾Æ¿ô
+        // 2. í˜ì´ë“œ ì•„ì›ƒ
         yield return StartCoroutine(SceneFader.instance.Fade(1f));
 
-        // --- È­¸éÀÌ °ËÀº »óÅÂ (¸ğµç º¯°æÀº ¿©±â¼­) ---
+        // --- í™”ë©´ì´ ê²€ì€ ìƒíƒœ (ëª¨ë“  ë³€ê²½ì€ ì—¬ê¸°ì„œ) ---
 
-        // 3. ÇÃ·¹ÀÌ¾î À§Ä¡¸¦ 'targetPoint'ÀÇ À§Ä¡·Î °­Á¦ ÀÌµ¿
+        // 3. í”Œë ˆì´ì–´ ìœ„ì¹˜ë¥¼ 'targetPoint'ì˜ ìœ„ì¹˜ë¡œ ê°•ì œ ì´ë™
         player.transform.position = targetPoint.position;
 
-        // 4. Ä«¸Ş¶ó ¼³Á¤ º¯°æ
+        // 4. ì¹´ë©”ë¼ ì„¤ì • ë³€ê²½
         if (virtualCamera != null)
         {
-            // 4a. Ä«¸Ş¶ó »çÀÌÁî º¯°æ
+            // 4a. ì¹´ë©”ë¼ ì‚¬ì´ì¦ˆ ë³€ê²½
             virtualCamera.m_Lens.OrthographicSize = newCameraSize;
 
-            // 4b. Ä«¸Ş¶ó Follow Å¸°ÙÀ» ÇÃ·¹ÀÌ¾î·Î ÁöÁ¤
+            // 4b. ì¹´ë©”ë¼ Follow íƒ€ê²Ÿì„ í”Œë ˆì´ì–´ë¡œ ì§€ì •
             virtualCamera.Follow = player.transform;
 
-            // ¡å¡å¡å 4c. (Ãß°¡µÈ ºÎºĞ) CinemachineConfiner2D È°¼ºÈ­ ¡å¡å¡å
+            // â–¼â–¼â–¼ 4c. (ì¶”ê°€ëœ ë¶€ë¶„) CinemachineConfiner2D í™œì„±í™” â–¼â–¼â–¼
             CinemachineConfiner2D confiner = virtualCamera.GetComponent<CinemachineConfiner2D>();
             if (confiner != null)
             {
-                confiner.enabled = true; // ÄÁÆÄÀÌ³Ê(°æ°è)¸¦ ÄÕ´Ï´Ù.
+                confiner.enabled = true; // ì»¨íŒŒì´ë„ˆ(ê²½ê³„)ë¥¼ ì¼­ë‹ˆë‹¤.
             }
             else
             {
-                Debug.LogWarning("[DoorTransition] 'Virtual Camera' ¿ÀºêÁ§Æ®¿¡ 'CinemachineConfiner2D' ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[DoorTransition] 'Virtual Camera' ì˜¤ë¸Œì íŠ¸ì— 'CinemachineConfiner2D' ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤.");
             }
-            // ¡ã¡ã¡ã
+            // â–²â–²â–²
         }
         else
         {
-            Debug.LogWarning("[DoorTransition] 'Virtual Camera'°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù! (ÀÎ½ºÆåÅÍ Ã¢ È®ÀÎ ÇÊ¿ä)");
+            Debug.LogWarning("[DoorTransition] 'Virtual Camera'ê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤! (ì¸ìŠ¤í™í„° ì°½ í™•ì¸ í•„ìš”)");
         }
 
-        // 5. Ä«¸Ş¶ó°¡ »õ Follow Å¸°ÙÀ» µû¶óÀâµµ·Ï 1ÇÁ·¹ÀÓ ´ë±â
+        // 5. ì¹´ë©”ë¼ê°€ ìƒˆ Follow íƒ€ê²Ÿì„ ë”°ë¼ì¡ë„ë¡ 1í”„ë ˆì„ ëŒ€ê¸°
         yield return null;
 
-        // 6. ´Ù½Ã È­¸é ¹à°Ô (ÆäÀÌµå ÀÎ)
+        // 6. ë‹¤ì‹œ í™”ë©´ ë°ê²Œ (í˜ì´ë“œ ì¸)
         yield return StartCoroutine(SceneFader.instance.Fade(0f));
 
-        // --- ÀÌµ¿ ¿Ï·á ---
+        // --- ì´ë™ ì™„ë£Œ ---
 
-        // 7. ÇÃ·¹ÀÌ¾î Á¶ÀÛ ´Ù½Ã È°¼ºÈ­
+        // 7. í”Œë ˆì´ì–´ ì¡°ì‘ ë‹¤ì‹œ í™œì„±í™”
         if (GameManager.Instance != null)
         {
             GameManager.Instance.isAction = false;
         }
+
+        isTransitioning = false;
+
+        // ğŸ”»ğŸ”»ğŸ”» ì—¬ê¸°ì„œ ì´ ë¬¸ ì˜¤ë¸Œì íŠ¸ ë¹„í™œì„±í™” ğŸ”»ğŸ”»ğŸ”»
+        gameObject.SetActive(false);
+        // ë§Œì•½ ìƒìœ„ ì˜¤ë¸Œì íŠ¸(ë¬¸ ì „ì²´ í”„ë¦¬íŒ¹)ë¥¼ ë„ê³  ì‹¶ìœ¼ë©´:
+        // transform.root.gameObject.SetActive(false);
+        // ë˜ëŠ”
+        // transform.parent.gameObject.SetActive(false);
+        // ğŸ”ºğŸ”ºğŸ”º
 
         isTransitioning = false;
     }
