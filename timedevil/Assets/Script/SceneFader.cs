@@ -23,9 +23,9 @@ public class SceneFader : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 이 오브젝트는 파괴되지 않음
 
-            // ▼▼▼ (핵심) 씬이 로드될 때마다 OnSceneLoaded 함수를 실행하도록 등록 ▼▼▼
+            // 씬이 로드될 때마다 OnSceneLoaded 함수를 실행하도록 등록
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
@@ -60,6 +60,10 @@ public class SceneFader : MonoBehaviour
     // 다른 스크립트에서 호출할 씬 전환 함수
     public void LoadSceneWithFade(string sceneName)
     {
+        // ▼▼▼ [핵심 수정] 씬 전환 시작 전 강제로 시간을 흐르게 설정 ▼▼▼
+        Time.timeScale = 1f;
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         // 중복 호출 방지
         if (isFading) return;
 
@@ -67,7 +71,7 @@ public class SceneFader : MonoBehaviour
         instance.StartCoroutine(FadeAndLoadScene(sceneName));
     }
 
-    // (수정) 페이드 아웃 -> 씬 로드까지만 담당
+    // 페이드 아웃 -> 씬 로드까지만 담당
     private IEnumerator FadeAndLoadScene(string sceneName)
     {
         isFading = true; // 씬 전환 시작
@@ -94,7 +98,9 @@ public class SceneFader : MonoBehaviour
 
         while (currentTime < fadeDuration)
         {
-            currentTime += Time.deltaTime;
+            // ▼▼▼ [참고] unscaledDeltaTime을 쓰면 타임스케일과 무관하게 페이드가 작동합니다 ▼▼▼
+            currentTime += Time.unscaledDeltaTime;
+
             fadeCanvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, currentTime / fadeDuration);
             yield return null;
         }
@@ -104,7 +110,7 @@ public class SceneFader : MonoBehaviour
         if (targetAlpha == 0f)
         {
             fadeCanvasGroup.blocksRaycasts = false;
-            isFading = false; // (수정) 페이드 인 완료 시 Fading 해제
+            isFading = false; // 페이드 인 완료 시 Fading 해제
             OnFadeInComplete?.Invoke();
         }
     }
