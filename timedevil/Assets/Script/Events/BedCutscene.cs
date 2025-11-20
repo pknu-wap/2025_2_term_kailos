@@ -74,15 +74,6 @@ public class BedCutscene : MonoBehaviour, IInteractable
         // 1. 완전히 어둡게
         yield return StartCoroutine(SceneFader.instance.Fade(1f));
 
-        // 2. 화면이 검은 동안 '털썩' 소리 재생
-        if (audioSource != null && thumpSound != null)
-        {
-            audioSource.PlayOneShot(thumpSound);
-        }
-
-        // 3. 1.5초 정도 기다림
-        yield return new WaitForSeconds(1.5f);
-
         // 4. 다음 씬으로 전환
         SceneFader.instance.LoadSceneWithFade(nextSceneName);
     }
