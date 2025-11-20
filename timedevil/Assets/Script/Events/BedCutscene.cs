@@ -81,7 +81,7 @@ public class BedCutscene : MonoBehaviour, IInteractable
         }
 
         // 3. 1.5초 정도 기다림
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSecondsRealtime(1.0f);
 
         // 4. 다음 씬으로 전환
         SceneFader.instance.LoadSceneWithFade(nextSceneName);
