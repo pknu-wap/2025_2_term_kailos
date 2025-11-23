@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(AudioSource))]
 public class DialogueManager : MonoBehaviour
 {
     public static DialogueManager instance;
@@ -17,9 +18,12 @@ public class DialogueManager : MonoBehaviour
     private Queue<Sentence> sentenceQueue;
     public bool isDialogueActive = false;
     private Coroutine typingCoroutine;
+    private bool isStartingDialogue = false;
 
-    // ▼▼▼ 추가된 변수 ▼▼▼
-    private bool isStartingDialogue = false; // 대화가 '시작되는 중'인지 확인하는 플래그
+    // 블록 입력 추가 (E 키 스킵 차단)
+    public bool blockInput = false;
+
+    private AudioSource audioSource;
 
     private void Awake()
     {
@@ -32,13 +36,18 @@ public class DialogueManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
         sentenceQueue = new Queue<Sentence>();
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
     }
 
     void Update()
     {
-        // ▼▼▼ 수정된 조건문 ▼▼▼
-        // 대화가 활성화 상태이고, '시작 중'이 아니며, E키가 눌렸을 때
+        // blockInput 중이면 입력 무시
+        if (blockInput) return;
+
         if (isDialogueActive && !isStartingDialogue && Input.GetKeyDown(KeyCode.E))
         {
             DisplayNextSentence();
@@ -48,7 +57,7 @@ public class DialogueManager : MonoBehaviour
     public void StartDialogue(Dialogue dialogue)
     {
         isDialogueActive = true;
-        isStartingDialogue = true; // 대화가 '시작되는 중'이라고 표시
+        isStartingDialogue = true;
         dialogueCanvas.SetActive(true);
         sentenceQueue.Clear();
 
@@ -63,10 +72,7 @@ public class DialogueManager : MonoBehaviour
     private IEnumerator StartDialogueRoutine()
     {
         yield return null;
-
         DisplayNextSentence();
-
-        // 첫 대사가 표시된 후에는 '시작 중' 상태를 해제
         isStartingDialogue = false;
     }
 
@@ -86,6 +92,14 @@ public class DialogueManager : MonoBehaviour
         Sentence sentence = sentenceQueue.Dequeue();
         nameText.text = sentence.characterName;
         portraitImage.sprite = sentence.characterPortrait;
+
+        audioSource.Stop();
+
+        if (sentence.voiceClip != null)
+        {
+            audioSource.PlayOneShot(sentence.voiceClip);
+        }
+
         typingCoroutine = StartCoroutine(TypeSentence(sentence.text));
     }
 
@@ -105,5 +119,7 @@ public class DialogueManager : MonoBehaviour
 
         isDialogueActive = false;
         dialogueCanvas.SetActive(false);
+
+        audioSource.Stop();
     }
 }
