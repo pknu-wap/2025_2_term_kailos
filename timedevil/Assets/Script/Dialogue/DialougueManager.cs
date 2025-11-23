@@ -4,7 +4,6 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-// ▼▼▼ 1. [핵심 수정] AudioSource 컴포넌트를 이 오브젝트에 필수로 요구합니다. ▼▼▼
 [RequireComponent(typeof(AudioSource))]
 public class DialogueManager : MonoBehaviour
 {
@@ -21,7 +20,9 @@ public class DialogueManager : MonoBehaviour
     private Coroutine typingCoroutine;
     private bool isStartingDialogue = false;
 
-    // ▼▼▼ 2. [핵심 수정] 오디오 재생을 위한 변수 선언 ▼▼▼
+    // 블록 입력 추가 (E 키 스킵 차단)
+    public bool blockInput = false;
+
     private AudioSource audioSource;
 
     private void Awake()
@@ -35,16 +36,18 @@ public class DialogueManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
         sentenceQueue = new Queue<Sentence>();
 
-        // ▼▼▼ 3. [핵심 수정] AudioSource 컴포넌트를 가져오고 초기화합니다. ▼▼▼
         audioSource = GetComponent<AudioSource>();
-        audioSource.playOnAwake = false; // 게임 시작 시 자동 재생 방지
+        audioSource.playOnAwake = false;
     }
 
     void Update()
     {
-        // (기존과 동일)
+        // blockInput 중이면 입력 무시
+        if (blockInput) return;
+
         if (isDialogueActive && !isStartingDialogue && Input.GetKeyDown(KeyCode.E))
         {
             DisplayNextSentence();
@@ -90,40 +93,33 @@ public class DialogueManager : MonoBehaviour
         nameText.text = sentence.characterName;
         portraitImage.sprite = sentence.characterPortrait;
 
-        // 1. 이전 대사의 목소리가 아직 나오고 있다면 강제 중지
         audioSource.Stop();
 
-        // 2. 이번 대사에 목소리(voiceClip)가 배정되어 있다면 재생
         if (sentence.voiceClip != null)
         {
-            // PlayOneShot을 사용하면 여러 소리가 겹치지 않고 한 번만 재생됩니다.
             audioSource.PlayOneShot(sentence.voiceClip);
         }
-        // ▲▲▲
 
         typingCoroutine = StartCoroutine(TypeSentence(sentence.text));
     }
 
     IEnumerator TypeSentence(string text)
     {
-        // (기존과 동일)
         dialogueText.text = "";
         foreach (char letter in text.ToCharArray())
         {
             dialogueText.text += letter;
-            yield return new WaitForSeconds(0.05f); // (타이핑 속도)
+            yield return new WaitForSeconds(0.05f);
         }
     }
 
     IEnumerator EndDialogueRoutine()
     {
-        // (기존과 동일)
         yield return new WaitForEndOfFrame();
 
         isDialogueActive = false;
         dialogueCanvas.SetActive(false);
 
-        // (선택 사항) 대화가 끝났을 때도 오디오를 강제 중지
         audioSource.Stop();
     }
 }
