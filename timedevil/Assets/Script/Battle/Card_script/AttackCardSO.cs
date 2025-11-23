@@ -21,7 +21,6 @@ public class AttackCardSO : BaseCardSO
 
     // =========================
     //         Waves Only
-    // =========================
     [Serializable]
     public class Wave
     {
@@ -40,11 +39,18 @@ public class AttackCardSO : BaseCardSO
         public float delayAfter = 0f;
 
         [Header("FX Hooks (optional)")]
-        public AudioClip sfx;             // 웨이브용 SFX
-        public bool sfxEveryHit = true;   // true면 각 타점마다, false면 웨이브 시작 시 1회
-        public GameObject vfxPrefab;      // 히트 지점에 생성할 VFX
-        public bool vfxEveryHit = true;   // true면 각 타점마다, false면 웨이브 시작 지점 1회
-        public float vfxLifetime = 0.6f;  // 생성 VFX 자동 파괴 시간
+        public AudioClip sfx;           // 웨이브용 SFX
+        public bool sfxEveryHit = true; // true: 각 타점마다 / false: 웨이브 시작 시 1회
+        public GameObject vfxPrefab;    // 히트 지점에 생성할 VFX
+        public bool vfxEveryHit = true; // true: 각 타점마다 / false: 웨이브 시작 1회
+        public float vfxLifetime = 0.6f;// VFX 자동 파괴 시간
+
+        [Header("Hit Timing")]
+        [Tooltip("각 칸 실제 판정 지연(초). 비우면 0초로 간주")]
+        public float[] hitDelays = new float[16];
+
+        [Header("Optional: 클립 선택 키")]
+        public string clipKey = "";     // 필요 없으면 비움
     }
 
     [Tooltip("앞에서부터 순차적으로 재생될 웨이브들")]

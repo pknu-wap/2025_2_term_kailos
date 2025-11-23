@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,9 +23,9 @@ public class AttackController : MonoBehaviour
     [SerializeField] private float tileZ = 0f;
 
     [Header("Timeline Interpretation")]
-    [SerializeField] private TimelineMode timelineMode = TimelineMode.Windows; // ★ 기본: 창 길이로 해석
-    [SerializeField] private float defaultTailWindow = 0.20f;  // StartTimes 모드 꼬리시간
-    [SerializeField] private float minWindow = 0.06f;  // 양 모드 공통 보정
+    [SerializeField] private TimelineMode timelineMode = TimelineMode.Windows; // 기본: 창 길이 해석
+    [SerializeField] private float defaultTailWindow = 0.20f;               // StartTimes 꼬리시간
+    [SerializeField] private float minWindow = 0.06f;               // 최소 창 길이 보정
 
     [Header("Hit/VFX")]
     [SerializeField] private HPController hp;
@@ -45,10 +46,16 @@ public class AttackController : MonoBehaviour
 
         var centers = (foe == Faction.Player) ? playerCentersPos : enemyCentersPos;
         if (centers == null || centers.Length < 16)
-        { Debug.LogWarning("[AttackController] centers pos array must have 16 elements."); yield break; }
+        {
+            Debug.LogWarning("[AttackController] centers pos array must have 16 elements.");
+            yield break;
+        }
 
         anim.EnsurePool(16);
 
+        // ─────────────────────────────
+        // 레거시: waves 없음 → pattern/timeline만 사용
+        // ─────────────────────────────
         if (so.waves == null || so.waves.Length == 0)
         {
             bool[] mask = new bool[16];
@@ -59,11 +66,14 @@ public class AttackController : MonoBehaviour
             if (IsAllZero(mask)) yield break;
 
             anim.PlaceAndShowMask(mask, centers);
-            yield return RunTimeline(mask, times, centers, so, self, foe);
+            yield return RunTimeline(mask, times, centers, so, self, foe, null);
             anim.HideAll();
             yield break;
         }
 
+        // ─────────────────────────────
+        // 웨이브 기반 카드
+        // ─────────────────────────────
         for (int wi = 0; wi < so.waves.Length; wi++)
         {
             var w = so.waves[wi];
@@ -90,7 +100,8 @@ public class AttackController : MonoBehaviour
             if (!w.vfxEveryHit && w.vfxPrefab)
                 SpawnVfx(w.vfxPrefab, AveragePosition(mask, centers), w.vfxLifetime);
 
-            yield return RunTimeline(mask, times, centers, so, self, foe);
+            // ★ 경고(빨간 타일) 표시 + 칸별 히트 지연 스케줄
+            yield return RunTimeline(mask, times, centers, so, self, foe, w);
 
             anim.HideAll();
 
@@ -98,83 +109,123 @@ public class AttackController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 경고(타일 페이드)와 실제 히트(칸별 지연)를 분리해서 실행.
+    /// waveOrNull==null → 레거시: hitDelay로 timeline 재활용
+    /// </summary>
     private IEnumerator RunTimeline(
         bool[] mask, float[] timeline, Vector3[] centers,
-        AttackCardSO so, Faction self, Faction foe)
+        AttackCardSO so, Faction self, Faction foe,
+        AttackCardSO.Wave waveOrNull // 웨이브 전달(없으면 null)
+    )
     {
-        var schedule = BuildSchedule(mask, timeline);
-        bool damageApplied = false;
-
-        // ★ 피크 콜백: 피크에 도달한 타일 인덱스로 판정 & 데미지
-        System.Action<int> onPeak = (tileIdx) =>
+        // ── 1) 경고(빨간 타일) 표시 ──
+        if (timelineMode == TimelineMode.StartTimes)
         {
-            if (tileIdx < 0 || tileIdx >= centers.Length) return;
-            if (damageApplied && oneHitPerCard) return;
-
-            Vector3 hitPos = centers[tileIdx]; hitPos.z = tileZ;
-            if (CheckHitNow(hitPos))
-                ApplyDamageOnce(so, self, foe, ref damageApplied);
-        };
-
-        // ★ 구독
-        anim.OnTilePeak += onPeak;
-
-        // 코루틴이 어떤 경로로 끝나든 해제되도록 try/finally 사용
-        try
-        {
-            if (timelineMode == TimelineMode.StartTimes)
+            var schedule = BuildSchedule(mask, timeline);
+            float lastT = 0f;
+            for (int k = 0; k < schedule.Count; k++)
             {
-                // 시각에 맞춰 대기 → 창=다음 타점 간격(없으면 defaultTailWindow)
-                float lastT = 0f;
-                for (int k = 0; k < schedule.Count; k++)
-                {
-                    var (idx, tPoint) = schedule[k];
+                var (idx, tPoint) = schedule[k];
+                float wait = Mathf.Max(0f, tPoint - lastT);
+                if (wait > 0f) yield return new WaitForSeconds(wait);
+                lastT = tPoint;
 
-                    float wait = Mathf.Max(0f, tPoint - lastT);
-                    if (wait > 0f) yield return new WaitForSeconds(wait);
-                    lastT = tPoint;
-
-                    float nextT = (k + 1 < schedule.Count) ? schedule[k + 1].time : tPoint + defaultTailWindow;
-                    float window = Mathf.Max(minWindow, nextT - tPoint);
-
-                    // 창 시작 → 피크 순간에 onPeak 호출됨
-                    anim.StartPulseWindow(idx, window);
-                }
-
-                // (선택) 약간의 꼬리 대기
-                if (schedule.Count > 0 && defaultTailWindow > 0f)
-                    yield return new WaitForSeconds(defaultTailWindow);
+                float nextT = (k + 1 < schedule.Count) ? schedule[k + 1].time : tPoint + defaultTailWindow;
+                float window = Mathf.Max(minWindow, nextT - tPoint);
+                anim.StartPulseWindow(idx, window); // 경고만
             }
-            else // TimelineMode.Windows
+            if (schedule.Count > 0 && defaultTailWindow > 0f)
+                yield return new WaitForSeconds(defaultTailWindow);
+        }
+        else // Windows
+        {
+            float maxWin = 0f;
+            for (int i = 0; i < 16; i++)
             {
-                // 각 칸의 timeline[i]가 곧 "페이드 총 길이". 0 또는 음수면 무시.
-                float maxWin = 0f;
-
-                for (int i = 0; i < 16; i++)
+                if (mask != null && mask[i])
                 {
-                    if (mask != null && i < mask.Length && mask[i])
+                    float win = (timeline != null && timeline.Length > i) ? timeline[i] : 0f;
+                    if (win > 0f)
                     {
-                        float win = (timeline != null && timeline.Length > i) ? timeline[i] : 0f;
-                        if (win > 0f)
-                        {
-                            anim.StartPulseWindow(i, win);  // 피크 시 onPeak 호출
-                            if (win > maxWin) maxWin = win;
-                        }
+                        anim.StartPulseWindow(i, win); // 경고만
+                        if (win > maxWin) maxWin = win;
                     }
                 }
+            }
+            if (maxWin > 0f) yield return new WaitForSeconds(maxWin);
+        }
 
-                if (maxWin > 0f) yield return new WaitForSeconds(maxWin);
+        // ── 2) 실제 히트: 칸별 '히트 지연'으로 스케줄 ──
+        // 웨이브가 있으면 wave.hitDelays, 없으면 레거시: timeline을 지연으로 사용
+        var hitDelays = new float[16];
+        for (int i = 0; i < 16; i++)
+        {
+            float d = 0f;
+            if (waveOrNull != null && waveOrNull.hitDelays != null && waveOrNull.hitDelays.Length > i)
+                d = Mathf.Max(0f, waveOrNull.hitDelays[i]);
+            else if (timeline != null && timeline.Length > i)
+                d = Mathf.Max(0f, timeline[i]); // 레거시: 경고와 같은 지연 사용
+            hitDelays[i] = d;
+        }
+
+        bool damageApplied = false;
+        var running = new List<Coroutine>(16);
+
+        for (int i = 0; i < 16; i++)
+        {
+            if (mask != null && mask[i])
+            {
+                var center = centers[i]; center.z = tileZ;
+                float delay = hitDelays[i];
+                running.Add(StartCoroutine(CoHitAfterDelay(
+                    delay, center, so, self, foe, waveOrNull,
+                    () => damageApplied, () => damageApplied = true
+                )));
             }
         }
-        finally
-        {
-            // ★ 꼭 해제 (중복 타격/메모리 릭 방지)
-            anim.OnTilePeak -= onPeak;
-        }
 
-        yield break;
+        // 모든 칸 판정 완료 대기
+        foreach (var co in running)
+            if (co != null) yield return co;
     }
 
+    /// <summary>칸별 지연 후 VFX 스폰 + 판정 + 데미지(옵션: 카드당 1회)</summary>
+    private IEnumerator CoHitAfterDelay(
+        float delay, Vector3 center,
+        AttackCardSO so, Faction self, Faction foe,
+        AttackCardSO.Wave waveOrNull,
+        Func<bool> getDamageApplied,
+        Action setDamageAppliedTrue
+    )
+    {
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+
+        // 히트 순간 VFX (웨이브 설정이 있고, 히트마다 스폰하기로 한 경우)
+        if (waveOrNull != null && waveOrNull.vfxPrefab && waveOrNull.vfxEveryHit)
+            SpawnVfx(waveOrNull.vfxPrefab, center, waveOrNull.vfxLifetime);
+
+        // 카드당 1회 옵션
+        if (getDamageApplied() && oneHitPerCard) yield break;
+
+        // 실제 히트 AABB 판정
+        if (CheckHitNow(center))
+        {
+            // ApplyDamageOnce 로직을 여기서 직접 수행 (ref 전달 문제 회피)
+            if (hp == null) yield break;
+
+            int atk = hp.GetAttack(self);
+            int def = hp.GetDefense(foe);
+            int dmg = Mathf.Max(1, (so.power + atk) - def);
+            hp.ApplyDamage(foe, dmg);
+
+            setDamageAppliedTrue();
+        }
+    }
+
+    // ─────────────────────────────
+    // 유틸
+    // ─────────────────────────────
     private List<(int idx, float time)> BuildSchedule(bool[] mask, float[] times)
     {
         var list = new List<(int idx, float time)>(16);
@@ -196,18 +247,6 @@ public class AttackController : MonoBehaviour
         float halfX = tileWidth * 0.5f, halfY = tileHeight * 0.5f;
         return (foePos.x >= center.x - halfX && foePos.x <= center.x + halfX &&
                 foePos.y >= center.y - halfY && foePos.y <= center.y + halfY);
-    }
-
-    private void ApplyDamageOnce(AttackCardSO so, Faction self, Faction foe, ref bool damageAppliedFlag)
-    {
-        if (damageAppliedFlag && oneHitPerCard) return;
-        if (hp == null) { Debug.LogWarning("[AttackController] HPController missing."); return; }
-
-        int atk = hp.GetAttack(self);
-        int def = hp.GetDefense(foe);
-        int dmg = Mathf.Max(1, (so.power + atk) - def);
-        hp.ApplyDamage(foe, dmg);
-        damageAppliedFlag = true;
     }
 
     private static bool IsAllZero(bool[] mask)
