@@ -1,89 +1,80 @@
 using UnityEngine;
 using System.Collections;
-using Cinemachine; // Cinemachine을 사용하기 위해 필요
+using Cinemachine;
 
 public class BedCutscene : MonoBehaviour, IInteractable
 {
     [Header("1. 이벤트 순서별 대화")]
-    public Dialogue[] dialogues; // 순서대로 4개의 대화를 넣을 배열
+    public Dialogue[] dialogues;
 
     [Header("2. 카메라 및 효과")]
-    public CinemachineVirtualCamera virtualCamera; // 제어할 '눈' (Virtual Camera)
-    public AudioClip thumpSound; // '털썩' 사운드
-    public string nextSceneName; // 마지막에 넘어갈 씬 이름
+    public CinemachineVirtualCamera virtualCamera;
+    public AudioClip thumpSound;
+    public string nextSceneName;
 
-    private int interactionCount = 0; // 몇 번째 상호작용인지 기억하는 변수
+    [Header("3. 자동대사 넘김 설정")]
+    public float autoAdvanceDelay = 1.5f;
+
     private AudioSource audioSource;
+    private bool isRunning = false;
 
     private void Start()
     {
-        // 침대 오브젝트에 있는 AudioSource를 가져옴
         audioSource = GetComponent<AudioSource>();
     }
 
-    // PlayerAction 스크립트가 이 함수를 호출합니다.
     public void Interact()
     {
-        // 상호작용 횟수에 따라 다른 행동을 실행
-        switch (interactionCount)
-        {
-            case 0: // 첫 번째 상호작용
-                DialogueManager.instance.StartDialogue(dialogues[0]);
-                interactionCount++; // 다음 상호작용을 위해 카운트 1 증가
-                break;
-            case 1: // 두 번째 상호작용
-                StartCoroutine(FadeZoomDialogue(dialogues[1], 4.0f)); // 카메라 크기 4.5로 줌인
-                interactionCount++;
-                break;
-            case 2: // 세 번째 상호작용
-                StartCoroutine(FadeZoomDialogue(dialogues[2], 3.0f)); // 더 줌인
-                interactionCount++;
-                break;
-            case 3: // 네 번째 상호작용
-                StartCoroutine(FadeZoomDialogue(dialogues[3], 2.0f)); // 더 줌인
-                interactionCount++;
-                break;
-            case 4: // 마지막 상호작용
-                StartCoroutine(FinalSequence());
-                break;
-        }
+        if (isRunning) return;
+        isRunning = true;
+
+        // 컷씬 동안 대사 스킵 키 입력 금지
+        DialogueManager.instance.blockInput = true;
+
+        StartCoroutine(RunAllSequences());
     }
 
-    // 페이드, 줌, 대화를 순서대로 처리하는 기능
+    private IEnumerator RunAllSequences()
+    {
+        for (int i = 0; i < dialogues.Length; i++)
+        {
+            float targetZoom = 5f;
+            if (i == 1) targetZoom = 4f;
+            else if (i == 2) targetZoom = 3f;
+            else if (i == 3) targetZoom = 2f;
+
+            yield return StartCoroutine(FadeZoomDialogue(dialogues[i], targetZoom));
+        }
+
+        yield return StartCoroutine(FinalSequence());
+    }
+
     IEnumerator FadeZoomDialogue(Dialogue dialogue, float targetZoomSize)
     {
-        // 1. 화면을 검게 (페이드 아웃)
         yield return StartCoroutine(SceneFader.instance.Fade(1f));
 
-        // 2. 화면이 검은 동안 '눈'의 렌즈 크기를 조절해 줌인
         if (virtualCamera != null)
-        {
             virtualCamera.m_Lens.OrthographicSize = targetZoomSize;
-        }
 
-        // 3. 대화 시작
         DialogueManager.instance.StartDialogue(dialogue);
 
-        // 4. 다시 화면을 밝게 (페이드 인)
         yield return StartCoroutine(SceneFader.instance.Fade(0f));
+
+        while (DialogueManager.instance.isDialogueActive)
+        {
+            yield return new WaitForSeconds(autoAdvanceDelay);
+            DialogueManager.instance.DisplayNextSentence(); // 자동 진행
+        }
     }
 
-    // 마지막 시퀀스(암전 -> 소리 -> 씬 전환)를 처리하는 기능
     IEnumerator FinalSequence()
     {
-        // 1. 완전히 어둡게
         yield return StartCoroutine(SceneFader.instance.Fade(1f));
 
-        // 2. 화면이 검은 동안 '털썩' 소리 재생
-        if (audioSource != null && thumpSound != null)
-        {
-            audioSource.PlayOneShot(thumpSound);
-        }
+        // 컷씬 종료 → 다시 입력 허용
+        DialogueManager.instance.blockInput = false;
 
-        // 3. 1.5초 정도 기다림
-        yield return new WaitForSeconds(1.5f);
-
-        // 4. 다음 씬으로 전환
         SceneFader.instance.LoadSceneWithFade(nextSceneName);
     }
 }
+    
