@@ -9571,6 +9571,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ddd3871dfa80b314db00cb8987246cac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveTutorialIntro: 1
+  introMsg1: "\uB10C \uC5EC\uAE30\uC11C \uC0AC\uB77C\uC838\uC57C\uD574..."
+  introMsg2: "\uC77C\uB2E8.... \uBB34\uC11C\uC6CC..... \uD53C\uD574\uC57C\uD574...!!"
+  introMsg1Seconds: 1.2
+  introMsg2Seconds: 1.2
+  introRequireKey: 0
+  introKey: 101
+  moveTutorialGate: 1
+  postEnemyWait: 3
+  continueKey: 101
+  gateMsg1: "\uC774 \uACF5\uACA9\uB4E4\uC744 \uD53C\uD55C\uB2E4\uACE0....?(E\uD0A4\uB20C\uB7EC\uC11C
+    \uACC4\uC18D)"
+  gateMsg2: "\uC5ED\uC2DC \uB108\uB294 \uC774 \uC138\uC0C1\uC5D0 \uC788\uC73C\uBA74
+    \uC548\uB3FC..."
   menu: {fileID: 1069897049}
   enemyTurnController: {fileID: 630219717}
   handUI: {fileID: 860620052}
