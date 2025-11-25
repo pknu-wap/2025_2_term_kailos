@@ -16,8 +16,4 @@ public static class PlayerReturnContext
 
     public static float GraceSecondsPending = 0f; // ⬅️ 추가
 
-    // ★ 추가: 카메라 재바인딩 요청 플래그 & 타겟 vcam 이름(옵션)
-    public static bool CameraRebindRequested = false;
-    public static string TargetVcamName = null; // null이면 씬 내 첫 번째 CinemachineVirtualCamera 사용
-
 }
