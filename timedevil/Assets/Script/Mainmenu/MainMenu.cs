@@ -1,13 +1,17 @@
 using UnityEngine;
+
 public class MainMenu : MonoBehaviour
 {
+    public AudioSource sfxPlayer;   // 인스펙터에서 연결
+    public AudioClip clickSound;    // 인스펙터에서 연결
+
     public void LoadMyRoom()
     {
-        Debug.Log("LoadMyRoom 함수가 호출되었습니다!");
+        if (sfxPlayer != null && clickSound != null)
+            sfxPlayer.PlayOneShot(clickSound);
 
         if (SceneFader.instance != null)
         {
-            Debug.Log("SceneFader를 찾았습니다. 씬 전환을 요청합니다.");
             SceneFader.instance.LoadSceneWithFade("Myroom");
         }
         else

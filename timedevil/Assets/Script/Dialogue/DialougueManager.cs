@@ -20,10 +20,10 @@ public class DialogueManager : MonoBehaviour
     private Coroutine typingCoroutine;
     private bool isStartingDialogue = false;
 
-    // 블록 입력 추가 (E 키 스킵 차단)
     public bool blockInput = false;
 
     private AudioSource audioSource;
+    public AudioClip typingSound;   // 추가됨
 
     private void Awake()
     {
@@ -45,7 +45,6 @@ public class DialogueManager : MonoBehaviour
 
     void Update()
     {
-        // blockInput 중이면 입력 무시
         if (blockInput) return;
 
         if (isDialogueActive && !isStartingDialogue && Input.GetKeyDown(KeyCode.E))
@@ -109,6 +108,10 @@ public class DialogueManager : MonoBehaviour
         foreach (char letter in text.ToCharArray())
         {
             dialogueText.text += letter;
+
+            if (typingSound != null)
+                audioSource.PlayOneShot(typingSound);   // 추가된 부분
+
             yield return new WaitForSeconds(0.05f);
         }
     }
