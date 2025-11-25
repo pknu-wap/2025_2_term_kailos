@@ -1220,12 +1220,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 175103319}
-  arrowClip: {fileID: 8300000, guid: e23c8ec65917e2f45b16dfa967173c9c, type: 3}
-  fClip: {fileID: 0}
-  dClip: {fileID: 0}
-  arrowDuration: 0.07
-  fDuration: 0.1
-  dDuration: 0.1
+  arrowClip: {fileID: 8300000, guid: 6279447ab54f68e468bf7a8039fcfc0b, type: 3}
+  fClip: {fileID: 8300000, guid: 8df10f1e12dea4944995cd2339fe776b, type: 3}
+  dClip: {fileID: 8300000, guid: 16f1f62126fe5c246a1ae92620d78e1e, type: 3}
+  inventorySceneName: InventoryScene
 --- !u!4 &175103318
 Transform:
   m_ObjectHideFlags: 0
