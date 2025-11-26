@@ -20,3 +20,6 @@ MonoBehaviour:
   baseSPD: 100
   deckIds:
   - Card1
+  - Card2
+  - Card3
+  - Card4

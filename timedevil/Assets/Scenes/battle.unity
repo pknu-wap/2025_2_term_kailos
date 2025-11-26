@@ -1207,7 +1207,7 @@ MonoBehaviour:
   database: {fileID: 11400000, guid: c0cc44962aa33464ca629e77b4d09b2b, type: 2}
   costController: {fileID: 1352731693}
   showCard: {fileID: 643248677}
-  totalSeconds: 3
+  totalSeconds: 1
   desc: {fileID: 0}
   logDebug: 0
   attackController: {fileID: 1201525412}
@@ -9573,6 +9573,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveTutorialIntro: 1
+  forceIntroThisRun: 0
   introMsg1: "\uB10C \uC5EC\uAE30\uC11C \uC0AC\uB77C\uC838\uC57C\uD574..."
   introMsg2: "\uC77C\uB2E8.... \uBB34\uC11C\uC6CC..... \uD53C\uD574\uC57C\uD574...!!"
   introMsg1Seconds: 1.2
@@ -9592,11 +9593,11 @@ MonoBehaviour:
   cost: {fileID: 1352731693}
   desc: {fileID: 1069897052}
   deck: {fileID: 0}
-  enemyThinkDelay: 3
+  enemyThinkDelay: 2
   enemyHandUI: {fileID: 133108826}
   enemyDeck: {fileID: 1424331453}
   itemHand: {fileID: 334961076}
-  enemyDiscardRevealDelay: 3
+  enemyDiscardRevealDelay: 2
   cardAnime: {fileID: 1201525414}
 --- !u!4 &2043066780
 Transform:
