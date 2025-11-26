@@ -15,8 +15,8 @@ public class ItemRuntime : MonoBehaviour
     public string defaultJsonName = "items";
 
     [Header("현재 인벤토리 데이터 (런타임 상태)")]
-    [SerializeField] private InventorySaveData currentData;   // 🔥 필드라서 Header OK
-    public InventorySaveData CurrentData                     // 코드에서 쓸 프로퍼티
+    [SerializeField] private InventorySaveData currentData;  
+    public InventorySaveData CurrentData                     
     {
         get => currentData;
         private set => currentData = value;
@@ -53,26 +53,26 @@ public class ItemRuntime : MonoBehaviour
     {
         if (string.IsNullOrEmpty(defaultJsonName))
         {
-            Debug.LogError("❌ defaultJsonName 이 비어 있습니다.");
+            Debug.LogError("defaultJsonName 이 비어 있습니다.");
             return;
         }
 
         TextAsset json = Resources.Load<TextAsset>(defaultJsonName);
         if (json == null)
         {
-            Debug.LogError($"❌ Resources/{defaultJsonName}.json 을 찾을 수 없습니다.");
+            Debug.LogError($"Resources/{defaultJsonName}.json 을 찾을 수 없습니다.");
             return;
         }
 
         CurrentData = JsonUtility.FromJson<InventorySaveData>(json.text);
         if (CurrentData == null || CurrentData.items == null)
         {
-            Debug.LogError("⚠️ 초기 JSON 파싱 실패 또는 items 배열이 비어 있습니다.");
+            Debug.LogError("초기 JSON 파싱 실패 또는 items 배열이 비어 있습니다.");
             CurrentData = new InventorySaveData { items = new InventoryItemEntry[0] };
             return;
         }
 
-        Debug.Log($"✅ 기본 JSON에서 {CurrentData.items.Length}개의 인벤토리 아이템을 로드했습니다.");
+        Debug.Log($"기본 JSON에서 {CurrentData.items.Length}개의 인벤토리 아이템을 로드했습니다.");
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public class ItemRuntime : MonoBehaviour
         ItemSave save = ItemSaveStore.Load(SaveFileName);
         if (save == null || save.items == null)
         {
-            Debug.LogWarning("⚠️ 세이브 파일이 없거나 파싱 실패. 기본 JSON을 사용합니다.");
+            Debug.LogWarning("세이브 파일이 없거나 파싱 실패. 기본 JSON을 사용합니다.");
             LoadFromDefaultJson();
             return;
         }
@@ -93,7 +93,7 @@ public class ItemRuntime : MonoBehaviour
             items = save.items
         };
 
-        Debug.Log($"✅ 세이브 파일에서 {CurrentData.items.Length}개의 인벤토리 아이템을 로드했습니다.");
+        Debug.Log($"세이브 파일에서 {CurrentData.items.Length}개의 인벤토리 아이템을 로드했습니다.");
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public class ItemRuntime : MonoBehaviour
     {
         if (CurrentData == null || CurrentData.items == null)
         {
-            Debug.LogWarning("⚠️ 저장할 인벤토리 데이터가 없습니다.");
+            Debug.LogWarning("저장할 인벤토리 데이터가 없습니다.");
             return;
         }
 
@@ -113,10 +113,10 @@ public class ItemRuntime : MonoBehaviour
         };
 
         ItemSaveStore.Save(save, SaveFileName);
-        Debug.Log($"💾 인벤토리 세이브 완료: {SaveFileName}");
+        Debug.Log($"인벤토리 세이브 완료: {SaveFileName}");
     }
 
-    // ================== 편의 메서드들 (원하면 자유롭게 추가) ==================
+    // ================== 편의 메서드들 ==================
 
     /// <summary>
     /// 특정 id 아이템의 현재 수량 조회 (없으면 0)

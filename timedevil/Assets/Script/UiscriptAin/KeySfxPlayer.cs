@@ -13,8 +13,6 @@ public class KeySfxPlayer : MonoBehaviour
 
     [Header("입력을 받을 인벤토리 씬 이름")]
     [SerializeField] private string inventorySceneName = "InventoryScene";
-    // ↑ 실제 인벤토리 씬 이름으로 바꿔줘
-
     private void Awake()
     {
         if (!audioSource)

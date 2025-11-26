@@ -22,7 +22,7 @@ public static class ItemSaveStore
     {
         if (data == null)
         {
-            Debug.LogError("❌ 저장하려는 ItemSave 데이터가 null 입니다.");
+            Debug.LogError("저장하려는 ItemSave 데이터가 null 입니다.");
             return;
         }
 
@@ -35,7 +35,7 @@ public static class ItemSaveStore
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"❌ 세이브 파일 쓰기 실패: {ex.Message}");
+            Debug.LogError($"세이브 파일 쓰기 실패: {ex.Message}");
         }
     }
 
@@ -58,7 +58,7 @@ public static class ItemSaveStore
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"❌ 세이브 파일 읽기/파싱 실패: {ex.Message}");
+            Debug.LogError($"세이브 파일 읽기/파싱 실패: {ex.Message}");
             return null;
         }
     }
