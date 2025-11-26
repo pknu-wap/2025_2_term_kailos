@@ -19,10 +19,14 @@ public class Cutscene_Cornered_02 : MonoBehaviour
     public GameObject cutsceneCameraObject;
     public float cameraMoveDelay = 2.0f;
 
-    // ▼▼▼ [추가됨] 교체할 스프라이트 이미지들 ▼▼▼
     [Header("4. 스프라이트 수동 교체")]
     public Sprite playerIdleRight; // 플레이어가 오른쪽 보는 멈춘 이미지
     public Sprite helperIdleLeft;  // 조력자가 왼쪽 보는 멈춘 이미지
+
+    // ▼▼▼ [추가됨] 컷씬 종료 후 재생할 BGM ▼▼▼
+    [Header("5. BGM 설정")]
+    public AudioClip endSceneBGM;
+    // ▲▲▲▲▲▲
 
     public void StartPart2()
     {
@@ -35,56 +39,38 @@ public class Cutscene_Cornered_02 : MonoBehaviour
         if (startDelay > 0) yield return new WaitForSeconds(startDelay);
         if (cameraMoveDelay > 0) yield return new WaitForSeconds(cameraMoveDelay);
 
-        // ▼▼▼ [핵심 수정] 대화 전, 애니메이터 끄고 스프라이트 교체 ▼▼▼
-
-        // (1) 조력자 처리
+        // --- 대화 전 스프라이트 교체 ---
         if (helper != null)
         {
             Animator helperAnim = helper.GetComponent<Animator>();
             SpriteRenderer helperSR = helper.GetComponent<SpriteRenderer>();
-
-            // 애니메이터가 방해하지 못하게 끕니다.
             if (helperAnim != null) helperAnim.enabled = false;
-
-            // 준비한 '왼쪽 보기' 스프라이트로 교체합니다.
-            if (helperSR != null && helperIdleLeft != null)
-            {
-                helperSR.sprite = helperIdleLeft;
-            }
+            if (helperSR != null && helperIdleLeft != null) helperSR.sprite = helperIdleLeft;
         }
 
-        // (2) 실제 플레이어 처리
         PlayerAction realPlayer = FindObjectOfType<PlayerAction>();
         if (realPlayer != null)
         {
             Animator playerAnim = realPlayer.GetComponent<Animator>();
             SpriteRenderer playerSR = realPlayer.GetComponent<SpriteRenderer>();
-
-            // 애니메이터 끄기
             if (playerAnim != null) playerAnim.enabled = false;
-
-            // '오른쪽 보기' 스프라이트로 교체
-            if (playerSR != null && playerIdleRight != null)
-            {
-                playerSR.sprite = playerIdleRight;
-            }
+            if (playerSR != null && playerIdleRight != null) playerSR.sprite = playerIdleRight;
         }
-        // ▲▲▲▲▲▲
 
+        // --- 대화 시작 ---
         if (DialogueManager.instance != null && dialogue.sentences.Length > 0)
         {
             DialogueManager.instance.StartDialogue(dialogue);
             yield return new WaitUntil(() => !DialogueManager.instance.isDialogueActive);
         }
 
-        // ▼▼▼ 조력자 이동 (이동할 땐 애니메이터 다시 켜기) ▼▼▼
+        // --- 조력자 이동 ---
         if (helper != null && movePath != null && movePath.Length > 0)
         {
             Animator helperAnim = helper.GetComponent<Animator>();
             SpriteRenderer helperSR = helper.GetComponent<SpriteRenderer>();
 
-            // 이동 시작 전 애니메이터 다시 활성화!
-            if (helperAnim != null) helperAnim.enabled = true;
+            if (helperAnim != null) helperAnim.enabled = true; // 이동 애니메이션 켬
 
             foreach (Transform targetPoint in movePath)
             {
@@ -95,7 +81,6 @@ public class Cutscene_Cornered_02 : MonoBehaviour
                         helper.transform.position, targetPoint.position, moveSpeed * Time.deltaTime
                     );
 
-                    // (기존 애니메이션 방향 로직 유지)
                     if (helperAnim != null)
                     {
                         Vector3 dir = (targetPoint.position - helper.transform.position).normalized;
@@ -109,24 +94,37 @@ public class Cutscene_Cornered_02 : MonoBehaviour
                 }
             }
 
-            // ▼▼▼ 도착 후, 다시 애니메이터 끄고 스프라이트 고정 ▼▼▼
+            // 이동 끝: 왼쪽 보기 고정
             if (helperAnim != null) helperAnim.enabled = false;
             if (helperSR != null && helperIdleLeft != null)
             {
-                helperSR.sprite = helperIdleLeft; // 마지막 모습은 왼쪽 보기
+                helperSR.sprite = helperIdleLeft;
             }
         }
 
+        // 조력자 퇴장 및 카메라 복구
         if (helper != null) helper.SetActive(false);
-        if (cutsceneCameraObject != null) { cutsceneCameraObject.SetActive(false); yield return new WaitForSeconds(1.5f); }
+        if (cutsceneCameraObject != null)
+        {
+            cutsceneCameraObject.SetActive(false);
+            yield return new WaitForSeconds(1.5f);
+        }
 
-        // (중요) 플레이어 애니메이터는 게임 재개 전에 다시 켜줘야 합니다.
+        // ▼▼▼ [추가됨] 컷씬 종료 시 BGM 변경 ▼▼▼
+        if (endSceneBGM != null && BGMManager.instance != null)
+        {
+            BGMManager.instance.PlayBGM(endSceneBGM);
+        }
+        // ▲▲▲▲▲▲
+
+        // 플레이어 애니메이터 복구
         if (realPlayer != null)
         {
             Animator playerAnim = realPlayer.GetComponent<Animator>();
             if (playerAnim != null) playerAnim.enabled = true;
         }
 
+        // 게임 재개
         if (GameManager.Instance != null) GameManager.Instance.isAction = false;
         gameObject.SetActive(false);
     }

@@ -3,7 +3,7 @@ using System.Collections;
 using Cinemachine;
 
 [RequireComponent(typeof(BoxCollider2D))]
-public class Cutscene_Cornered : MonoBehaviour
+public class Cutscene_Cornered_01 : MonoBehaviour
 {
     [Header("1. 컷씬에 등장할 대상")]
     public PlayerAction player;
@@ -42,7 +42,6 @@ public class Cutscene_Cornered : MonoBehaviour
     public Sprite playerIdleRight;
     public Sprite helperIdleLeft;
 
-    // ▼▼▼ [추가됨] 사운드 설정 ▼▼▼
     [Header("9. 사운드 효과")]
     public AudioSource audioSource;      // 소리를 재생할 스피커 컴포넌트
     public AudioClip skillSound;         // 스킬 발동 효과음
@@ -82,8 +81,20 @@ public class Cutscene_Cornered : MonoBehaviour
         fakePlayerActor.transform.rotation = player.transform.rotation;
         fakePlayerActor.SetActive(true);
 
+        // 몬스터 움직임 멈춤
         UndeadMover monsterMover = monster.GetComponent<UndeadMover>();
         if (monsterMover != null) { monsterMover.StopAllCoroutines(); monsterMover.enabled = false; }
+
+        // ▼▼▼ [추가됨] 몬스터가 내고 있던 소리 끄기 ▼▼▼
+        if (monster != null)
+        {
+            AudioSource monsterAudio = monster.GetComponent<AudioSource>();
+            if (monsterAudio != null)
+            {
+                monsterAudio.Stop(); // 몬스터 소리 즉시 정지
+            }
+        }
+        // ▲▲▲▲▲▲
 
         if (SceneFader.instance != null)
         {
@@ -162,21 +173,19 @@ public class Cutscene_Cornered : MonoBehaviour
         // 스킬 발동 전 딜레이
         if (skillDelay > 0) yield return new WaitForSeconds(skillDelay);
 
-        // ▼▼▼ [추가됨] 스킬 사운드 재생 ▼▼▼
+        // 스킬 사운드 재생
         if (audioSource != null && skillSound != null)
         {
             audioSource.PlayOneShot(skillSound);
         }
-        // ▲▲▲▲▲▲
 
         if (skillEffectOnScene != null) skillEffectOnScene.SetActive(true);
 
-        // ▼▼▼ [추가됨] 몬스터 사망 사운드 재생 ▼▼▼
+        // 몬스터 사망 사운드 재생
         if (audioSource != null && monsterDeathSound != null)
         {
             audioSource.PlayOneShot(monsterDeathSound);
         }
-        // ▲▲▲▲▲▲
 
         Animator monsterAnim = monster.GetComponent<Animator>();
         if (monsterAnim != null) monsterAnim.SetTrigger("doDie");
