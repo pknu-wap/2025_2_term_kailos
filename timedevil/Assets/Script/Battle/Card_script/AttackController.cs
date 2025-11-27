@@ -8,7 +8,7 @@ public class AttackController : MonoBehaviour
     public enum TimelineMode { StartTimes, Windows }
 
     private const float ProjectileZ = -5f;   // 발사체는 항상 앞(카메라 쪽)
-    private const float ExplosionZ = -5f;   // 폭발도 앞
+    private const float ExplosionZ = -5f;    // 폭발도 앞
 
     [SerializeField] private AttackAnimationController anim;
 
@@ -82,7 +82,7 @@ public class AttackController : MonoBehaviour
             AttackCardSO.ParsePattern16(w.pattern16, warnMaskBase);
             AttackCardSO.FillTimeline16(w.timeline, warnTimes);
 
-            // ★ (1) 경고 마스크 강화: labelsB>0 인 모든 도착 타일을 OR
+            // (1) 경고 마스크 강화: labelsB>0 인 모든 도착 타일 OR
             bool[] warnMask = BuildWarningMaskWithLabelsB(warnMaskBase, w.labelsB);
 
             if (IsAllZero(warnMask))
@@ -105,7 +105,7 @@ public class AttackController : MonoBehaviour
             anim.HideAll();
 
             // Hook 선택
-            if (w.projectilePrefab != null)                       // Launcher Hook
+            if (w.projectilePrefab != null)                       // Launcher Hook (이동 중 충돌 즉시 판정)
             {
                 yield return LaunchProjectilesByLabels(w, self, foe, centersSelf, centersFoe, so);
             }
@@ -252,8 +252,7 @@ public class AttackController : MonoBehaviour
 
     // ─────────────────────────────────────────────
     //  Launcher: 라벨 매칭으로 발사체 직선 이동
-    //  (요구사항: 플레이어/적과의 충돌로는 사라지지 않고,
-    //   '도착 지점'에 도달했을 때만 데미지/소멸 처리)
+    //  (★★ 수정: 이동 중 충돌 즉시 데미지/소멸 처리)
     // ─────────────────────────────────────────────
     private IEnumerator LaunchProjectilesByLabels(
         AttackCardSO.Wave w, Faction self, Faction foe,
@@ -288,7 +287,7 @@ public class AttackController : MonoBehaviour
                     if (w.hitDelays != null && w.hitDelays.Length > srcIdx)
                         launchDelay = Mathf.Max(0f, w.hitDelays[srcIdx]); // 출발칸 기준 지연
 
-                    running.Add(StartCoroutine(CoLaunchProjectileLine_ArrivalOnly(
+                    running.Add(StartCoroutine(CoLaunchProjectileLine_MoveHit(
                         w, startPos, endPos, launchDelay, so, self, foe,
                         () => damageApplied, () => damageApplied = true
                     )));
@@ -312,8 +311,8 @@ public class AttackController : MonoBehaviour
         return dict;
     }
 
-    // ★ 변경 버전: 이동 중 충돌 판정 제거, "도착 시"에만 데미지/소멸/VFX
-    private IEnumerator CoLaunchProjectileLine_ArrivalOnly(
+    // ★ 새 버전: 이동 중 매 프레임 AABB로 충돌 체크 → 즉시 데미지/임팩트 → (옵션) 파괴
+    private IEnumerator CoLaunchProjectileLine_MoveHit(
         AttackCardSO.Wave w,
         Vector3 startPos, Vector3 endPos, float delay,
         AttackCardSO so, Faction self, Faction foe,
@@ -325,15 +324,16 @@ public class AttackController : MonoBehaviour
         if (w.projectilePrefab != null)
         {
             proj = Instantiate(w.projectilePrefab, startPos, Quaternion.identity);
-
-            // ★ (2) 런처 크기 조절
-            if (w.projectileScale > 0f)
-                proj.transform.localScale *= w.projectileScale;
+            if (w.projectileScale > 0f) proj.transform.localScale *= w.projectileScale;
         }
 
         float dist = Vector3.Distance(startPos, endPos);
         float speed = Mathf.Max(0f, w.projectileSpeed);
         float t = (dist <= 0.0001f || speed <= 0f) ? 1f : 0f; // 속도 0 → 즉시 도착
+
+        // 히트박스 최소 보정
+        float hbW = Mathf.Max(0.01f, w.projectileHitWidth);
+        float hbH = Mathf.Max(0.01f, w.projectileHitHeight);
 
         while (t < 1f)
         {
@@ -341,25 +341,28 @@ public class AttackController : MonoBehaviour
             t = Mathf.Clamp01(t);
 
             var pos = Vector3.Lerp(startPos, endPos, t);
-            pos.z = ProjectileZ; // Z 고정
+            pos.z = ProjectileZ;
             if (proj) proj.transform.position = pos;
 
-            // 이동 중 충돌 없음 (요구사항)
+            // 이동 중 충돌: 한 카드당 1회만 데미지(옵션)
+            if (!(getDamageApplied() && oneHitPerCard))
+            {
+                if (CheckRectHitNow(pos, hbW, hbH))
+                {
+                    ApplyDamage(so, self, foe);
+                    setDamageAppliedTrue();
+
+                    if (w.vfxPrefab) SpawnVfx(w.vfxPrefab, pos, w.vfxLifetime);
+                    if (proj && w.destroyOnImpact) Destroy(proj);
+                    yield break; // 이 발사체 종료
+                }
+            }
+
             yield return null;
         }
 
-        // ★ (3) 도착 지점에서만 처리
-        if (!(getDamageApplied() && oneHitPerCard))
-        {
-            ApplyDamage(so, self, foe);
-
-            // 임팩트 VFX(공통 vfxPrefab 재사용)
-            if (w.vfxPrefab) SpawnVfx(w.vfxPrefab, endPos, w.vfxLifetime);
-
-            setDamageAppliedTrue();
-        }
-
-        if (proj) Destroy(proj); // 도착 후 소멸
+        // 도착했지만 이동 중 한 번도 맞추지 못했으면 소멸
+        if (proj) Destroy(proj);
     }
 
     // ─────────────────────────────────────────────
