@@ -4902,11 +4902,11 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uC77C\uACF1 \uAC10\uC815\uC758 \uC0C9\uAE54..?"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: d568ec8c492c8ca44acc8e1885101332, type: 3}
     - characterName: "\uB098"
-      text: "\uBCF4\uAE30 \uADC0\uCC2E\uC544"
+      text: "\uAD73\uC774 \uC77D\uC5B4\uC57C \uD558"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: 000bdcf39d0bce94bbdbeac00fb66a21, type: 3}
   overrideCardId: 
   disableAfterPickup: 1
   destroyAfterPickup: 0
@@ -5339,6 +5339,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 963139387}
+  - component: {fileID: 963139388}
   m_Layer: 0
   m_Name: BGMManager
   m_TagString: Untagged
@@ -5355,12 +5356,24 @@ Transform:
   m_GameObject: {fileID: 963139386}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.9971004, y: -2.6738677, z: -10.018046}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &963139388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963139386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a23bb73275799834b9f2955888a8d585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &977312587
 GameObject:
   m_ObjectHideFlags: 0
@@ -5722,28 +5735,28 @@ MonoBehaviour:
   dialogues:
   - sentences:
     - characterName: "\uB098"
-      text: "\uADF8\uB0E5 \uC790\uAE30\uC2EB\uC5B4"
+      text: "\uADF8\uB0E5 \uC7A0\uC774\uB098 \uC790\uC790"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: 0b058f3e7dcbc68448fa1b77d73165cb, type: 3}
   - sentences:
     - characterName: ???
-      text: "\uB108\uB294 \uC544\uBB34\uAC83\uB3C4 \uBABB\uD574"
-      characterPortrait: {fileID: 0}
+      text: ...
+      characterPortrait: {fileID: 21300000, guid: faddc8e013202db42a2074ac85536ec3, type: 3}
       voiceClip: {fileID: 0}
   - sentences:
     - characterName: "\uB098"
-      text: "\uC81C\uBC1C \uC800\uB9AC\uAC00"
+      text: "\uC81C\uBC1C \uC800\uB9AC \uAC00"
       characterPortrait: {fileID: 21300000, guid: c47fa7d7138300b4995672f2ef740502, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: d0b8af61fce90e5418955675a5b06e50, type: 3}
   - sentences:
     - characterName: "\uB098"
-      text: "\uAEBC\uC838 \uBCF4\uAE30\uC2EB\uC5B4"
+      text: "\uADF8\uB9CC.. \uB0B4 \uB208 \uC55E\uC5D0\uC11C \uC0AC\uB77C\uC838"
       characterPortrait: {fileID: 21300000, guid: c47fa7d7138300b4995672f2ef740502, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: 8711e894545798e45a74423b341dbc34, type: 3}
   virtualCamera: {fileID: 2076388506}
   thumpSound: {fileID: 0}
   nextSceneName: chapter1
-  autoAdvanceDelay: 3
+  autoAdvanceDelay: 1
 --- !u!1 &1027162494
 GameObject:
   m_ObjectHideFlags: 0
@@ -5776,11 +5789,11 @@ MonoBehaviour:
   dialogue:
     sentences:
     - characterName: "\uB098"
-      text: "\uC9C0\uAE08 \uBA87 \uC2DC\uC9C0\r"
+      text: "\uC5BC\uB9C8\uB098 \uC794\uAC70\uC9C0"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: bc3627c76cd4fb64187c733e4a474ec6, type: 3}
   autoAdvance: 1
-  autoDelay: 1.5
+  autoDelay: 3
 --- !u!4 &1027162496
 Transform:
   m_ObjectHideFlags: 0
@@ -5805,110 +5818,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1122489511}
-  - component: {fileID: 1122489510}
+  - component: {fileID: 1122489512}
   m_Layer: 0
-  m_Name: BGMplayer
+  m_Name: SceneMusicStarter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!82 &1122489510
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1122489509}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
-  m_Volume: 1
-  m_Pitch: 1
-  Loop: 1
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
 --- !u!4 &1122489511
 Transform:
   m_ObjectHideFlags: 0
@@ -5918,12 +5835,26 @@ Transform:
   m_GameObject: {fileID: 1122489509}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 25.88995, y: 19.47911, z: -10.124857}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1122489512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122489509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef7eeea3b95f0274a87c69887be5c69f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneBGM: {fileID: 8300000, guid: 3ae8bbe1b8a58364196e311009839982, type: 3}
+  uniqueKey: 
 --- !u!1 &1158280061
 GameObject:
   m_ObjectHideFlags: 0
@@ -6070,7 +6001,7 @@ MonoBehaviour:
   dialogue:
     sentences:
     - characterName: "\uB098"
-      text: "\uBC16\uC740 \uC2EB\uC5B4"
+      text: "\uB208\uBD80\uC154..\uC544\uCE68\uC778\uAC74"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
       voiceClip: {fileID: 0}
   overrideCardId: 
@@ -6156,7 +6087,6 @@ Transform:
   - {fileID: 1005693816}
   - {fileID: 1197922559}
   - {fileID: 576516804}
-  - {fileID: 1842524683}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1241498037
@@ -6709,6 +6639,7 @@ GameObject:
   - component: {fileID: 1503988287}
   - component: {fileID: 1503988286}
   - component: {fileID: 1503988288}
+  - component: {fileID: 1503988289}
   m_Layer: 0
   m_Name: DialogueManager
   m_TagString: Untagged
@@ -6734,6 +6665,8 @@ MonoBehaviour:
   dialogueText: {fileID: 320326850}
   isDialogueActive: 0
   blockInput: 0
+  sfxSource: {fileID: 1503988288}
+  voiceSource: {fileID: 1503988289}
   typingSound: {fileID: 8300000, guid: 436e851e1d1c73a469a16340c156f08a, type: 3}
 --- !u!4 &1503988287
 Transform:
@@ -6765,6 +6698,102 @@ AudioSource:
   m_PlayOnAwake: 0
   m_Volume: 0.452
   m_Pitch: 0.4
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!82 &1503988289
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1503988285}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
@@ -7314,97 +7343,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1825848035}
   m_CullTransparentMesh: 1
---- !u!1 &1842524682
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1842524683}
-  - component: {fileID: 1842524685}
-  - component: {fileID: 1842524684}
-  m_Layer: 8
-  m_Name: TemporaryBattleExit
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1842524683
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1842524682}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.32, y: -1.6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1237196013}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1842524684
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1842524682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e385ba278f3e2741963fca2699e1638, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  fallbackSceneName: MainMenu
---- !u!61 &1842524685
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1842524682}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
 --- !u!1 &1880991116
 GameObject:
   m_ObjectHideFlags: 0
@@ -8068,11 +8006,10 @@ MonoBehaviour:
   dialogue:
     sentences:
     - characterName: "\uB098"
-      text: "\uBC25 \uBA39\uAE30\uB3C4 \uADC0\uCC2E\uACE0 \uBC16\uC5D0 \uB098\uAC00\uBA74
-        \uBAA8\uB450\uAC00 \uB0A0 \uCCD0\uB2E4\uBCF4\uB294 \uAC83 \uAC19\uACE0\n\"
-        \" \uD558\uB294 \uAE30\uBD84\uC774\uC57C"
+      text: "\uB354 \uC774\uC0C1 \uC0AC\uB78C\uB4E4\uC744 \uB9C8\uC8FC\uCE58\uACE0
+        \uC2F6\uC9C0\uC54A\uC544"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: 71f2f4c382597c94c9da47a07c9af676, type: 3}
   overrideCardId: 
   disableAfterPickup: 1
   destroyAfterPickup: 0
