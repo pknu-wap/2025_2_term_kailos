@@ -4902,11 +4902,11 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uC77C\uACF1 \uAC10\uC815\uC758 \uC0C9\uAE54..?"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 8300000, guid: d568ec8c492c8ca44acc8e1885101332, type: 3}
+      voiceClip: {fileID: 8300000, guid: 2a563097fca2a214597880f1a8240f5a, type: 3}
     - characterName: "\uB098"
       text: "\uAD73\uC774 \uC77D\uC5B4\uC57C \uD558"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 8300000, guid: 000bdcf39d0bce94bbdbeac00fb66a21, type: 3}
+      voiceClip: {fileID: 8300000, guid: 73e39d803194f3d49bc66b843faa0ff6, type: 3}
   overrideCardId: 
   disableAfterPickup: 1
   destroyAfterPickup: 0
@@ -5737,7 +5737,7 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uADF8\uB0E5 \uC7A0\uC774\uB098 \uC790\uC790"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 8300000, guid: 0b058f3e7dcbc68448fa1b77d73165cb, type: 3}
+      voiceClip: {fileID: 8300000, guid: 80871ef3417d6c84b808b62bc31fe3bf, type: 3}
   - sentences:
     - characterName: ???
       text: ...
@@ -5747,12 +5747,12 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uC81C\uBC1C \uC800\uB9AC \uAC00"
       characterPortrait: {fileID: 21300000, guid: c47fa7d7138300b4995672f2ef740502, type: 3}
-      voiceClip: {fileID: 8300000, guid: d0b8af61fce90e5418955675a5b06e50, type: 3}
+      voiceClip: {fileID: 8300000, guid: d1faa9153603301428478bf262df1287, type: 3}
   - sentences:
     - characterName: "\uB098"
       text: "\uADF8\uB9CC.. \uB0B4 \uB208 \uC55E\uC5D0\uC11C \uC0AC\uB77C\uC838"
       characterPortrait: {fileID: 21300000, guid: c47fa7d7138300b4995672f2ef740502, type: 3}
-      voiceClip: {fileID: 8300000, guid: 8711e894545798e45a74423b341dbc34, type: 3}
+      voiceClip: {fileID: 8300000, guid: 12e268693486c884ea8fb93af9923af4, type: 3}
   virtualCamera: {fileID: 2076388506}
   thumpSound: {fileID: 0}
   nextSceneName: chapter1
@@ -5791,9 +5791,9 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uC5BC\uB9C8\uB098 \uC794\uAC70\uC9C0"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 8300000, guid: bc3627c76cd4fb64187c733e4a474ec6, type: 3}
+      voiceClip: {fileID: 8300000, guid: 68781fc048cec044b8438ad473010392, type: 3}
   autoAdvance: 1
-  autoDelay: 3
+  autoDelay: 4
 --- !u!4 &1027162496
 Transform:
   m_ObjectHideFlags: 0
@@ -6003,7 +6003,7 @@ MonoBehaviour:
     - characterName: "\uB098"
       text: "\uB208\uBD80\uC154..\uC544\uCE68\uC778\uAC74"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 0}
+      voiceClip: {fileID: 8300000, guid: a41a4ed3c6b16b04a95cb051e80b324b, type: 3}
   overrideCardId: 
   disableAfterPickup: 1
   destroyAfterPickup: 0
@@ -6137,12 +6137,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -8009,7 +8009,7 @@ MonoBehaviour:
       text: "\uB354 \uC774\uC0C1 \uC0AC\uB78C\uB4E4\uC744 \uB9C8\uC8FC\uCE58\uACE0
         \uC2F6\uC9C0\uC54A\uC544"
       characterPortrait: {fileID: 21300000, guid: 2e0827c2b95c6884bae7ed3ac8a82323, type: 3}
-      voiceClip: {fileID: 8300000, guid: 71f2f4c382597c94c9da47a07c9af676, type: 3}
+      voiceClip: {fileID: 8300000, guid: 929bee349dce97945846739fd2164837, type: 3}
   overrideCardId: 
   disableAfterPickup: 1
   destroyAfterPickup: 0
