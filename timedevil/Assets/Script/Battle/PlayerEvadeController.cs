@@ -20,19 +20,17 @@ public class PlayerEvadeController : MonoBehaviour
     private float snapEpsilon = 0.15f;
 
     [Header("Timing")]
-    [SerializeField, Tooltip("왕복 총 시간(초): 가기 1/2 + 오기 1/2")]
-    private float totalEvadeSeconds = 1.0f;
+    [SerializeField, Tooltip("편도 이동 시간(초)")]
+    private float moveSeconds = 0.25f;
 
     private bool enemyAttackWindow = false;
-    private bool evading = false;
-    private Vector3 basePos;
+    private bool evading = false; // 이동 중 입력 잠금
 
     void Awake()
     {
         if (!playerPawn) playerPawn = this.transform;
         if (!animator) animator = FindObjectOfType<PlayerAnimeController>(true);
         if (animator) animator.SetTarget(playerPawn);
-        basePos = playerPawn.position;
     }
 
     void OnEnable() { EnemyTurnController.OnEnemyAttackWindowChanged += HandleEnemyAttackWindow; }
@@ -44,6 +42,7 @@ public class PlayerEvadeController : MonoBehaviour
     {
         if (!CanAcceptInput()) return;
 
+        // 방향 입력
         Vector3 offset = Vector3.zero;
         if (Input.GetKeyDown(KeyCode.UpArrow)) offset = new Vector3(0f, stepY, 0f);
         else if (Input.GetKeyDown(KeyCode.DownArrow)) offset = new Vector3(0f, -stepY, 0f);
@@ -51,39 +50,44 @@ public class PlayerEvadeController : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.RightArrow)) offset = new Vector3(stepX, 0f, 0f);
         else return;
 
-        // ▶ 패널 경계 검사: 이동 ‘끝점’이 허용 센터 안에 없으면 시작 자체를 취소
-        basePos = playerPawn.position;
-        if (!TrySnapToAllowedCenter(basePos + offset, out var snappedEnd))
-            return;
+        // 도착 후보 → 패널 내부인지 스냅 검사
+        var cur = playerPawn.position;
+        if (!TrySnapToAllowedCenter(cur + offset, out var snappedEnd))
+            return; // 패널 밖이면 무시
 
-        StartCoroutine(Co_EvadeOnce(snappedEnd));
+        StartCoroutine(Co_MoveOnce(snappedEnd));
     }
 
     private bool CanAcceptInput()
     {
         if (evading) return false;
         var tm = TurnManager.Instance;
-        if (tm == null || tm.currentTurn != TurnState.EnemyTurn) return false;
-        if (!enemyAttackWindow) return false;
+        if (tm == null || tm.currentTurn != TurnState.EnemyTurn) return false; // 적 턴에만 회피
+        if (!enemyAttackWindow) return false;                                  // 공격 윈도우 중에만 회피
         return true;
     }
 
-    private IEnumerator Co_EvadeOnce(Vector3 endWorld)
+    /// <summary>
+    /// 한 칸만 이동하고 끝(원위치 복귀 없음)
+    /// </summary>
+    private IEnumerator Co_MoveOnce(Vector3 endWorld)
     {
         evading = true;
 
-        float half = Mathf.Max(0.01f, totalEvadeSeconds * 0.5f);
+        float dur = Mathf.Max(0.01f, moveSeconds);
 
         if (animator != null)
         {
-            animator.AnimatePingPong(endWorld, half, 0f);
+            animator.AnimateTo(endWorld, dur);
             while (animator.IsPlaying) yield return null;
         }
         else
         {
-            yield return LerpPosition(playerPawn.position, endWorld, half);
-            yield return LerpPosition(endWorld, basePos, half);
+            yield return LerpPosition(playerPawn.position, endWorld, dur);
         }
+
+        // 스냅 보정(부동오차 방지)
+        playerPawn.position = endWorld;
 
         evading = false;
     }
@@ -100,10 +104,7 @@ public class PlayerEvadeController : MonoBehaviour
         for (int i = 0; i < allowedCenters.Length; i++)
         {
             float d = Vector2.Distance((Vector2)desired, (Vector2)allowedCenters[i]);
-            if (d < best)
-            {
-                best = d; bestIdx = i;
-            }
+            if (d < best) { best = d; bestIdx = i; }
         }
 
         if (bestIdx >= 0 && best <= snapEpsilon)
@@ -111,10 +112,10 @@ public class PlayerEvadeController : MonoBehaviour
             snapped = allowedCenters[bestIdx];
             return true; // 패널 내부로 인정
         }
-        return false;     // 패널 탈출 → 회피 시작 금지
+        return false;     // 패널 탈출 → 이동 금지
     }
 
-    // 폴백 보간
+    // 폴백 보간(애니메이터 없을 때)
     private IEnumerator LerpPosition(Vector3 a, Vector3 b, float dur)
     {
         float t = 0f;

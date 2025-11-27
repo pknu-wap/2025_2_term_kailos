@@ -9,8 +9,8 @@ public class TurnManager : MonoBehaviour
     //  Persisted flags (Intro / Gate)  **v2 keys**
     // ─────────────────────────────────────────
     private const string PREF_KEY_MOVE_TUTORIAL_SEEN_V2 = "Move_Tutorial_v2_IntroSeen";      // 인트로 1회
-    private const string PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2 = "Move_Tutorial_v2_GateSeen";       // 게이트 1회
-    private const string PREF_KEY_MOVE_TUTORIAL_V2_MIGRATED = "Move_Tutorial_v2_Migrated";       // 빌드당 1회 초기화 마커
+    private const string PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2 = "Move_Tutorial_v2_GateSeen";  // 게이트 1회
+    private const string PREF_KEY_MOVE_TUTORIAL_V2_MIGRATED = "Move_Tutorial_v2_Migrated";   // 빌드당 1회 초기화 마커
 
     private static bool s_MoveTutorialSeenThisSession = false;
     private static bool s_MoveTutorialGateSeenThisSession = false;
@@ -24,6 +24,12 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private float introMsg2Seconds = 1.2f;
     [SerializeField] private bool introRequireKey = false;
     [SerializeField] private KeyCode introKey = KeyCode.E;
+
+    [Header("Intro SFX (optional)")]
+    [SerializeField] private AudioClip introSfx1;
+    [SerializeField, Range(0f, 1f)] private float introSfx1Volume = 1f;
+    [SerializeField] private AudioClip introSfx2;
+    [SerializeField, Range(0f, 1f)] private float introSfx2Volume = 1f;
 
     [Header("Debug / One-shot reset for this build")]
     [Tooltip("체크하면 이번 실행에서만 v2 키를 한 번 초기화하여 인트로/게이트가 다시 1회 노출됩니다.")]
@@ -40,6 +46,12 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private KeyCode continueKey = KeyCode.E;
     [TextArea][SerializeField] private string gateMsg1 = "이 공격들을 피한다고....?(E키눌러서 계속)";
     [TextArea][SerializeField] private string gateMsg2 = "역시 너는 이 세상에 있으면 안돼...";
+
+    [Header("Gate SFX (optional)")]
+    [SerializeField] private AudioClip gateSfx1;
+    [SerializeField, Range(0f, 1f)] private float gateSfx1Volume = 1f;
+    [SerializeField] private AudioClip gateSfx2;
+    [SerializeField, Range(0f, 1f)] private float gateSfx2Volume = 1f;
 
     [Header("Optional UI Controller")]
     [SerializeField] private BattleMenuController menu;
@@ -286,7 +298,7 @@ public class TurnManager : MonoBehaviour
             desc.SetPlayerDiscardMode(true);
             desc.ShowTemporaryExplanation($"손패가 {deck.MaxHandSize}장을 초과했습니다. 버릴 카드를 선택하세요. (남은 초과: {deck.OverCapCount})");
         }
-        Debug.Log($"[TurnManager] DiscardPhase 시작 — 초과 {deck.OverCapCount}장");
+        Debug.Log($"[TurnManager] DiscardPhase 시작 — 초과 {deck.OverCapCount}");
     }
 
     public void OnPlayerDiscardOne(int remainingOver)
@@ -337,11 +349,17 @@ public class TurnManager : MonoBehaviour
         if (postEnemyWait > 0f)
             yield return new WaitForSeconds(postEnemyWait);
 
+        // 게이트 1: 문구 + 사운드
         if (desc) desc.ShowTemporaryExplanation(gateMsg1);
+        PlaySfx(gateSfx1, gateSfx1Volume);
+
         while (!Input.GetKeyDown(continueKey)) yield return null;
         yield return null; while (Input.GetKey(continueKey)) yield return null;
 
+        // 게이트 2: 문구 + 사운드
         if (desc) desc.ShowTemporaryExplanation(gateMsg2);
+        PlaySfx(gateSfx2, gateSfx2Volume);
+
         while (!Input.GetKeyDown(continueKey)) yield return null;
         yield return null; while (Input.GetKey(continueKey)) yield return null;
 
@@ -364,23 +382,33 @@ public class TurnManager : MonoBehaviour
 
         tutorialIntroPlayed = true;
 
-        // 1) 첫 문장
+        // 1) 첫 문장 + 사운드
         if (desc) desc.ShowTemporaryExplanation(introMsg1);
-        if (introRequireKey)
-        {
-            while (!Input.GetKeyDown(introKey)) yield return null;
-            yield return null; while (Input.GetKey(introKey)) yield return null;
-        }
-        else if (introMsg1Seconds > 0f) yield return new WaitForSeconds(introMsg1Seconds);
+        float w1 = introMsg1Seconds;
+        if (!introRequireKey) // 자동 진행 모드에서만 클립 길이 고려
+            w1 = Mathf.Max(w1, introSfx1 ? introSfx1.length : 0f);
+        PlaySfx(introSfx1, introSfx1Volume);
 
-        // 2) 둘째 문장
-        if (desc) desc.ShowTemporaryExplanation(introMsg2);
         if (introRequireKey)
         {
             while (!Input.GetKeyDown(introKey)) yield return null;
             yield return null; while (Input.GetKey(introKey)) yield return null;
         }
-        else if (introMsg2Seconds > 0f) yield return new WaitForSeconds(introMsg2Seconds);
+        else if (w1 > 0f) yield return new WaitForSeconds(w1);
+
+        // 2) 둘째 문장 + 사운드
+        if (desc) desc.ShowTemporaryExplanation(introMsg2);
+        float w2 = introMsg2Seconds;
+        if (!introRequireKey)
+            w2 = Mathf.Max(w2, introSfx2 ? introSfx2.length : 0f);
+        PlaySfx(introSfx2, introSfx2Volume);
+
+        if (introRequireKey)
+        {
+            while (!Input.GetKeyDown(introKey)) yield return null;
+            yield return null; while (Input.GetKey(introKey)) yield return null;
+        }
+        else if (w2 > 0f) yield return new WaitForSeconds(w2);
 
         if (desc) desc.ClearTemporaryMessage();
 
@@ -411,4 +439,14 @@ public class TurnManager : MonoBehaviour
         }
     }
 #endif
+
+    // ─────────────────────────────────────────
+    // SFX helper
+    // ─────────────────────────────────────────
+    private void PlaySfx(AudioClip clip, float volume)
+    {
+        if (!clip) return;
+        var pos = Camera.main ? Camera.main.transform.position : Vector3.zero;
+        AudioSource.PlayClipAtPoint(clip, pos, Mathf.Clamp01(volume));
+    }
 }
