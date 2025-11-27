@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 /// - Deck 패널: 덱 목록 그대로
 /// - E키: 현재 영역에서 반대 영역으로 한 장 이동
 /// - 덱은 중복 불가 + 최대 13장 제한
-/// - W키: 이전 씬으로 복귀 (SceneHistory.LastSceneName 사용)
+/// - W키: 이전(메인) 씬으로 복귀 (PlayerReturnContext 사용)
 /// </summary>
 public class CardSceneController : MonoBehaviour
 {
@@ -21,8 +21,13 @@ public class CardSceneController : MonoBehaviour
     [SerializeField] private RectTransform selector; // 주황 박스
 
     [Header("Prefab & Resources")]
-    [SerializeField] private GameObject cardSlotPrefab;        // Image 하나 들어있는 프리팹
-    [SerializeField] private string resourcesFolder = "my_asset"; // Resources/my_asset/<CardId>
+    [SerializeField] private GameObject cardSlotPrefab;              // Image 하나 들어있는 프리팹
+    [SerializeField] private string resourcesFolder = "my_asset";    // Resources/my_asset/<CardId>
+
+    [Header("Return Settings")]
+    [SerializeField] private float graceSeconds = 1.0f;              // 복귀 직후 충돌 무적 시간(옵션)
+    [SerializeField] private string worldVcamName = "CM vcam1";      // 복귀 씬에서 쓸 vcam 이름(없으면 자동 탐색)
+    [SerializeField] private bool useFaderIfExists = true;           // SceneFader 있으면 사용
 
     // 내부 상태
     private readonly List<CardSlot> cardSlots = new();
@@ -59,17 +64,43 @@ public class CardSceneController : MonoBehaviour
 
     void HandleInput()
     {
-        // W: 이전 씬으로 복귀
+        // W: 이전 씬(메인)으로 복귀 — PlayerReturnContext 기반
         if (Input.GetKeyDown(KeyCode.W))
         {
-            if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
+            // 복귀 대상이 세팅되어 있으면 표준 복귀 루트 사용
+            if (!string.IsNullOrEmpty(PlayerReturnContext.ReturnSceneName))
             {
-                Time.timeScale = 1f;
-                SceneManager.LoadScene(SceneHistory.LastSceneName);
+                // 카메라 재바인딩 요청
+                PlayerReturnContext.CameraRebindRequested = true;
+                PlayerReturnContext.TargetVcamName = string.IsNullOrWhiteSpace(worldVcamName) ? null : worldVcamName;
+
+                // (옵션) 복귀 직후 무적
+                if (graceSeconds > 0f)
+                {
+                    PlayerReturnContext.IsInGracePeriod = true;
+                    PlayerReturnContext.GraceSecondsPending = graceSeconds;
+                }
+                else
+                {
+                    PlayerReturnContext.IsInGracePeriod = false;
+                    PlayerReturnContext.GraceSecondsPending = 0f;
+                }
+
+                // 페이더 우선 복귀
+                SceneLoader.GoBackToReturnScene(graceSeconds, useFaderIfExists);
             }
             else
             {
-                Debug.LogWarning("[CardScene] 이전 씬 기록이 없습니다.");
+                // 폴백: 마지막 씬 기록이 있으면 그리로, 아니면 경고
+                if (!string.IsNullOrEmpty(SceneHistory.LastSceneName))
+                {
+                    if (SceneFader.instance) SceneFader.instance.LoadSceneWithFade(SceneHistory.LastSceneName);
+                    else SceneManager.LoadScene(SceneHistory.LastSceneName);
+                }
+                else
+                {
+                    Debug.LogWarning("[CardScene] 복귀 대상(ReturnSceneName)이 설정되지 않았습니다.");
+                }
             }
             return;
         }
