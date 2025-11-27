@@ -6,20 +6,28 @@ public enum TurnState { PlayerTurn, EnemyTurn }
 public class TurnManager : MonoBehaviour
 {
     // ─────────────────────────────────────────
-    //  Move_Tutorial 인트로: 영구 저장 + 세션 캐시
+    //  Persisted flags (Intro / Gate)  **v2 keys**
     // ─────────────────────────────────────────
-    private const string PREF_KEY_MOVE_TUTORIAL_SEEN = "Move_Tutorial_Seen";
+    private const string PREF_KEY_MOVE_TUTORIAL_SEEN_V2 = "Move_Tutorial_v2_IntroSeen";      // 인트로 1회
+    private const string PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2 = "Move_Tutorial_v2_GateSeen";       // 게이트 1회
+    private const string PREF_KEY_MOVE_TUTORIAL_V2_MIGRATED = "Move_Tutorial_v2_Migrated";       // 빌드당 1회 초기화 마커
+
     private static bool s_MoveTutorialSeenThisSession = false;
+    private static bool s_MoveTutorialGateSeenThisSession = false;
 
     [Header("Move_Tutorial Intro")]
-    [SerializeField] private bool moveTutorialIntro = true;     // 튜토리얼 씬에서만 켜두기
-    [SerializeField] private bool forceIntroThisRun = false;    // ⬅ 테스트/디버그용: 이 실행에서 강제로 한 번 보이게
+    [SerializeField] private bool moveTutorialIntro = true;
+    [SerializeField] private bool forceIntroThisRun = false; // 디버그용(이 실행에서만 강제 노출)
     [SerializeField, TextArea] private string introMsg1 = "넌 여기서 사라져야해...";
     [SerializeField, TextArea] private string introMsg2 = "일단.... 무서워..... 피해야해...!!";
     [SerializeField] private float introMsg1Seconds = 1.2f;
     [SerializeField] private float introMsg2Seconds = 1.2f;
     [SerializeField] private bool introRequireKey = false;
     [SerializeField] private KeyCode introKey = KeyCode.E;
+
+    [Header("Debug / One-shot reset for this build")]
+    [Tooltip("체크하면 이번 실행에서만 v2 키를 한 번 초기화하여 인트로/게이트가 다시 1회 노출됩니다.")]
+    [SerializeField] private bool resetIntroGateOnceOnThisBuild = false;
 
     private bool tutorialIntroPlayed = false;
     private static bool IsMoveTutorial() => SceneManager.GetActiveScene().name == "Move_Tutorial";
@@ -77,9 +85,21 @@ public class TurnManager : MonoBehaviour
         if (!enemyDeck) enemyDeck = EnemyDeckRuntime.Instance ?? FindObjectOfType<EnemyDeckRuntime>(true);
         if (!itemHand) itemHand = FindObjectOfType<ItemHandUI>(true);
 
-        // 저장된 적 있으면 세션 캐시 올림
-        if (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_SEEN, 0) == 1)
+        // (A) 이번 빌드에서 한 번만 초기화하고 싶다면 인스펙터 체크
+        if (resetIntroGateOnceOnThisBuild && PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_V2_MIGRATED, 0) == 0)
+        {
+            PlayerPrefs.DeleteKey(PREF_KEY_MOVE_TUTORIAL_SEEN_V2);
+            PlayerPrefs.DeleteKey(PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2);
+            PlayerPrefs.SetInt(PREF_KEY_MOVE_TUTORIAL_V2_MIGRATED, 1);
+            PlayerPrefs.Save();
+            Debug.LogWarning("[TurnManager] v2 intro/gate keys cleared once for this build.");
+        }
+
+        // (B) 저장된 플래그를 세션 캐시에 반영 (v2 키 기준)
+        if (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_SEEN_V2, 0) == 1)
             s_MoveTutorialSeenThisSession = true;
+        if (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2, 0) == 1)
+            s_MoveTutorialGateSeenThisSession = true;
     }
 
     void Start()
@@ -90,28 +110,41 @@ public class TurnManager : MonoBehaviour
         ResolvePlayerData();
         ResolveEnemyData();
 
-        // ▶ Move_Tutorial이면 인트로 우선 검사
+        // ▶ Move_Tutorial이면 인트로 우선 검사 (한 번만)
         if (IsMoveTutorial() && moveTutorialIntro && ShouldPlayIntroNow())
         {
             Debug.Log("[TurnManager] Move_Tutorial intro start");
             StartCoroutine(Co_MoveTutorialIntroBoot());
-            return; // ⬅ 인트로가 턴 진행을 막도록 즉시 반환
+            return; // 인트로가 끝날 때까지 턴 진행 금지
         }
 
         // 그 외: 정상 시작
         DecideFirstTurn();
     }
 
-    // 인트로 재생 여부 판단(강제 옵션 반영)
+    // ─────────────────────────────────────────
+    // Intro / Gate 표시 판단 (v2 keys)
+    // ─────────────────────────────────────────
     private bool ShouldPlayIntroNow()
     {
-        if (forceIntroThisRun) return true; // 테스트용 강제 재생
-        if (tutorialIntroPlayed) return false; // 이미 재생 시작했으면 X
+        if (forceIntroThisRun) return true;          // 테스트용
+        if (tutorialIntroPlayed) return false;       // 이미 재생 시작
+        bool seenGlobally = (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_SEEN_V2, 0) == 1);
+        bool seenSession = s_MoveTutorialSeenThisSession;
+#if UNITY_EDITOR
+        Debug.Log($"[TurnManager] Intro check: global={seenGlobally}, session={seenSession}, play={!(seenGlobally || seenSession)}");
+#endif
+        return !(seenGlobally || seenSession);
+    }
 
-        bool seenGlobally = (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_SEEN, 0) == 1);
-        bool seenThisSession = s_MoveTutorialSeenThisSession;
-
-        return !(seenGlobally || seenThisSession);
+    private bool ShouldPlayGateNow()
+    {
+        bool seenGlobally = (PlayerPrefs.GetInt(PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2, 0) == 1);
+        bool seenSession = s_MoveTutorialGateSeenThisSession;
+#if UNITY_EDITOR
+        Debug.Log($"[TurnManager] Gate  check: global={seenGlobally}, session={seenSession}, play={!(seenGlobally || seenSession)}");
+#endif
+        return !(seenGlobally || seenSession);
     }
 
     void ResolvePlayerData()
@@ -187,7 +220,7 @@ public class TurnManager : MonoBehaviour
         if (enemyTurnController)
             yield return enemyTurnController.RunTurn();
 
-        // 적 손패 초과 자동 버림(연출 → 데이터 이동 → 리빌드)
+        // 적 손패 초과 자동 버림
         if (enemyDeck != null && cardAnime != null)
         {
             int over = enemyDeck.OverCapCount;
@@ -218,7 +251,8 @@ public class TurnManager : MonoBehaviour
 
         Debug.Log("🔶 적 턴 종료");
 
-        if (moveTutorialGate && IsMoveTutorial())
+        // ★ 게이트도 "첫 방문 1회만"
+        if (moveTutorialGate && IsMoveTutorial() && ShouldPlayGateNow())
         {
             if (menu) menu.EnableInput(false);
             yield return StartCoroutine(Co_MoveTutorialGate());
@@ -312,12 +346,18 @@ public class TurnManager : MonoBehaviour
         yield return null; while (Input.GetKey(continueKey)) yield return null;
 
         if (desc) desc.ClearTemporaryMessage();
+
+        // ▶ 게이트 1회 완료 플래그 저장 (v2)
+        s_MoveTutorialGateSeenThisSession = true;
+        PlayerPrefs.SetInt(PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2, 1);
+        PlayerPrefs.Save();
+
         BeginPlayerTurn();
     }
 
     private System.Collections.IEnumerator Co_MoveTutorialIntroBoot()
     {
-        // 인트로 중에는 어떤 턴도 진행되지 않도록 UI/입력 잠금
+        // 인트로 동안 입력 잠금/적 턴 차단
         if (menu) menu.EnableInput(false);
         if (handUI) handUI.HideCards();
         if (desc) { desc.SetEnemyTurn(true); desc.SetPlayerDiscardMode(false); }
@@ -344,24 +384,30 @@ public class TurnManager : MonoBehaviour
 
         if (desc) desc.ClearTemporaryMessage();
 
-        // ▶ 인트로를 실제로 보여주었으므로 플래그 저장
+        // ▶ 인트로 완료 플래그 저장 (v2)
         s_MoveTutorialSeenThisSession = true;
-        PlayerPrefs.SetInt(PREF_KEY_MOVE_TUTORIAL_SEEN, 1);
+        PlayerPrefs.SetInt(PREF_KEY_MOVE_TUTORIAL_SEEN_V2, 1);
         PlayerPrefs.Save();
 
-        // 이제 실제 적 턴 시작
+        // 인트로 후 적 턴 시작
         BeginEnemyTurn();
     }
 
 #if UNITY_EDITOR
-    // F12: 인트로 재생 플래그 초기화
+    // F12: 인트로 플래그 초기화 / F11: 게이트 플래그 초기화  (v2 키 기준)
     void Update()
     {
         if (IsMoveTutorial() && Input.GetKeyDown(KeyCode.F12))
         {
-            PlayerPrefs.DeleteKey(PREF_KEY_MOVE_TUTORIAL_SEEN);
+            PlayerPrefs.DeleteKey(PREF_KEY_MOVE_TUTORIAL_SEEN_V2);
             s_MoveTutorialSeenThisSession = false;
-            Debug.LogWarning("[TurnManager] Move_Tutorial 인트로 플래그 초기화됨 (에디터 F12)");
+            Debug.LogWarning("[TurnManager] Intro v2 flag cleared (F12)");
+        }
+        if (IsMoveTutorial() && Input.GetKeyDown(KeyCode.F11))
+        {
+            PlayerPrefs.DeleteKey(PREF_KEY_MOVE_TUTORIAL_GATE_SEEN_V2);
+            s_MoveTutorialGateSeenThisSession = false;
+            Debug.LogWarning("[TurnManager] Gate v2 flag cleared (F11)");
         }
     }
 #endif
