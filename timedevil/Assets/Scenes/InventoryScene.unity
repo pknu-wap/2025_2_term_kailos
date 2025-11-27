@@ -7083,9 +7083,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1478103674}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3fa0770eb219cfd47bc7f657792ae249, type: 3}
+  m_Script: {fileID: 11500000, guid: 0fefce69672715944b4d85e6280f2717, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  graceSeconds: 0.5
+  useFaderIfExists: 1
 --- !u!1 &1486154291
 GameObject:
   m_ObjectHideFlags: 0

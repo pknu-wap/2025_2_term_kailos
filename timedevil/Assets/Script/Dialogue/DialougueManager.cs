@@ -22,8 +22,10 @@ public class DialogueManager : MonoBehaviour
 
     public bool blockInput = false;
 
-    private AudioSource audioSource;
-    public AudioClip typingSound;   // 추가됨
+    [Header("Sound")]
+    public AudioSource sfxSource;   // 기존 audioSource (타이핑 효과음용)
+    public AudioSource voiceSource; // ★추가됨: 성우 목소리 전용
+    public AudioClip typingSound;
 
     private void Awake()
     {
@@ -35,12 +37,13 @@ public class DialogueManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
 
         sentenceQueue = new Queue<Sentence>();
 
-        audioSource = GetComponent<AudioSource>();
-        audioSource.playOnAwake = false;
+        // 편의상 자동으로 찾아주기 (기존 컴포넌트)
+        if (sfxSource == null) sfxSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -90,14 +93,25 @@ public class DialogueManager : MonoBehaviour
 
         Sentence sentence = sentenceQueue.Dequeue();
         nameText.text = sentence.characterName;
-        portraitImage.sprite = sentence.characterPortrait;
 
-        audioSource.Stop();
-
-        if (sentence.voiceClip != null)
+        if (portraitImage != null)
         {
-            audioSource.PlayOneShot(sentence.voiceClip);
+            portraitImage.sprite = sentence.characterPortrait;
+            if (sentence.characterPortrait == null) portraitImage.color = new Color(1, 1, 1, 0);
+            else portraitImage.color = new Color(1, 1, 1, 1);
         }
+
+        // ▼▼▼ 소리 재생 로직 분리 ▼▼▼
+
+        // 1. 이전 목소리 끄기 (말이 겹치지 않게)
+        if (voiceSource != null) voiceSource.Stop();
+
+        // 2. 새 목소리 재생 (전용 스피커 사용)
+        if (voiceSource != null && sentence.voiceClip != null)
+        {
+            voiceSource.PlayOneShot(sentence.voiceClip);
+        }
+        // ▲▲▲▲▲▲
 
         typingCoroutine = StartCoroutine(TypeSentence(sentence.text));
     }
@@ -109,8 +123,9 @@ public class DialogueManager : MonoBehaviour
         {
             dialogueText.text += letter;
 
-            if (typingSound != null)
-                audioSource.PlayOneShot(typingSound);   // 추가된 부분
+            // 3. 타이핑 소리는 효과음 스피커로 재생
+            if (sfxSource != null && typingSound != null)
+                sfxSource.PlayOneShot(typingSound);
 
             yield return new WaitForSeconds(0.05f);
         }
@@ -123,6 +138,8 @@ public class DialogueManager : MonoBehaviour
         isDialogueActive = false;
         dialogueCanvas.SetActive(false);
 
-        audioSource.Stop();
+        // 종료 시 소리 끄기
+        if (voiceSource != null) voiceSource.Stop();
+        if (sfxSource != null) sfxSource.Stop();
     }
 }
