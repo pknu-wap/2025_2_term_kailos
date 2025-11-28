@@ -4,7 +4,6 @@ using Cinemachine;
 
 public class DoorTransition : MonoBehaviour, IInteractable
 {
-    // ... (기존 변수들 동일) ...
     [Header("이동할 목표 지점")]
     public Transform targetPoint;
 
@@ -15,47 +14,76 @@ public class DoorTransition : MonoBehaviour, IInteractable
     [Header("BGM 설정")]
     public AudioClip newBGM;
 
-    // ▼▼▼ [추가됨] 음악 중복 재생 방지용 키 ▼▼▼
     [Header("음악 반복 방지")]
-    [Tooltip("SceneMusicStarter에 적은 'Unique Key'와 똑같이 적으세요.")]
     public string stopMusicKey = "Chapter1_Intro_BGM";
+
+    // ▼▼▼ [추가됨] 문 여는 효과음 설정 ▼▼▼
+    [Header("효과음 설정")]
+    public AudioSource sfxAudioSource; // 소리를 낼 스피커
+    public AudioClip doorOpenSound;    // 문 여는 소리 파일
     // ▲▲▲▲▲▲
 
     private PlayerAction player;
     private bool isTransitioning = false;
 
-    // ... (Start, Interact 함수는 기존과 동일) ...
-    void Start() { player = FindObjectOfType<PlayerAction>(); }
-    public void Interact() { if (!isTransitioning) StartCoroutine(TransitionCoroutine()); }
+    void Start()
+    {
+        player = FindObjectOfType<PlayerAction>();
+        if (player == null)
+        {
+            Debug.LogError("[DoorTransition] 씬에서 'PlayerAction' 스크립트를 찾을 수 없습니다!");
+        }
+    }
+
+    public void Interact()
+    {
+        if (targetPoint == null) return;
+        if (player == null) return;
+
+        if (isTransitioning || (DialogueManager.instance != null && DialogueManager.instance.isDialogueActive))
+        {
+            return;
+        }
+        StartCoroutine(TransitionCoroutine());
+    }
 
     IEnumerator TransitionCoroutine()
     {
         isTransitioning = true;
+
+        // 1. 플레이어 조작 비활성화
         if (GameManager.Instance != null) GameManager.Instance.isAction = true;
 
+        // ▼▼▼ [추가됨] 문 여는 소리 재생 ▼▼▼
+        // 화면이 어두워지기 시작할 때 소리가 나야 자연스럽습니다.
+        if (sfxAudioSource != null && doorOpenSound != null)
+        {
+            sfxAudioSource.PlayOneShot(doorOpenSound);
+        }
+        // ▲▲▲▲▲▲
+
+        // 2. 페이드 아웃
         if (SceneFader.instance != null) yield return StartCoroutine(SceneFader.instance.Fade(1f));
 
         // --- 화면이 검은 상태 ---
 
-        // 1. BGM 변경 (기존 로직)
+        // 3. BGM 변경
         if (newBGM != null && BGMManager.instance != null)
         {
             BGMManager.instance.PlayBGM(newBGM);
         }
 
-        // ▼▼▼ [핵심 추가] "이제 처음 브금은 틀지 마"라고 도장 쾅! ▼▼▼
+        // 4. 음악 반복 방지 저장
         if (!string.IsNullOrEmpty(stopMusicKey))
         {
-            // stopMusicKey 이름으로 '1'을 저장합니다.
             PlayerPrefs.SetInt(stopMusicKey, 1);
-            PlayerPrefs.Save(); // 저장 확정
+            PlayerPrefs.Save();
         }
-        // ▲▲▲▲▲▲
 
-        // 2. 플레이어 이동
+        // 5. 플레이어 이동
         player.transform.position = targetPoint.position;
 
-        // 3. 카메라 설정
+        // 6. 카메라 설정
         if (virtualCamera != null)
         {
             virtualCamera.m_Lens.OrthographicSize = newCameraSize;
@@ -66,8 +94,10 @@ public class DoorTransition : MonoBehaviour, IInteractable
 
         yield return null;
 
+        // 7. 페이드 인
         if (SceneFader.instance != null) yield return StartCoroutine(SceneFader.instance.Fade(0f));
 
+        // 8. 조작 재개
         if (GameManager.Instance != null) GameManager.Instance.isAction = false;
         isTransitioning = false;
     }

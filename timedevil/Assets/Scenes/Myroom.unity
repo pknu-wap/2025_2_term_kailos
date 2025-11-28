@@ -5752,7 +5752,7 @@ MonoBehaviour:
   virtualCamera: {fileID: 2076388506}
   thumpSound: {fileID: 0}
   nextSceneName: chapter1
-  autoAdvanceDelay: 1
+  autoAdvanceDelay: 3
 --- !u!1 &1027162494
 GameObject:
   m_ObjectHideFlags: 0
