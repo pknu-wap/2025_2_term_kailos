@@ -336,7 +336,7 @@ Transform:
   m_GameObject: {fileID: 138928733}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.91, y: -1.939, z: 0}
+  m_LocalPosition: {x: 0.91, y: -1.939, z: 5}
   m_LocalScale: {x: 1.7451397, y: 1.7451397, z: 1.7451397}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -917,7 +917,7 @@ MonoBehaviour:
   playerData: {fileID: 0}
   enemyData: {fileID: 0}
   playerPawn: {fileID: 1345401700}
-  enemyPawn: {fileID: 1064948988}
+  enemyPawn: {fileID: 1867045134}
 --- !u!1 &473387546
 GameObject:
   m_ObjectHideFlags: 0
@@ -4735,6 +4735,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1064948988}
   - component: {fileID: 1064948987}
+  - component: {fileID: 1064948989}
   m_Layer: 0
   m_Name: none
   m_TagString: Untagged
@@ -4783,7 +4784,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 815397005, guid: d207945970c9bf34f9bc2785a1ea5ee7, type: 3}
+  m_Sprite: {fileID: 602471819, guid: 82ec241670b48204b834044dbd59c125, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -4802,13 +4803,34 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1064948986}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.344, y: 2.502, z: -2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.058, y: 0.139, z: -2.0710888}
+  m_LocalScale: {x: 2.091672, y: 2.091672, z: 2.091672}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1867045134}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1064948989
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064948986}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 52e04c5b1b5ae7f429d6fb2149574c86, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1069897048
 GameObject:
   m_ObjectHideFlags: 0
@@ -4994,7 +5016,7 @@ MonoBehaviour:
   playerGridOrigin: {fileID: 1330316358}
   enemyGridOrigin: {fileID: 1767689043}
   playerPawn: {fileID: 1345401700}
-  enemyPawn: {fileID: 1064948988}
+  enemyPawn: {fileID: 1867045134}
   playerRC: {x: 4, y: 1}
   enemyRC: {x: 2, y: 2}
   perCellSeconds: 0.15
@@ -9628,6 +9650,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1867045133
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1867045134}
+  m_Layer: 0
+  m_Name: Enemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1867045134
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1867045133}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.314, y: 2.475, z: 0.0710889}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1064948988}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1937422803
 GameObject:
   m_ObjectHideFlags: 0
@@ -10227,7 +10281,7 @@ SceneRoots:
   - {fileID: 1245666683}
   - {fileID: 726002405}
   - {fileID: 1345401700}
-  - {fileID: 1064948988}
+  - {fileID: 1867045134}
   - {fileID: 1234915016}
   - {fileID: 1767689043}
   - {fileID: 1330316358}
