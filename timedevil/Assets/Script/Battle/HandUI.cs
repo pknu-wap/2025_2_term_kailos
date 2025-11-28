@@ -11,13 +11,16 @@ public class HandUI : MonoBehaviour
 
     [Header("Layout (single row, left aligned)")]
     [SerializeField] private float leftPadding = 8f;
-    [SerializeField] private float rightPadding = 8f; // 👈 추가: 오른쪽 여백
-
+    [SerializeField] private float rightPadding = 8f;
     [SerializeField] private float cardWidth = 120f;
 
     [Header("Select Overlay")]
     [SerializeField] private RectTransform select;
-    [SerializeField] private Vector2 selectPadding = new Vector2(8f, 8f);
+
+    // ★ Select 고정 크기
+    [Header("Select Overlay Fixed Size")]
+    [SerializeField] private bool useFixedSelectSize = true;
+    [SerializeField] private Vector2 fixedSelectSize = new Vector2(113.2803f, 161.15f);
 
     private readonly List<GameObject> spawned = new();
     private readonly List<string> handIdsSnapshot = new();
@@ -54,8 +57,6 @@ public class HandUI : MonoBehaviour
             BattleDeckRuntime.Instance.OnHandChanged -= RebuildFromHand;
     }
 
-    // 입력은 여기서 처리하지 않음
-
     public void RebuildFromHand()
     {
         if (!row) row = (RectTransform)transform;
@@ -68,33 +69,23 @@ public class HandUI : MonoBehaviour
         if (live != null) handIdsSnapshot.AddRange(live);
 
         ClearSpawned();
-        // --- 배치 계산: 패널 너비 안에서 첫/끝 카드가 항상 들어오도록 step 계산 ---
-        float rowW = row.rect.width;
-        // 사용할 수 있는 가로폭
-        float usable = Mathf.Max(0f, rowW - leftPadding - rightPadding);
 
+        float rowW = row.rect.width;
+        float usable = Mathf.Max(0f, rowW - leftPadding - rightPadding);
         int n = handIdsSnapshot.Count;
 
-        // n==0이면 아래 루프 자체가 돌지 않지만 안전하게 초기화
         float step = 0f;
         if (n <= 1)
         {
-            step = 0f; // 한 장이면 패널 안 왼쪽에 그대로
+            step = 0f;
         }
         else
         {
-            // 마지막 카드의 오른쪽 끝이 패널을 넘지 않도록:
-            // 첫 카드 x=leftPadding, 마지막 카드 x=leftPadding + step*(n-1)
-            // 마지막 카드의 "오른쪽 끝" = 그 x + cardWidth <= leftPadding + usable
-            // => step*(n-1) <= usable - cardWidth
             float maxSpan = Mathf.Max(0f, usable - cardWidth);
             float needed = maxSpan / (n - 1);
-
-            // 카드 크기는 유지, 간격만 줄이기(겹치기 허용). 간격의 상한은 cardWidth.
             step = Mathf.Min(cardWidth, Mathf.Max(0f, needed));
         }
 
-        // --- 스폰 & 배치 ---
         ClearSpawned();
         for (int i = 0; i < n; i++)
         {
@@ -112,17 +103,14 @@ public class HandUI : MonoBehaviour
             rtItem.anchorMin = rtItem.anchorMax = new Vector2(0f, 0.5f);
             rtItem.pivot = new Vector2(0f, 0.5f);
 
-            // 계산된 step으로 겹치기/간격 적용
             float x = leftPadding + step * i;
             rtItem.anchoredPosition = new Vector2(x, 0f);
 
-            // 카드 자체 크기는 그대로 유지
             rtItem.sizeDelta = new Vector2(cardWidth, rtItem.sizeDelta.y);
         }
 
-        // 손패 변경 시 선택 해제되더라도, 다음 진입에서 회색 방지
         ExitSelectMode();
-        ShowCards(); // ✅ 항상 켜 두기 (중요)
+        ShowCards();
     }
 
     private void ClearSpawned()
@@ -152,7 +140,7 @@ public class HandUI : MonoBehaviour
     {
         if (CardCount == 0) return;
 
-        ShowCards();                 // ✅ 재진입 시 반드시 on
+        ShowCards();
         selecting = true;
         if (select) select.gameObject.SetActive(true);
         onSelectModeChanged?.Invoke(true);
@@ -188,16 +176,31 @@ public class HandUI : MonoBehaviour
         if (select && selectIndex >= 0 && selectIndex < spawned.Count)
         {
             var target = (RectTransform)spawned[selectIndex].transform;
+
+            // 부모/앵커 설정
             select.SetParent(row, false);
-            select.anchorMin = select.anchorMax = new Vector2(0f, 0.5f);
-            select.pivot = new Vector2(0f, 0.5f);
 
-            var size = target.sizeDelta + selectPadding * 2f;
-            var pos = target.anchoredPosition - new Vector2(selectPadding.x, 0f);
+            // ✔ 선택 박스는 중앙 pivot 사용
+            select.anchorMin = select.anchorMax = new Vector2(0f, 0.5f); // 행의 좌중앙 기준
+            select.pivot = new Vector2(0.5f, 0.5f);
 
-            select.sizeDelta = new Vector2(size.x, Mathf.Max(size.y, 0f));
-            select.anchoredPosition = new Vector2(pos.x, 0f);
-            select.SetAsLastSibling();
+            // ✔ 카드 pivot(0,0.5) → 중앙 좌표 = anchoredX + cardWidth/2
+            float centerX = target.anchoredPosition.x + target.sizeDelta.x * 0.5f;
+            select.anchoredPosition = new Vector2(centerX, 0f);
+
+            // ✔ 크기 고정
+            if (useFixedSelectSize)
+            {
+                select.sizeDelta = fixedSelectSize;
+            }
+            else
+            {
+                // (옵션 분기: 필요시 예전 로직으로)
+                select.sizeDelta = new Vector2(target.sizeDelta.x, target.sizeDelta.y);
+            }
+
+            select.localScale = Vector3.one;        // 스케일 흔적 제거
+            select.SetAsLastSibling();              // 항상 맨 위로
         }
     }
 

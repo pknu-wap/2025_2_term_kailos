@@ -8,8 +8,8 @@ public class PlayerData
     public string playerName = "Player";
 
     [Header("Stats")]
-    public int maxHP = 100;
-    public int currentHP = 100;
+    public int maxHP = 20;
+    public int currentHP = 20;
     public int attack = 10;
     public int defense = 5;
     public int speed = 5;     // 선턴 결정 등에 사용

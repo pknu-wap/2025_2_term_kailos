@@ -15,7 +15,7 @@ MonoBehaviour:
   id: Card6
   displayName: Card6
   type: 0
-  display: "[\uD798]\t\t\t\t"
+  display: "[\uD798]\n\uD798\uCC28\uAC8C \uACF5"
   explanation: "\uD798\uC774 \uC62C\uB77C\uC624\uB294\uAC70\uAC19\uB2E4"
   cost: 1
   positive: 0
@@ -43,8 +43,24 @@ MonoBehaviour:
   animationKey: 
   sfx: {fileID: 0}
   waves:
-  - pattern16: 
-    timeline: []
+  - pattern16: 1111100110011111
+    timeline:
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    - 1
+    - 1
+    - 0
+    - 0
+    - 1
+    - 1
+    - 1
+    - 1
+    - 1
     delayBefore: 0
     delayAfter: 0
     sfx: {fileID: 0}
@@ -61,7 +77,45 @@ MonoBehaviour:
     projectileScale: 0
     labelsA: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     labelsB: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    explosionPrefab: {fileID: 0}
-    explosionLifetime: 0
-    explosionScale: 0
+    explosionPrefab: {fileID: 1854310036816520, guid: 1a0752842faa9f744824155df469aad4, type: 3}
+    explosionLifetime: 0.3
+    explosionScale: 0.8
+    clipKey: 
+  - pattern16: 0000011001100000
+    timeline:
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 1
+    - 1
+    - 0
+    - 0
+    - 1
+    - 1
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    delayBefore: 0.2
+    delayAfter: 0
+    sfx: {fileID: 0}
+    sfxEveryHit: 0
+    vfxPrefab: {fileID: 0}
+    vfxEveryHit: 0
+    vfxLifetime: 0
+    hitDelays: []
+    projectilePrefab: {fileID: 0}
+    projectileSpeed: 0
+    projectileHitWidth: 0
+    projectileHitHeight: 0
+    destroyOnImpact: 0
+    projectileScale: 0
+    labelsA: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    labelsB: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    explosionPrefab: {fileID: 1854310036816520, guid: 1a0752842faa9f744824155df469aad4, type: 3}
+    explosionLifetime: 0.3
+    explosionScale: 0.8
     clipKey: 

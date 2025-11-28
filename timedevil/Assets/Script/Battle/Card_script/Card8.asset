@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae67f8acdd35dd84fb814605a4b67711, type: 3}
   m_Name: Card8
   m_EditorClassIdentifier: 
-  id: 
-  displayName: 
-  type: 0
-  display: 
-  explanation: 
-  cost: 1
+  id: Card8
+  displayName: Card8
+  type: 2
+  display: "[\uD53C\uACE4\uD568]\n\uC0C1\uB300 \uCE74\uB4DC 2\uC7A5 \uBC84\uB9AC\uAE30"
+  explanation: "\uB0B4 \uD53C\uACE4\uD568\uC744 \uBC1B\uC544\uB77C!"
+  cost: 3
   positive: 0
   negative: 0
-  drawMode: 0
-  amount: 1
+  drawMode: 1
+  amount: 2
