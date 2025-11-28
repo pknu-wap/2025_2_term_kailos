@@ -336,7 +336,7 @@ Transform:
   m_GameObject: {fileID: 138928733}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.91, y: -1.939, z: 5}
+  m_LocalPosition: {x: 0.91, y: -1.939, z: 0}
   m_LocalScale: {x: 1.7451397, y: 1.7451397, z: 1.7451397}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -917,7 +917,7 @@ MonoBehaviour:
   playerData: {fileID: 0}
   enemyData: {fileID: 0}
   playerPawn: {fileID: 1345401700}
-  enemyPawn: {fileID: 1867045134}
+  enemyPawn: {fileID: 1064948988}
 --- !u!1 &473387546
 GameObject:
   m_ObjectHideFlags: 0
@@ -4735,7 +4735,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1064948988}
   - component: {fileID: 1064948987}
-  - component: {fileID: 1064948989}
   m_Layer: 0
   m_Name: none
   m_TagString: Untagged
@@ -4784,7 +4783,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 602471819, guid: 82ec241670b48204b834044dbd59c125, type: 3}
+  m_Sprite: {fileID: 815397005, guid: d207945970c9bf34f9bc2785a1ea5ee7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -4803,34 +4802,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1064948986}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.058, y: 0.139, z: -2.0710888}
-  m_LocalScale: {x: 2.091672, y: 2.091672, z: 2.091672}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.344, y: 2.502, z: -2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1867045134}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!95 &1064948989
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1064948986}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 52e04c5b1b5ae7f429d6fb2149574c86, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1069897048
 GameObject:
   m_ObjectHideFlags: 0
@@ -5016,7 +4994,7 @@ MonoBehaviour:
   playerGridOrigin: {fileID: 1330316358}
   enemyGridOrigin: {fileID: 1767689043}
   playerPawn: {fileID: 1345401700}
-  enemyPawn: {fileID: 1867045134}
+  enemyPawn: {fileID: 1064948988}
   playerRC: {x: 4, y: 1}
   enemyRC: {x: 2, y: 2}
   perCellSeconds: 0.15
@@ -9650,38 +9628,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1867045133
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1867045134}
-  m_Layer: 0
-  m_Name: Enemy
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1867045134
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867045133}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.314, y: 2.475, z: 0.0710889}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1064948988}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1937422803
 GameObject:
   m_ObjectHideFlags: 0
@@ -9733,7 +9679,7 @@ MonoBehaviour:
   - {x: -3.43, y: -0.05, z: -2}
   - {x: -2.14, y: -0.05, z: -2}
   snapEpsilon: 0.15
-  moveSeconds: 0.25
+  totalEvadeSeconds: 0.5
 --- !u!4 &1937422805
 Transform:
   m_ObjectHideFlags: 0
@@ -9781,27 +9727,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveTutorialIntro: 1
   forceIntroThisRun: 0
-  introMsg1: "\uC0AC\uB77C\uC838....(E\uD0A4\uB20C\uB7EC\uC11C \uACC4\uC18D)"
-  introMsg2: "\uBB34\uC11C\uC6CC..... \uD53C\uD574\uC57C\uD574...!!(E\uD0A4\uB20C\uB7EC\uC11C
-    \uACC4\uC18D)"
+  introMsg1: "\uB10C \uC5EC\uAE30\uC11C \uC0AC\uB77C\uC838\uC57C\uD574..."
+  introMsg2: "\uC77C\uB2E8.... \uBB34\uC11C\uC6CC..... \uD53C\uD574\uC57C\uD574...!!"
   introMsg1Seconds: 1.2
   introMsg2Seconds: 1.2
   introRequireKey: 1
   introKey: 101
-  introSfx1: {fileID: 8300000, guid: ad82ac48082cc2741bc241641fa68828, type: 3}
-  introSfx1Volume: 1
-  introSfx2: {fileID: 8300000, guid: ddfbbd57ec8c59e4faee87dcd3d1422c, type: 3}
-  introSfx2Volume: 1
   resetIntroGateOnceOnThisBuild: 0
   moveTutorialGate: 1
   postEnemyWait: 3
   continueKey: 101
-  gateMsg1: "\uC5B4\uB5BB\uAC8C...(E\uD0A4\uB20C\uB7EC\uC11C \uACC4\uC18D)"
-  gateMsg2: "\uB300\uCCB4...(E\uD0A4\uB20C\uB7EC\uC11C \uACC4\uC18D)"
-  gateSfx1: {fileID: 8300000, guid: 7e426e8ebac9fc94b9d2071457ef2194, type: 3}
-  gateSfx1Volume: 1
-  gateSfx2: {fileID: 8300000, guid: bfcdb64ff0d009c43bed6e95f555f437, type: 3}
-  gateSfx2Volume: 1
+  gateMsg1: "\uC774 \uACF5\uACA9\uB4E4\uC744 \uD53C\uD55C\uB2E4\uACE0....?(E\uD0A4\uB20C\uB7EC\uC11C
+    \uACC4\uC18D)"
+  gateMsg2: "\uC5ED\uC2DC \uB108\uB294 \uC774 \uC138\uC0C1\uC5D0 \uC788\uC73C\uBA74
+    \uC548\uB3FC..."
   menu: {fileID: 1069897049}
   enemyTurnController: {fileID: 630219717}
   handUI: {fileID: 860620052}
@@ -10281,7 +10220,7 @@ SceneRoots:
   - {fileID: 1245666683}
   - {fileID: 726002405}
   - {fileID: 1345401700}
-  - {fileID: 1867045134}
+  - {fileID: 1064948988}
   - {fileID: 1234915016}
   - {fileID: 1767689043}
   - {fileID: 1330316358}
